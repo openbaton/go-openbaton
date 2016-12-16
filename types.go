@@ -62,6 +62,13 @@ const (
 	EventReset           Event = "RESET"
 )
 
+type HistoryLifecycleEvent struct {
+	Id          string `json:"id"`
+	Event       string `json:"event"`
+	Description string `json:"description"`
+	ExecutedAt  string `json:"executedAt"`
+}
+
 // A Lifecycle Event as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type LifecycleEvent struct {
 	Id              string   `json:"id"`
@@ -117,36 +124,36 @@ const (
 
 // A Virtual Network Function Record as described by ETSI GS NFV-MAN 001 V1.1.1
 type VNFRecord struct {
-	Id                           string                  `json:"id"`
-	HbVersion                    int                     `json:"hb_version"`
-	AutoScalePolicy              []*AutoScalePolicy      `json:"auto_scale_policy"`
-	ConnectionPoint              []*ConnectionPoint      `json:"connection_point"`
-	ProjectId                    string                  `json:"projectId"`
-	DeploymentFlavourKey         string                  `json:"deployment_flavour_key"`
-	Configurations               *Configuration          `json:"configurations"`
-	LifecycleEvent               []*LifecycleEvent       `json:"lifecycle_event"`
-	LifecycleEventHistory        []HistoryLifecycleEvent `json:"lifecycle_event_history"`
-	Localization                 string                  `json:"localization"`
-	MonitoringParameter          []string                `json:"monitoring_parameter"`
-	Vdu                          []VirtualDeploymentUnit `json:"vdu"`
-	Vendor                       string                  `json:"vendor"`
-	Version                      string                  `json:"version"`
-	VirtualLink                  []InternalVirtualLink   `json:"virtual_link"`
-	ParentNsId                   string                  `json:"parent_ns_id"`
-	DescriptorReference          string                  `json:"descriptor_reference"`
-	VnfmId                       string                  `json:"vnfm_id"`
-	ConnectedExternalVirtualLink []VirtualLinkRecord     `json:"connected_external_virtual_link"`
-	VnfAddress                   []string                `json:"vnf_address"`
-	Status                       Status                  `json:"status"`
-	Notification                 []string                `json:"notification"`
-	AuditLog                     string                  `json:"audit_log"`
-	RuntimePolicyInfo            []string                `json:"runtime_policy_info"`
-	Name                         string                  `json:"name"`
-	Type                         string                  `json:"type"`
-	Endpoint                     string                  `json:"endpoint"`
-	Task                         string                  `json:"task"`
-	Requires                     Configuration           `json:"requires"`
-	Provides                     Configuration           `json:"provides"`
-	CyclicDependency             bool                    `json:"cyclic_dependency"`
-	PackageId                    string                  `json:"packageId"`
+	Id                           string                   `json:"id"`
+	HbVersion                    int                      `json:"hb_version"`
+	AutoScalePolicy              []*AutoScalePolicy       `json:"auto_scale_policy"`
+	ConnectionPoint              []*ConnectionPoint       `json:"connection_point"`
+	ProjectId                    string                   `json:"projectId"`
+	DeploymentFlavourKey         string                   `json:"deployment_flavour_key"`
+	Configurations               *Configuration           `json:"configurations"`
+	LifecycleEvent               []*LifecycleEvent        `json:"lifecycle_event"`
+	LifecycleEventHistory        []*HistoryLifecycleEvent `json:"lifecycle_event_history"`
+	Localization                 string                   `json:"localization"`
+	MonitoringParameter          []string                 `json:"monitoring_parameter"`
+	Vdu                          []VirtualDeploymentUnit  `json:"vdu"`
+	Vendor                       string                   `json:"vendor"`
+	Version                      string                   `json:"version"`
+	VirtualLink                  []InternalVirtualLink    `json:"virtual_link"`
+	ParentNsId                   string                   `json:"parent_ns_id"`
+	DescriptorReference          string                   `json:"descriptor_reference"`
+	VnfmId                       string                   `json:"vnfm_id"`
+	ConnectedExternalVirtualLink []VirtualLinkRecord      `json:"connected_external_virtual_link"`
+	VnfAddress                   []string                 `json:"vnf_address"`
+	Status                       Status                   `json:"status"`
+	Notification                 []string                 `json:"notification"`
+	AuditLog                     string                   `json:"audit_log"`
+	RuntimePolicyInfo            []string                 `json:"runtime_policy_info"`
+	Name                         string                   `json:"name"`
+	Type                         string                   `json:"type"`
+	Endpoint                     string                   `json:"endpoint"`
+	Task                         string                   `json:"task"`
+	Requires                     *Configuration           `json:"requires"`
+	Provides                     *Configuration           `json:"provides"`
+	CyclicDependency             bool                     `json:"cyclic_dependency"`
+	PackageId                    string                   `json:"packageId"`
 }
