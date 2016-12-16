@@ -14,6 +14,16 @@ type AutoScalePolicy struct {
 	Actions            []ScalingAction `json:"actions"`
 }
 
+type ScalingAlarm struct {
+	Id                 string  `json:"id"`
+	Version            int     `json:"version"`
+	Metric             string  `json:"metric"`
+	Statistic          string  `json:"statistic"`
+	ComparisonOperator string  `json:"comparisonOperator"`
+	Threshold          float64 `json:"threshold"`
+	Weight             float64 `json:"weight"`
+}
+
 type ScalingAction struct {
 	Id      string            `json:"id"`
 	Version int               `json:"version"`
