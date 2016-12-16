@@ -10,8 +10,64 @@ type AutoScalePolicy struct {
 	Cooldown           int             `json:"cooldown"`
 	Mode               ScalingMode     `json:"mode"`
 	Type               ScalingType     `json:"type"`
-	Alarms             []ScalingAlarm  `json:"alarms"`
+	Alarms             []*ScalingAlarm `json:"alarms"`
 	Actions            []ScalingAction `json:"actions"`
+}
+
+type ConfigurationParameter struct {
+	Id          string `json:"id"`
+	Version     int    `json:"version"`
+	Description string `json:"description"`
+	ConfKey     string `json:"confKey"`
+	Value       string `json:"value"`
+}
+
+type Configuration struct {
+	Id                      string                    `json:"id"`
+	Version                 int                       `json:"version"`
+	ProjectId               string                    `json:"projectId"`
+	ConfigurationParameters []*ConfigurationParameter `json:"configurationParameters"`
+	Name                    string                    `json:"name"`
+}
+
+type ConnectionPoint struct {
+	Id      string `json:"id"`
+	Version int    `json:"version"`
+	Type    string `json:"type"`
+}
+
+type Event string
+
+const (
+	EventGranted  Event = "GRANTED"
+	EventAllocate Event = "ALLOCATE"
+	EventScale    Event = "SCALE"
+	EventRelease  Event = "RELEASE"
+	EventError    Event = "ERROR"
+
+	EventInstantiate     Event = "INSTANTIATE"
+	EventTerminate       Event = "TERMINATE"
+	EventConfigure       Event = "CONFIGURE"
+	EventStart           Event = "START"
+	EventStop            Event = "STOP"
+	EventHeal            Event = "HEAL"
+	EventScaleOut        Event = "SCALE_OUT"
+	EventScaleIn         Event = "SCALE_IN"
+	EventScaleUp         Event = "SCALE_UP"
+	EventScaleDown       Event = "SCALE_DOWN"
+	EventUpdate          Event = "UPDATE"
+	EventUpdateRollback  Event = "UPDATE_ROLLBACK"
+	EventUpgrade         Event = "UPGRADE"
+	EventUpgradeRollback Event = "UPGRADE_ROLLBACK"
+	EventReset           Event = "RESET"
+)
+
+// A Lifecycle Event as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type LifecycleEvent struct {
+	Id              string   `json:"id"`
+	Version         int      `json:"version"`
+	Event           Event    `json:"event"`
+	LifecycleEvents []string `json:"lifecycle_events"`
 }
 
 type ScalingAlarm struct {
@@ -63,12 +119,12 @@ const (
 type VNFRecord struct {
 	Id                           string                  `json:"id"`
 	HbVersion                    int                     `json:"hb_version"`
-	AutoScalePolicy              []AutoScalePolicy       `json:"auto_scale_policy"`
-	ConnectionPoint              []ConnectionPoint       `json:"connection_point"`
+	AutoScalePolicy              []*AutoScalePolicy      `json:"auto_scale_policy"`
+	ConnectionPoint              []*ConnectionPoint      `json:"connection_point"`
 	ProjectId                    string                  `json:"projectId"`
 	DeploymentFlavourKey         string                  `json:"deployment_flavour_key"`
-	Configurations               Configuration           `json:"configurations"`
-	LifecycleEvent               []LifecycleEvent        `json:"lifecycle_event"`
+	Configurations               *Configuration          `json:"configurations"`
+	LifecycleEvent               []*LifecycleEvent       `json:"lifecycle_event"`
 	LifecycleEventHistory        []HistoryLifecycleEvent `json:"lifecycle_event_history"`
 	Localization                 string                  `json:"localization"`
 	MonitoringParameter          []string                `json:"monitoring_parameter"`
