@@ -242,24 +242,40 @@ type VNFDConnectionPoint struct {
 }
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type VNFForwardingGraphDescriptor struct {
+	Id                    string                   `json:"id"`
+	HbVersion             int                      `json:"hb_version"`
+	Vendor                string                   `json:"vendor"`
+	Version               string                   `json:"version"`
+	NumberOfEndpoints     int                      `json:"number_of_endpoints"`
+	NumberOfVirtualLinks  int                      `json:"number_of_virtual_links"`
+	DependentVirtualLink  []*VirtualLinkDescriptor `json:"dependent_virtual_link"`
+	NetworkForwardingPath []*NetworkForwardingPath `json:"network_forwarding_path"`
+	ConnectionPoint       []*ConnectionPoint       `json:"connection_point"`
+	DescriptorVersion     string                   `json:"descriptor_version"`
+	ConstituentVnfs       []*ConstituentVNF        `json:"constituent_vnfs"`
+	VnffgdSecurity        Security                 `json:"vnffgd_security"`
+}
+
+// Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphRecord struct {
-	id                      string
-	descriptor_reference    *VNFForwardingGraphDescriptor
-	parent_ns               *NetworkServiceRecord
-	dependent_virtual_link  []*VirtualLinkRecord
-	status                  *Status
-	notification            []string
-	lifecycle_event_history []*LifecycleEvent
-	audit_log               string
-	network_forwarding_path *NetworkForwardingPath
-	connection_point        []*VNFDConnectionPoint
-	member_vnfs             []*VirtualNetworkFunctionRecord
-	vendor                  string
-	version                 string
-	number_of_endpoints     int
-	number_of_vnfs          int
-	number_of_pnfs          int
-	number_of_virtual_links int
+	Id                    string                          `json:"id"`
+	DescriptorReference   *VNFForwardingGraphDescriptor   `json:"descriptor_reference"`
+	ParentNs              *NetworkServiceRecord           `json:"parent_ns"`
+	DependentVirtualLink  []*VirtualLinkRecord            `json:"dependent_virtual_link"`
+	Status                *Status                         `json:"status"`
+	Notification          []string                        `json:"notification"`
+	LifecycleEventHistory []*LifecycleEvent               `json:"lifecycle_event_history"`
+	AuditLog              string                          `json:"audit_log"`
+	NetworkForwardingPath *NetworkForwardingPath          `json:"network_forwarding_path"`
+	ConnectionPoint       []*VNFDConnectionPoint          `json:"connection_point"`
+	MemberVnfs            []*VirtualNetworkFunctionRecord `json:"member_vnfs"`
+	Vendor                string                          `json:"vendor"`
+	Version               string                          `json:"version"`
+	NumberOfEndpoints     int                             `json:"number_of_endpoints"`
+	NumberOfVnfs          int                             `json:"number_of_vnfs"`
+	NumberOfPnfs          int                             `json:"number_of_pnfs"`
+	NumberOfVirtualLinks  int                             `json:"number_of_virtual_links"`
 }
 
 // A Virtual Network Function Record as described by ETSI GS NFV-MAN 001 V1.1.1
