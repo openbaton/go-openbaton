@@ -62,6 +62,14 @@ const (
 	EventReset           Event = "RESET"
 )
 
+type HighAvailability struct {
+	Id               string          `json:"id"`
+	Version          int             `json:"version"`
+	ResiliencyLevel  ResiliencyLevel `json:"resiliencyLevel"`
+	GeoRedundancy    bool            `json:"geoRedundancy"`
+	RedundancyScheme string          `json:"redundancyScheme"`
+}
+
 type HistoryLifecycleEvent struct {
 	Id          string `json:"id"`
 	Event       string `json:"event"`
@@ -76,6 +84,13 @@ type LifecycleEvent struct {
 	Event           Event    `json:"event"`
 	LifecycleEvents []string `json:"lifecycle_events"`
 }
+
+type ResiliencyLevel string
+
+const (
+	ResiliencyActiveStandbyStateless ResiliencyLevel = "ACTIVE_STANDBY_STATELESS"
+	ResiliencyActiveStandbyStateful  ResiliencyLevel = "ACTIVE_STANDBY_STATEFUL"
+)
 
 type ScalingAlarm struct {
 	Id                 string  `json:"id"`
@@ -121,6 +136,28 @@ const (
 	ScaleTypeVoted    ScalingType = "VOTED"
 	ScaleTypeWeighted ScalingType = "WEIGHTED"
 )
+
+type VirtualDeploymentUnit struct {
+	id                                 string
+	version                            int
+	projectId                          string
+	name                               string
+	vm_image                           []string
+	parent_vdu                         string
+	computation_requirement            string
+	virtual_memory_resource_element    string
+	virtual_network_bandwidth_resource string
+	lifecycle_event                    []*LifecycleEvent
+	vdu_constraint                     string
+	high_availability                  *HighAvailability
+	fault_management_policy            []*VRFaultManagementPolicy
+	scale_in_out                       int
+	vnfc                               []*VNFComponent
+	vnfc_instance                      []*VNFCInstance
+	monitoring_parameter               []string
+	hostname                           string
+	vimInstanceName                    []string
+}
 
 // A Virtual Network Function Record as described by ETSI GS NFV-MAN 001 V1.1.1
 type VNFRecord struct {
