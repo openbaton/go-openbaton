@@ -1,7 +1,7 @@
 package openbaton
 
 type AutoScalePolicy struct {
-	Id                 string          `json:"id"`
+	ID                 string          `json:"id"`
 	Version            int             `json:"version"`
 	Name               string          `json:"name"`
 	Threshold          float64         `json:"threshold"`
@@ -15,7 +15,7 @@ type AutoScalePolicy struct {
 }
 
 type ConfigurationParameter struct {
-	Id          string `json:"id"`
+	ID          string `json:"id"`
 	Version     int    `json:"version"`
 	Description string `json:"description"`
 	ConfKey     string `json:"confKey"`
@@ -23,24 +23,24 @@ type ConfigurationParameter struct {
 }
 
 type Configuration struct {
-	Id                      string                    `json:"id"`
+	ID                      string                    `json:"id"`
 	Version                 int                       `json:"version"`
-	ProjectId               string                    `json:"projectId"`
+	ProjectID               string                    `json:"projectId"`
 	ConfigurationParameters []*ConfigurationParameter `json:"configurationParameters"`
 	Name                    string                    `json:"name"`
 }
 
 type ConnectionPoint struct {
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 	Version int    `json:"version"`
 	Type    string `json:"type"`
 }
 
 // ConstituentVNF as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type ConstituentVNF struct {
-	Id                    string          `json:"id"`
+	ID                    string          `json:"id"`
 	VnfReference          string          `json:"vnf_reference"`
-	VnfFlavourIdReference string          `json:"vnf_flavour_id_reference"`
+	VnfFlavourIDReference string          `json:"vnf_flavour_id_reference"`
 	RedundancyModel       RedundancyModel `json:"redundancy_modelid"`
 	Affinity              string          `json:"affinity"`
 	Capability            string          `json:"capability"`
@@ -86,7 +86,7 @@ const (
 )
 
 type HighAvailability struct {
-	Id               string          `json:"id"`
+	ID               string          `json:"id"`
 	Version          int             `json:"version"`
 	ResiliencyLevel  ResiliencyLevel `json:"resiliencyLevel"`
 	GeoRedundancy    bool            `json:"geoRedundancy"`
@@ -94,7 +94,7 @@ type HighAvailability struct {
 }
 
 type HistoryLifecycleEvent struct {
-	Id          string `json:"id"`
+	ID          string `json:"id"`
 	Event       string `json:"event"`
 	Description string `json:"description"`
 	ExecutedAt  string `json:"executedAt"`
@@ -107,18 +107,30 @@ type InternalVirtualLink struct {
 }
 
 type Ip struct {
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 	Version int    `json:"version"`
 	NetName string `json:"netname"`
 	Ip      string `json:"ip"`
 }
 
-// A Lifecycle Event as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+// A LifecycleEvent as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type LifecycleEvent struct {
-	Id              string   `json:"id"`
+	ID              string   `json:"id"`
 	Version         int      `json:"version"`
 	Event           Event    `json:"event"`
 	LifecycleEvents []string `json:"lifecycle_events"`
+}
+
+type NetworkForwardingPath struct {
+	ID string `json:"id"`
+	Version int `json:"version"` 
+	Policy *Policy `json:"policy"`
+	Connection map[string]string `json:"connection"`
+}
+
+type Policy struct {
+	ID      string `json:"id"`
+	Version int    `json:"version"`
 }
 
 type RedundancyModel string
@@ -136,7 +148,7 @@ const (
 )
 
 type ScalingAlarm struct {
-	Id                 string  `json:"id"`
+	ID                 string  `json:"id"`
 	Version            int     `json:"version"`
 	Metric             string  `json:"metric"`
 	Statistic          string  `json:"statistic"`
@@ -146,7 +158,7 @@ type ScalingAlarm struct {
 }
 
 type ScalingAction struct {
-	Id      string            `json:"id"`
+	ID      string            `json:"id"`
 	Version int               `json:"version"`
 	Type    ScalingActionType `json:"type"`
 	Value   string            `json:"value"`
@@ -181,14 +193,14 @@ const (
 )
 
 type Security struct {
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 	Version int    `json:"version"`
 }
 
 type VirtualDeploymentUnit struct {
-	Id                              string                     `json:"id"`
+	ID                              string                     `json:"id"`
 	Version                         int                        `json:"version"`
-	ProjectId                       string                     `json:"projectId"`
+	ProjectID                       string                     `json:"projectId"`
 	Name                            string                     `json:"name"`
 	VmImage                         []string                   `json:"vm_image"`
 	ParentVdu                       string                     `json:"parent_vdu"`
@@ -207,22 +219,34 @@ type VirtualDeploymentUnit struct {
 	VimInstanceName                 []string                   `json:"vimInstanceName"`
 }
 
-// Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+// VirtualLink (abstract) based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 // The VLD describes the basic topology of the connectivity (e.g. E-LAN, E-Line, E-Tree) between one
 // or more VNFs connected to this VL and other required parameters (e.g. bandwidth and QoS class).
 // The VLD connection parameters are expected to have similar attributes to those used on the ports
 // on VNFs in ETSI GS NFV-SWA 001 [i.8]. Therefore a set of VLs in a Network Service can be mapped
 // to a Network Connectivity Topology (NCT) as defined in ETSI GS NFV-SWA 001 [i.8].
 type VirtualLink struct {
-	Id               string   `json:"id"`
+	ID               string   `json:"id"`
 	HbVersion        int      `json:"hb_version"`
-	ExtId            string   `json:"extId"`
+	ExtID            string   `json:"extId"`
 	RootRequirement  string   `json:"root_requirement"`
 	LeafRequirement  string   `json:"leaf_requirement"`
 	Qos              []string `json:"qos"`
 	TestAccess       []string `json:"test_access"`
 	ConnectivityType []string `json:"connectivity_type"`
 	Name             string   `json:"name"`
+}
+
+// VirtualLinkDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type VirtualLinkDescriptor struct {
+	VirtualLink
+	ProjectID         string    `json:"projectId"`
+	Vendor            string    `json:"vendor"`
+	DescriptorVersion string    `json:"descriptor_version"`
+	NumberOfEndpoints int       `json:"number_of_endpoints"`
+	connection        []string  `json:"connection"`
+	vld_security      *Security `json:"vld_security"`
+	name              string
 }
 
 type VirtualLinkRecord struct {
@@ -232,7 +256,7 @@ type VirtualLinkRecord struct {
 	ParentNs              string                      `json:"parent_ns"`
 	VNFFGRReference       []*VNFForwardingGraphRecord `json:"vnffgr_reference"`
 	DescriptorReference   string                      `json:"descriptor_reference"`
-	VimId                 string                      `json:"vim_id"`
+	VimID                 string                      `json:"vim_id"`
 	AllocatedCapacity     []string                    `json:"allocated_capacity"`
 	Status                LinkStatus                  `json:"status"`
 	Notification          []string                    `json:"notification"`
@@ -242,8 +266,8 @@ type VirtualLinkRecord struct {
 }
 
 type VNFCInstance struct {
-	VimId        string        `json:"vim_id"`
-	VcId         string        `json:"vc_id"`
+	VimID        string        `json:"vim_id"`
+	VcID         string        `json:"vc_id"`
 	Hostname     string        `json:"hostname"`
 	State        string        `json:"state"`
 	VnfComponent *VNFComponent `json:"vnfComponent"`
@@ -253,7 +277,7 @@ type VNFCInstance struct {
 
 // A Virtual Network Function Component as defined by ETSI GS NFV-MAN 001 V1.1.1
 type VNFComponent struct {
-	Id              string                 `json:"id"`
+	ID              string                 `json:"id"`
 	Version         int                    `json:"version"`
 	ConnectionPoint []*VNFDConnectionPoint `json:"connection_component"`
 }
@@ -267,7 +291,7 @@ type VNFDConnectionPoint struct {
 
 // VNFForwardingGraphDescriptor as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphDescriptor struct {
-	Id                    string                   `json:"id"`
+	ID                    string                   `json:"id"`
 	HbVersion             int                      `json:"hb_version"`
 	Vendor                string                   `json:"vendor"`
 	Version               string                   `json:"version"`
@@ -283,7 +307,7 @@ type VNFForwardingGraphDescriptor struct {
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphRecord struct {
-	Id                    string                          `json:"id"`
+	ID                    string                          `json:"id"`
 	DescriptorReference   *VNFForwardingGraphDescriptor   `json:"descriptor_reference"`
 	ParentNs              *NetworkServiceRecord           `json:"parent_ns"`
 	DependentVirtualLink  []*VirtualLinkRecord            `json:"dependent_virtual_link"`
@@ -304,11 +328,11 @@ type VNFForwardingGraphRecord struct {
 
 // A Virtual Network Function Record as described by ETSI GS NFV-MAN 001 V1.1.1
 type VNFRecord struct {
-	Id                           string                   `json:"id"`
+	ID                           string                   `json:"id"`
 	HbVersion                    int                      `json:"hb_version"`
 	AutoScalePolicy              []*AutoScalePolicy       `json:"auto_scale_policy"`
 	ConnectionPoint              []*ConnectionPoint       `json:"connection_point"`
-	ProjectId                    string                   `json:"projectId"`
+	ProjectID                    string                   `json:"projectId"`
 	DeploymentFlavourKey         string                   `json:"deployment_flavour_key"`
 	Configurations               *Configuration           `json:"configurations"`
 	LifecycleEvent               []*LifecycleEvent        `json:"lifecycle_event"`
@@ -319,9 +343,9 @@ type VNFRecord struct {
 	Vendor                       string                   `json:"vendor"`
 	Version                      string                   `json:"version"`
 	VirtualLink                  []InternalVirtualLink    `json:"virtual_link"`
-	ParentNsId                   string                   `json:"parent_ns_id"`
+	ParentNsID                   string                   `json:"parent_ns_id"`
 	DescriptorReference          string                   `json:"descriptor_reference"`
-	VnfmId                       string                   `json:"vnfm_id"`
+	VnfmID                       string                   `json:"vnfm_id"`
 	ConnectedExternalVirtualLink []VirtualLinkRecord      `json:"connected_external_virtual_link"`
 	VnfAddress                   []string                 `json:"vnf_address"`
 	Status                       Status                   `json:"status"`
@@ -335,7 +359,7 @@ type VNFRecord struct {
 	Requires                     *Configuration           `json:"requires"`
 	Provides                     *Configuration           `json:"provides"`
 	CyclicDependency             bool                     `json:"cyclic_dependency"`
-	PackageId                    string                   `json:"packageId"`
+	PackageID                    string                   `json:"packageId"`
 }
 
 type VRFaultManagementPolicy struct {
