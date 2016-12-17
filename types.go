@@ -180,6 +180,11 @@ const (
 	ScaleTypeWeighted ScalingType = "WEIGHTED"
 )
 
+type Security struct {
+	Id      string `json:"id"`
+	Version int    `json:"version"`
+}
+
 type VirtualDeploymentUnit struct {
 	Id                              string                     `json:"id"`
 	Version                         int                        `json:"version"`
