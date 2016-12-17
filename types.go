@@ -62,6 +62,17 @@ const (
 	EventReset           Event = "RESET"
 )
 
+type FaultManagementAction string
+
+const (
+	FaultRestart              FaultManagementAction = "RESTART"
+	FaultReinstantiateService FaultManagementAction = "REINSTANTIATE_SERVICE"
+	FaultHeal                 FaultManagementAction = "HEAL"
+	FaultReinstantiate        FaultManagementAction = "REINSTANTIATE"
+	FaultSwitchToStandby      FaultManagementAction = "SWITCH_TO_STANDBY"
+	FaultSwitchToActive       FaultManagementAction = "SWITCH_TO_ACTIVE"
+)
+
 type HighAvailability struct {
 	Id               string          `json:"id"`
 	Version          int             `json:"version"`
@@ -75,6 +86,19 @@ type HistoryLifecycleEvent struct {
 	Event       string `json:"event"`
 	Description string `json:"description"`
 	ExecutedAt  string `json:"executedAt"`
+}
+
+// An extended Virtual Link based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type InternalVirtualLink struct {
+	VirtualLink
+	ConnectionPointsReferences []string `json:"connection_points_references"`
+}
+
+type Ip struct {
+	Id      string `json:"id"`
+	Version int    `json:"version"`
+	NetName string `json:"netname"`
+	Ip      string `json:"ip"`
 }
 
 // A Lifecycle Event as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
@@ -159,6 +183,64 @@ type VirtualDeploymentUnit struct {
 	VimInstanceName                 []string                   `json:"vimInstanceName"`
 }
 
+// Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+// The VLD describes the basic topology of the connectivity (e.g. E-LAN, E-Line, E-Tree) between one
+// or more VNFs connected to this VL and other required parameters (e.g. bandwidth and QoS class).
+// The VLD connection parameters are expected to have similar attributes to those used on the ports
+// on VNFs in ETSI GS NFV-SWA 001 [i.8]. Therefore a set of VLs in a Network Service can be mapped
+// to a Network Connectivity Topology (NCT) as defined in ETSI GS NFV-SWA 001 [i.8].
+type VirtualLink struct {
+	Id               string   `json:"id"`
+	HbVersion        int      `json:"hb_version"`
+	ExtId            string   `json:"extId"`
+	RootRequirement  string   `json:"root_requirement"`
+	LeafRequirement  string   `json:"leaf_requirement"`
+	Qos              []string `json:"qos"`
+	TestAccess       []string `json:"test_access"`
+	ConnectivityType []string `json:"connectivity_type"`
+	Name             string   `json:"name"`
+}
+
+type VirtualLinkRecord struct {
+	Vendor                string                      `json:"vendor"`
+	Version               string                      `json:"version"`
+	NumberOfEndpoints     int                         `json:"number_of_endpoints"`
+	ParentNs              string                      `json:"parent_ns"`
+	VNFFGRReference       []*VNFForwardingGraphRecord `json:"vnffgr_reference"`
+	DescriptorReference   string                      `json:"descriptor_reference"`
+	VimId                 string                      `json:"vim_id"`
+	AllocatedCapacity     []string                    `json:"allocated_capacity"`
+	Status                LinkStatus                  `json:"status"`
+	Notification          []string                    `json:"notification"`
+	LifecycleEventHistory []*LifecycleEvent           `json:"lifecycle_event_history"`
+	AuditLog              []string                    `json:"audit_log"`
+	Connection            []string                    `json:"connection"`
+}
+
+type VNFCInstance struct {
+	VimId        string        `json:"vim_id"`
+	VcId         string        `json:"vc_id"`
+	Hostname     string        `json:"hostname"`
+	State        string        `json:"state"`
+	VnfComponent *VNFComponent `json:"vnfComponent"`
+	FloatingIps  []*Ip         `json:"floatingIps"`
+	Ips          []*Ip         `json:"ips"`
+}
+
+// A Virtual Network Function Component as defined by ETSI GS NFV-MAN 001 V1.1.1
+type VNFComponent struct {
+	Id              string                 `json:"id"`
+	Version         int                    `json:"version"`
+	ConnectionPoint []*VNFDConnectionPoint `json:"connection_component"`
+}
+
+// A Virtual Network Function Descriptor Connection Point as defined by
+// ETSI GS NFV-MAN 001 V1.1.1
+type VNFDConnectionPoint struct {
+	VirtualLinkReference string `json:"virtual_link_reference"`
+	FloatingIp           string `json:"floatingIp"`
+}
+
 // A Virtual Network Function Record as described by ETSI GS NFV-MAN 001 V1.1.1
 type VNFRecord struct {
 	Id                           string                   `json:"id"`
@@ -172,7 +254,7 @@ type VNFRecord struct {
 	LifecycleEventHistory        []*HistoryLifecycleEvent `json:"lifecycle_event_history"`
 	Localization                 string                   `json:"localization"`
 	MonitoringParameter          []string                 `json:"monitoring_parameter"`
-	Vdu                          []VirtualDeploymentUnit  `json:"vdu"`
+	Vdu                          []*VirtualDeploymentUnit `json:"vdu"`
 	Vendor                       string                   `json:"vendor"`
 	Version                      string                   `json:"version"`
 	VirtualLink                  []InternalVirtualLink    `json:"virtual_link"`
