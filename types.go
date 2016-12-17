@@ -241,6 +241,27 @@ type VNFDConnectionPoint struct {
 	FloatingIp           string `json:"floatingIp"`
 }
 
+// Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type VNFForwardingGraphRecord struct {
+	id                      string
+	descriptor_reference    *VNFForwardingGraphDescriptor
+	parent_ns               *NetworkServiceRecord
+	dependent_virtual_link  []*VirtualLinkRecord
+	status                  *Status
+	notification            []string
+	lifecycle_event_history []*LifecycleEvent
+	audit_log               string
+	network_forwarding_path *NetworkForwardingPath
+	connection_point        []*VNFDConnectionPoint
+	member_vnfs             []*VirtualNetworkFunctionRecord
+	vendor                  string
+	version                 string
+	number_of_endpoints     int
+	number_of_vnfs          int
+	number_of_pnfs          int
+	number_of_virtual_links int
+}
+
 // A Virtual Network Function Record as described by ETSI GS NFV-MAN 001 V1.1.1
 type VNFRecord struct {
 	Id                           string                   `json:"id"`
