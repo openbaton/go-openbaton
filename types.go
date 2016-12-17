@@ -138,25 +138,25 @@ const (
 )
 
 type VirtualDeploymentUnit struct {
-	id                                 string
-	version                            int
-	projectId                          string
-	name                               string
-	vm_image                           []string
-	parent_vdu                         string
-	computation_requirement            string
-	virtual_memory_resource_element    string
-	virtual_network_bandwidth_resource string
-	lifecycle_event                    []*LifecycleEvent
-	vdu_constraint                     string
-	high_availability                  *HighAvailability
-	fault_management_policy            []*VRFaultManagementPolicy
-	scale_in_out                       int
-	vnfc                               []*VNFComponent
-	vnfc_instance                      []*VNFCInstance
-	monitoring_parameter               []string
-	hostname                           string
-	vimInstanceName                    []string
+	Id                              string                     `json:"id"`
+	Version                         int                        `json:"version"`
+	ProjectId                       string                     `json:"projectId"`
+	Name                            string                     `json:"name"`
+	VmImage                         []string                   `json:"vm_image"`
+	ParentVdu                       string                     `json:"parent_vdu"`
+	ComputationRequirement          string                     `json:"computation_requirement"`
+	VirtualMemoryResourceElement    string                     `json:"virtual_memory_resource_element"`
+	VirtualNetworkBandwidthResource string                     `json:"virtual_network_bandwidth_resource"`
+	LifecycleEvent                  []*LifecycleEvent          `json:"lifecycle_event"`
+	VduConstraint                   string                     `json:"vdu_constraint"`
+	HighAvailability                *HighAvailability          `json:"high_availability"`
+	FaultManagementPolicy           []*VRFaultManagementPolicy `json:"fault_management_policy"`
+	ScaleInOut                      int                        `json:"scale_in_out"`
+	Vnfc                            []*VNFComponent            `json:"vnfc"`
+	VnfcInstance                    []*VNFCInstance            `json:"vnfc_instance"`
+	MonitoringParameter             []string                   `json:"monitoring_parameter"`
+	Hostname                        string                     `json:"hostname"`
+	VimInstanceName                 []string                   `json:"vimInstanceName"`
 }
 
 // A Virtual Network Function Record as described by ETSI GS NFV-MAN 001 V1.1.1
@@ -193,4 +193,8 @@ type VNFRecord struct {
 	Provides                     *Configuration           `json:"provides"`
 	CyclicDependency             bool                     `json:"cyclic_dependency"`
 	PackageId                    string                   `json:"packageId"`
+}
+
+type VRFaultManagementPolicy struct {
+	Action FaultManagementAction `json:"action"`
 }
