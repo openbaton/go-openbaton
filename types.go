@@ -36,6 +36,18 @@ type ConnectionPoint struct {
 	Type    string `json:"type"`
 }
 
+// ConstituentVNF as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type ConstituentVNF struct {
+	Id                    string          `json:"id"`
+	VnfReference          string          `json:"vnf_reference"`
+	VnfFlavourIdReference string          `json:"vnf_flavour_id_reference"`
+	RedundancyModel       RedundancyModel `json:"redundancy_modelid"`
+	Affinity              string          `json:"affinity"`
+	Capability            string          `json:"capability"`
+	NumberOfInstances     int             `json:"number_of_instancesid"`
+	Version               int             `json:"version"`
+}
+
 type Event string
 
 const (
@@ -108,6 +120,13 @@ type LifecycleEvent struct {
 	Event           Event    `json:"event"`
 	LifecycleEvents []string `json:"lifecycle_events"`
 }
+
+type RedundancyModel string
+
+const (
+	RedundancyActive  RedundancyModel = "ACTIVE"
+	RedundancyStandby RedundancyModel = "STANDBY"
+)
 
 type ResiliencyLevel string
 
@@ -234,14 +253,14 @@ type VNFComponent struct {
 	ConnectionPoint []*VNFDConnectionPoint `json:"connection_component"`
 }
 
-// A Virtual Network Function Descriptor Connection Point as defined by
+// Virtual Network Function Descriptor Connection Point as defined by
 // ETSI GS NFV-MAN 001 V1.1.1
 type VNFDConnectionPoint struct {
 	VirtualLinkReference string `json:"virtual_link_reference"`
 	FloatingIp           string `json:"floatingIp"`
 }
 
-// Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+// VNFForwardingGraphDescriptor as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphDescriptor struct {
 	Id                    string                   `json:"id"`
 	HbVersion             int                      `json:"hb_version"`
@@ -254,7 +273,7 @@ type VNFForwardingGraphDescriptor struct {
 	ConnectionPoint       []*ConnectionPoint       `json:"connection_point"`
 	DescriptorVersion     string                   `json:"descriptor_version"`
 	ConstituentVnfs       []*ConstituentVNF        `json:"constituent_vnfs"`
-	VnffgdSecurity        Security                 `json:"vnffgd_security"`
+	VnffgdSecurity        *Security                `json:"vnffgd_security"`
 }
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
