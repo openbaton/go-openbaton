@@ -100,12 +100,6 @@ type HistoryLifecycleEvent struct {
 	ExecutedAt  string `json:"executedAt"`
 }
 
-// An extended Virtual Link based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-type InternalVirtualLink struct {
-	VirtualLink
-	ConnectionPointsReferences []string `json:"connection_points_references"`
-}
-
 type Ip struct {
 	ID      string `json:"id"`
 	Version int    `json:"version"`
@@ -119,13 +113,6 @@ type LifecycleEvent struct {
 	Version         int      `json:"version"`
 	Event           Event    `json:"event"`
 	LifecycleEvents []string `json:"lifecycle_events"`
-}
-
-type NetworkForwardingPath struct {
-	ID string `json:"id"`
-	Version int `json:"version"` 
-	Policy *Policy `json:"policy"`
-	Connection map[string]string `json:"connection"`
 }
 
 // NetworkServiceRecord as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
