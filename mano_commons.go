@@ -81,6 +81,22 @@ type LifecycleEvent struct {
 	LifecycleEvents []string `json:"lifecycle_events"`
 }
 
+type NetworkServiceDeploymentFlavour struct {
+	vendor string
+	version string
+	number_of_endpoints int
+	parent_ns string
+	vnffgr_reference []*VNFForwardingGraphRecord
+	descriptor_reference string
+	vim_id string
+	allocated_capacity []string
+	status LinkStatus
+	notification []string
+	lifecycle_event_history []*LifecycleEvent
+	audit_log []string
+	connection []string
+}
+
 type RedundancyModel string
 
 const (
