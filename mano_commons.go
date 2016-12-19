@@ -1,16 +1,16 @@
 package openbaton
 
 type AutoScalePolicy struct {
-	ID                 string          `json:"id"`
-	Version            int             `json:"version"`
-	Name               string          `json:"name"`
-	Threshold          float64         `json:"threshold"`
-	ComparisonOperator string          `json:"comparisonOperator"`
-	Period             int             `json:"period"`
-	Cooldown           int             `json:"cooldown"`
-	Mode               ScalingMode     `json:"mode"`
-	Type               ScalingType     `json:"type"`
-	Alarms             []*ScalingAlarm `json:"alarms"`
+	ID                 string           `json:"id"`
+	Version            int              `json:"version"`
+	Name               string           `json:"name"`
+	Threshold          float64          `json:"threshold"`
+	ComparisonOperator string           `json:"comparisonOperator"`
+	Period             int              `json:"period"`
+	Cooldown           int              `json:"cooldown"`
+	Mode               ScalingMode      `json:"mode"`
+	Type               ScalingType      `json:"type"`
+	Alarms             []*ScalingAlarm  `json:"alarms"`
 	Actions            []*ScalingAction `json:"actions"`
 }
 
@@ -35,27 +35,27 @@ type ConstituentVNF struct {
 type Event string
 
 const (
-	EventGranted  Event = "GRANTED"
-	EventAllocate Event = "ALLOCATE"
-	EventScale    Event = "SCALE"
-	EventRelease  Event = "RELEASE"
-	EventError    Event = "ERROR"
+	EventGranted  = Event("GRANTED")
+	EventAllocate = Event("ALLOCATE")
+	EventScale    = Event("SCALE")
+	EventRelease  = Event("RELEASE")
+	EventError    = Event("ERROR")
 
-	EventInstantiate     Event = "INSTANTIATE"
-	EventTerminate       Event = "TERMINATE"
-	EventConfigure       Event = "CONFIGURE"
-	EventStart           Event = "START"
-	EventStop            Event = "STOP"
-	EventHeal            Event = "HEAL"
-	EventScaleOut        Event = "SCALE_OUT"
-	EventScaleIn         Event = "SCALE_IN"
-	EventScaleUp         Event = "SCALE_UP"
-	EventScaleDown       Event = "SCALE_DOWN"
-	EventUpdate          Event = "UPDATE"
-	EventUpdateRollback  Event = "UPDATE_ROLLBACK"
-	EventUpgrade         Event = "UPGRADE"
-	EventUpgradeRollback Event = "UPGRADE_ROLLBACK"
-	EventReset           Event = "RESET"
+	EventInstantiate     = Event("INSTANTIATE")
+	EventTerminate       = Event("TERMINATE")
+	EventConfigure       = Event("CONFIGURE")
+	EventStart           = Event("START")
+	EventStop            = Event("STOP")
+	EventHeal            = Event("HEAL")
+	EventScaleOut        = Event("SCALE_OUT")
+	EventScaleIn         = Event("SCALE_IN")
+	EventScaleUp         = Event("SCALE_UP")
+	EventScaleDown       = Event("SCALE_DOWN")
+	EventUpdate          = Event("UPDATE")
+	EventUpdateRollback  = Event("UPDATE_ROLLBACK")
+	EventUpgrade         = Event("UPGRADE")
+	EventUpgradeRollback = Event("UPGRADE_ROLLBACK")
+	EventReset           = Event("RESET")
 )
 
 type HighAvailability struct {
@@ -101,15 +101,15 @@ type NetworkServiceDeploymentFlavour struct {
 type RedundancyModel string
 
 const (
-	RedundancyActive  RedundancyModel = "ACTIVE"
-	RedundancyStandby RedundancyModel = "STANDBY"
+	RedundancyActive  = RedundancyModel("ACTIVE")
+	RedundancyStandby = RedundancyModel("STANDBY")
 )
 
 type ResiliencyLevel string
 
 const (
-	ResiliencyActiveStandbyStateless ResiliencyLevel = "ACTIVE_STANDBY_STATELESS"
-	ResiliencyActiveStandbyStateful  ResiliencyLevel = "ACTIVE_STANDBY_STATEFUL"
+	ResiliencyActiveStandbyStateless = ResiliencyLevel("ACTIVE_STANDBY_STATELESS")
+	ResiliencyActiveStandbyStateful  = ResiliencyLevel("ACTIVE_STANDBY_STATEFUL")
 )
 
 type ScalingAction struct {
@@ -123,12 +123,12 @@ type ScalingAction struct {
 type ScalingActionType string
 
 const (
-	ScaleOut          ScalingActionType = "SCALE_OUT"
-	ScaleOutTo        ScalingActionType = "SCALE_OUT_TO"
-	ScaleOutToFlavour ScalingActionType = "SCALE_OUT_TO_FLAVOUR"
-	ScaleIn           ScalingActionType = "SCALE_IN"
-	ScaleInTo         ScalingActionType = "SCALE_IN_TO"
-	ScaleInToFlavour  ScalingActionType = "SCALE_IN_TO_FLAVOUR"
+	ScaleOut          = ScalingActionType("SCALE_OUT")
+	ScaleOutTo        = ScalingActionType("SCALE_OUT_TO")
+	ScaleOutToFlavour = ScalingActionType("SCALE_OUT_TO_FLAVOUR")
+	ScaleIn           = ScalingActionType("SCALE_IN")
+	ScaleInTo         = ScalingActionType("SCALE_IN_TO")
+	ScaleInToFlavour  = ScalingActionType("SCALE_IN_TO_FLAVOUR")
 )
 
 type ScalingAlarm struct {
@@ -144,17 +144,17 @@ type ScalingAlarm struct {
 type ScalingMode string
 
 const (
-	ScaleModeReactive   ScalingMode = "REACTIVE"
-	ScaleModeProactive  ScalingMode = "PROACTIVE"
-	ScaleModePredictive ScalingMode = "PREDICTIVE"
+	ScaleModeReactive   = ScalingMode("REACTIVE")
+	ScaleModeProactive  = ScalingMode("PROACTIVE")
+	ScaleModePredictive = ScalingMode("PREDICTIVE")
 )
 
 type ScalingType string
 
 const (
-	ScaleTypeSingle   ScalingType = "SINGLE"
-	ScaleTypeVoted    ScalingType = "VOTED"
-	ScaleTypeWeighted ScalingType = "WEIGHTED"
+	ScaleTypeSingle   = ScalingType("SINGLE")
+	ScaleTypeVoted    = ScalingType("VOTED")
+	ScaleTypeWeighted = ScalingType("WEIGHTED")
 )
 
 type Security struct {

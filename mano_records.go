@@ -3,10 +3,10 @@ package openbaton
 type LinkStatus string
 
 const (
-	LinkDown                           LinkStatus = "LINKDOWN"
-	LinkNormalOperation                LinkStatus = "NORMALOPERATION"
-	LinkDegradeOperation               LinkStatus = "DEGRADEDOPERATION"
-	LinkOfflineThroughManagementAction LinkStatus = "OFFLINETHROUGHMANAGEMENTACTION"
+	LinkDown                           = LinkStatus("LINKDOWN")
+	LinkNormalOperation                = LinkStatus("NORMALOPERATION")
+	LinkDegradeOperation               = LinkStatus("DEGRADEDOPERATION")
+	LinkOfflineThroughManagementAction = LinkStatus("OFFLINETHROUGHMANAGEMENTACTION")
 )
 
 // NetworkServiceRecord as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
