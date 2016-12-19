@@ -7,9 +7,9 @@ type InternalVirtualLink struct {
 }
 
 type NetworkForwardingPath struct {
-	ID string `json:"id"`
-	Version int `json:"version"` 
-	Policy *Policy `json:"policy"`
+	ID         string            `json:"id"`
+	Version    int               `json:"version"`
+	Policy     *Policy           `json:"policy"`
 	Connection map[string]string `json:"connection"`
 }
 

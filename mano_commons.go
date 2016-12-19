@@ -11,7 +11,7 @@ type AutoScalePolicy struct {
 	Mode               ScalingMode     `json:"mode"`
 	Type               ScalingType     `json:"type"`
 	Alarms             []*ScalingAlarm `json:"alarms"`
-	Actions            []ScalingAction `json:"actions"`
+	Actions            []*ScalingAction `json:"actions"`
 }
 
 type ConnectionPoint struct {
@@ -83,19 +83,19 @@ type LifecycleEvent struct {
 
 // NetworkServiceDeploymentFlavour as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type NetworkServiceDeploymentFlavour struct {
-	Vendor string `json:"vendor"`
-	Version string `json:"version"`
-	NumberOfEndpoints int `json:"number_of_endpoints"`
-	ParentNs string `json:"parent_ns"`
-	VNFFGRReference []*VNFForwardingGraphRecord `json:"vnffgr_reference"`
-	DescriptorReference string `json:"descriptor_reference"`
-	VimID string `json:"vim_id"`
-	AllocatedCapacity []string `json:"allocated_capacity"`
-	Status LinkStatus `json:"status"`
-	Notification []string `json:"notification"`
-	LifecycleEventHistory []*LifecycleEvent `json:"lifecycle_event_history"`
-	AuditLog []string `json:"audit_log"` 
-	Connection []string `json:"connection"`
+	Vendor                string                      `json:"vendor"`
+	Version               string                      `json:"version"`
+	NumberOfEndpoints     int                         `json:"number_of_endpoints"`
+	ParentNs              string                      `json:"parent_ns"`
+	VNFFGRReference       []*VNFForwardingGraphRecord `json:"vnffgr_reference"`
+	DescriptorReference   string                      `json:"descriptor_reference"`
+	VimID                 string                      `json:"vim_id"`
+	AllocatedCapacity     []string                    `json:"allocated_capacity"`
+	Status                LinkStatus                  `json:"status"`
+	Notification          []string                    `json:"notification"`
+	LifecycleEventHistory []*LifecycleEvent           `json:"lifecycle_event_history"`
+	AuditLog              []string                    `json:"audit_log"`
+	Connection            []string                    `json:"connection"`
 }
 
 type RedundancyModel string
