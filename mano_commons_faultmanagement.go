@@ -10,3 +10,7 @@ const (
 	FaultSwitchToStandby      FaultManagementAction = "SWITCH_TO_STANDBY"
 	FaultSwitchToActive       FaultManagementAction = "SWITCH_TO_ACTIVE"
 )
+
+type VRFaultManagementPolicy struct {
+	Action FaultManagementAction `json:"action"`
+}
