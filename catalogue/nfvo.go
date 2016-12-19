@@ -53,11 +53,38 @@ type HistoryLifecycleEvent struct {
 	ExecutedAt  string `json:"executedAt"`
 }
 
+type Location struct {
+	ID string `json:"id"`
+	Version int `json:"id"`
+	Name string `json:"id"`
+	Latitude string `json:"id"`
+	Longitude string `json:"id"`
+}
+
 type Script struct {
 	ID string `json:"id"`
 	Version int `json:"version"`
 	Name string `json:"name"`
 	Payload []byte `json:"-"`
+}
+
+type VIMInstance struct {
+	ID string `json:"id"`
+	Version int `json:"version"`
+	Name string `json:"name"`
+	AuthURL string `json:"authUrl"`
+	Tenant string `json:"tenant"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	KeyPair string `json:"keyPair"`
+	Location *Location `json:"location"`
+	SecurityGroups []string `json:"securityGroups"`
+	Flavours []*DeploymentFlavour `json:"flavours"`
+	Type string `json:"type"`
+	Images []*NFVImage `json:"images"`
+	Networks []*Network `json:"networks"`
+	ProjectID string `json:"projectId"`
+	Active bool `json:"active"`
 }
 
 type VNFCDependencyParameters struct {
