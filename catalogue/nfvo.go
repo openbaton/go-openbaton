@@ -54,53 +54,73 @@ type HistoryLifecycleEvent struct {
 }
 
 type Location struct {
-	ID string `json:"id"`
-	Version int `json:"id"`
-	Name string `json:"id"`
-	Latitude string `json:"id"`
+	ID        string `json:"id"`
+	Version   int    `json:"id"`
+	Name      string `json:"id"`
+	Latitude  string `json:"id"`
 	Longitude string `json:"id"`
 }
 
+type Network struct {
+	ID       string    `json:"id"`
+	Version  int       `json:"version"`
+	Name     string    `json:"name"`
+	ExtID    string    `json:"extId"`
+	External bool      `json:"external"`
+	Shared   bool      `json:"shared"`
+	Subnets  []*Subnet `json:"subnets"`
+}
+
 type NFVImage struct {
-	ID string `json:"id"`
-	Version int `json:"version"`
-	ExtID string `json:"extId"`
-	Name string `json:"name"`
-	MinRAM int64 `json:"minRam"`
-	MinDiskSpace int64 `json:"minDiskSpace"`
-	MinCPU string `json:"minCPU"`
-	Public bool `json:"public"`
-	DiskFormat string `json:"diskFormat"`
+	ID              string `json:"id"`
+	Version         int    `json:"version"`
+	ExtID           string `json:"extId"`
+	Name            string `json:"name"`
+	MinRAM          int64  `json:"minRam"`
+	MinDiskSpace    int64  `json:"minDiskSpace"`
+	MinCPU          string `json:"minCPU"`
+	Public          bool   `json:"public"`
+	DiskFormat      string `json:"diskFormat"`
 	ContainerFormat string `json:"containerFormat"`
-	Created string `json:"created"` // Actually a date; implement a Marshaller if needed
-	Updated string `json:"updated"` // see above
-	IsPublic bool `json:"isPublic"`
+	Created         string `json:"created"` // Actually a date; implement a Marshaller if needed
+	Updated         string `json:"updated"` // see above
+	IsPublic        bool   `json:"isPublic"`
 }
 
 type Script struct {
-	ID string `json:"id"`
-	Version int `json:"version"`
-	Name string `json:"name"`
+	ID      string `json:"id"`
+	Version int    `json:"version"`
+	Name    string `json:"name"`
 	Payload []byte `json:"-"`
 }
 
+type Subnet struct {
+	ID        string `json:"id"`
+	Version   int    `json:"version"`
+	Name      string `json:"name"`
+	ExtID     string `json:"extId"`
+	NetworkID string `json:"networkId"`
+	CIDR      string `json:"cidr"`
+	GatewayIP string `json:"gatewayIp"`
+}
+
 type VIMInstance struct {
-	ID string `json:"id"`
-	Version int `json:"version"`
-	Name string `json:"name"`
-	AuthURL string `json:"authUrl"`
-	Tenant string `json:"tenant"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	KeyPair string `json:"keyPair"`
-	Location *Location `json:"location"`
-	SecurityGroups []string `json:"securityGroups"`
-	Flavours []*DeploymentFlavour `json:"flavours"`
-	Type string `json:"type"`
-	Images []*NFVImage `json:"images"`
-	Networks []*Network `json:"networks"`
-	ProjectID string `json:"projectId"`
-	Active bool `json:"active"`
+	ID             string               `json:"id"`
+	Version        int                  `json:"version"`
+	Name           string               `json:"name"`
+	AuthURL        string               `json:"authUrl"`
+	Tenant         string               `json:"tenant"`
+	Username       string               `json:"username"`
+	Password       string               `json:"password"`
+	KeyPair        string               `json:"keyPair"`
+	Location       *Location            `json:"location"`
+	SecurityGroups []string             `json:"securityGroups"`
+	Flavours       []*DeploymentFlavour `json:"flavours"`
+	Type           string               `json:"type"`
+	Images         []*NFVImage          `json:"images"`
+	Networks       []*Network           `json:"networks"`
+	ProjectID      string               `json:"projectId"`
+	Active         bool                 `json:"active"`
 }
 
 type VNFCDependencyParameters struct {
