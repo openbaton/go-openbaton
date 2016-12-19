@@ -28,3 +28,10 @@ type HistoryLifecycleEvent struct {
 	Description string `json:"description"`
 	ExecutedAt  string `json:"executedAt"`
 }
+
+type VNFCDependencyParameters struct {
+	VNFCID string `json:"vnfcId"`
+	ID string `json:"id"`
+	Version int `json:"version"`
+	Parameters map[string]*DependencyParameters `json:"parameters"`
+}
