@@ -73,7 +73,7 @@ type Ip struct {
 	Ip      string `json:"ip"`
 }
 
-// A LifecycleEvent as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+// LifecycleEvent as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type LifecycleEvent struct {
 	ID              string   `json:"id"`
 	Version         int      `json:"version"`
@@ -81,20 +81,21 @@ type LifecycleEvent struct {
 	LifecycleEvents []string `json:"lifecycle_events"`
 }
 
+// NetworkServiceDeploymentFlavour as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type NetworkServiceDeploymentFlavour struct {
-	vendor string
-	version string
-	number_of_endpoints int
-	parent_ns string
-	vnffgr_reference []*VNFForwardingGraphRecord
-	descriptor_reference string
-	vim_id string
-	allocated_capacity []string
-	status LinkStatus
-	notification []string
-	lifecycle_event_history []*LifecycleEvent
-	audit_log []string
-	connection []string
+	Vendor string `json:"vendor"`
+	Version string `json:"version"`
+	NumberOfEndpoints int `json:"number_of_endpoints"`
+	ParentNs string `json:"parent_ns"`
+	VNFFGRReference []*VNFForwardingGraphRecord `json:"vnffgr_reference"`
+	DescriptorReference string `json:"descriptor_reference"`
+	VimID string `json:"vim_id"`
+	AllocatedCapacity []string `json:"allocated_capacity"`
+	Status LinkStatus `json:"status"`
+	Notification []string `json:"notification"`
+	LifecycleEventHistory []*LifecycleEvent `json:"lifecycle_event_history"`
+	AuditLog []string `json:"audit_log"` 
+	Connection []string `json:"connection"`
 }
 
 type RedundancyModel string
