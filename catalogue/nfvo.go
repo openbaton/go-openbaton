@@ -1,5 +1,29 @@
 package catalogue
 
+type Action string
+
+const (
+	ActionGrantOperation         = Action("GRANT_OPERATION")
+	ActionAllocateResources      = Action("ALLOCATE_RESOURCES")
+	ActionScaleIn                = Action("SCALE_IN")
+	ActionScaleOut               = Action("SCALE_OUT")
+	ActionScaling                = Action("SCALING")
+	ActionError                  = Action("ERROR")
+	ActionReleaseResources       = Action("RELEASE_RESOURCES")
+	ActionInstantiate            = Action("INSTANTIATE")
+	ActionModify                 = Action("MODIFY")
+	ActionHeal                   = Action("HEAL")
+	ActionUpdateVNFR             = Action("UPDATEVNFR")
+	ActionUpdate                 = Action("UPDATE")
+	ActionScaled                 = Action("SCALED")
+	ActionReleaseResourcesFinish = Action("RELEASE_RESOURCES_FINISH")
+	ActionInstantiateFinish      = Action("INSTANTIATE_FINISH")
+	ActionConfigure              = Action("CONFIGURE")
+	ActionStart                  = Action("START")
+	ActionStop                   = Action("STOP")
+	ActionResume                 = Action("RESUME")
+)
+
 type ConfigurationParameter struct {
 	ID          string `json:"id"`
 	Version     int    `json:"version"`
@@ -30,8 +54,8 @@ type HistoryLifecycleEvent struct {
 }
 
 type VNFCDependencyParameters struct {
-	VNFCID string `json:"vnfcId"`
-	ID string `json:"id"`
-	Version int `json:"version"`
+	VNFCID     string                           `json:"vnfcId"`
+	ID         string                           `json:"id"`
+	Version    int                              `json:"version"`
 	Parameters map[string]*DependencyParameters `json:"parameters"`
 }
