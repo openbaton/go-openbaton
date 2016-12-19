@@ -53,6 +53,13 @@ type HistoryLifecycleEvent struct {
 	ExecutedAt  string `json:"executedAt"`
 }
 
+type Script struct {
+	ID string `json:"id"`
+	Version int `json:"version"`
+	Name string `json:"name"`
+	Payload []byte `json:"-"`
+}
+
 type VNFCDependencyParameters struct {
 	VNFCID     string                           `json:"vnfcId"`
 	ID         string                           `json:"id"`
