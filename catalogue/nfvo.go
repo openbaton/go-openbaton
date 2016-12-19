@@ -87,6 +87,10 @@ type NFVImage struct {
 	IsPublic        bool   `json:"isPublic"`
 }
 
+type NFVMessage interface {
+	Action() Action
+}
+
 type Script struct {
 	ID      string `json:"id"`
 	Version int    `json:"version"`
