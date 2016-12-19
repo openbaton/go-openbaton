@@ -61,6 +61,22 @@ type Location struct {
 	Longitude string `json:"id"`
 }
 
+type NFVImage struct {
+	ID string `json:"id"`
+	Version int `json:"version"`
+	ExtID string `json:"extId"`
+	Name string `json:"name"`
+	MinRAM int64 `json:"minRam"`
+	MinDiskSpace int64 `json:"minDiskSpace"`
+	MinCPU string `json:"minCPU"`
+	Public bool `json:"public"`
+	DiskFormat string `json:"diskFormat"`
+	ContainerFormat string `json:"containerFormat"`
+	Created string `json:"created"` // Actually a date; implement a Marshaller if needed
+	Updated string `json:"updated"` // see above
+	IsPublic bool `json:"isPublic"`
+}
+
 type Script struct {
 	ID string `json:"id"`
 	Version int `json:"version"`

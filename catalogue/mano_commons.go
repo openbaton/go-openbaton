@@ -32,6 +32,17 @@ type ConstituentVNF struct {
 	Version               int             `json:"version"`
 }
 
+// DeploymentFlavour as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type DeploymentFlavour struct {
+	ID string `json:"id"`
+	Version int `json:"version"`
+	FlavourKey string `json:"flavour_key"`
+	ExtID string `json:"extId"`
+	RAM int `json:"ram"`
+	Disk int `json:"disk"`
+	VCPUs int `json:"vcpus"`
+}
+
 type Event string
 
 const (
