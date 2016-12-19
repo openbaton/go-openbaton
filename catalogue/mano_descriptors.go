@@ -1,4 +1,4 @@
-package openbaton
+package catalogue
 
 // An extended Virtual Link based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type InternalVirtualLink struct {

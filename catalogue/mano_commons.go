@@ -1,4 +1,4 @@
-package openbaton
+package catalogue
 
 type AutoScalePolicy struct {
 	ID                 string           `json:"id"`

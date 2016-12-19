@@ -1,4 +1,4 @@
-package openbaton
+package catalogue
 
 type PerceivedSeverity string
 

@@ -1,4 +1,4 @@
-package openbaton
+package catalogue
 
 type Criteria struct {
 	ID                 string       `json:"id"`
