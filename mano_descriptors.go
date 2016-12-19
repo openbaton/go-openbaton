@@ -42,9 +42,9 @@ type VirtualLinkDescriptor struct {
 	Vendor            string    `json:"vendor"`
 	DescriptorVersion string    `json:"descriptor_version"`
 	NumberOfEndpoints int       `json:"number_of_endpoints"`
-	connection        []string  `json:"connection"`
-	vld_security      *Security `json:"vld_security"`
-	name              string
+	Connection        []string  `json:"connection"`
+	VLDSecurity       *Security `json:"vld_security"`
+	Name              string    `json:"name"`
 }
 
 // A Virtual Network Function Component as defined by ETSI GS NFV-MAN 001 V1.1.1

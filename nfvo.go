@@ -16,6 +16,12 @@ type Configuration struct {
 	Name                    string                    `json:"name"`
 }
 
+type DependencyParameters struct {
+	ID         string            `json:"id"`
+	Version    int               `json:"version"`
+	Parameters map[string]string `json:"parameters"`
+}
+
 type HistoryLifecycleEvent struct {
 	ID          string `json:"id"`
 	Event       string `json:"event"`

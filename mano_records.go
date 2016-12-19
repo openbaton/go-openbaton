@@ -170,3 +170,12 @@ type VNFForwardingGraphRecord struct {
 	NumberOfPnfs          int                             `json:"number_of_pnfs"`
 	NumberOfVirtualLinks  int                             `json:"number_of_virtual_links"`
 }
+
+type VNFRecordDependency struct {
+	ID             string                               `json:"id"`
+	Version        int                                  `json:"version"`
+	Target         string                               `json:"target"`
+	Parameters     map[string]*DependencyParameters     `json:"parameters"`
+	VNFCParameters map[string]*VNFCDependencyParameters `json:"vnfcParameters"`
+	IDType         map[string]string                    `json:"idType"`
+}
