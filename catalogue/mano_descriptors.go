@@ -13,6 +13,14 @@ type NetworkForwardingPath struct {
 	Connection map[string]string `json:"connection"`
 }
 
+// VDUDepencency as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type VDUDependency struct {
+	ID      string                 `json:"id"`
+	Version int                    `json:"version"`
+	Source  *VirtualDeploymentUnit `json:"source"`
+	Target  *VirtualDeploymentUnit `json:"target"`
+}
+
 type VirtualDeploymentUnit struct {
 	ID                              string                     `json:"id"`
 	Version                         int                        `json:"version"`
@@ -47,7 +55,27 @@ type VirtualLinkDescriptor struct {
 	Name              string    `json:"name"`
 }
 
-// A Virtual Network Function Component as defined by ETSI GS NFV-MAN 001 V1.1.1
+// VirtualNetworkFunctionDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type VirtualNetworkFunctionDescriptor struct {
+	LifecycleEvent       []*LifecycleEvent              `json:"lifecycle_event"`
+	Configurations       Configuration                  `json:"configurations"`
+	VDU                  []*VirtualDeploymentUnit       `json:"vdu"`
+	VirtualLink          []*InternalVirtualLink         `json:"virtual_link"`
+	VDUDependency        []*VDUDependency               `json:"vdu_dependency"`
+	DeploymentFlavour    []*VNFDeploymentFlavour        `json:"deployment_flavour"`
+	ManifestFile         string                         `json:"manifest_file"`
+	ManifestFileSecurity []*Security                    `json:"manifest_file_security"`
+	Type                 string                         `json:"type"`
+	Endpoint             string                         `json:"-"`
+	VNFPackageLocation   string                         `json:"vnfPackageLocation"`
+	Requires             map[string]*RequiresParameters `json:"requires"`
+	Provides             []string                       `json:"provides"`
+	CyclicDependency     bool                           `json:"-"`
+	Connection_point     []*ConnectionPoint             `json:"connection_point"`
+	VNFDConnection_point []*VNFDConnectionPoint         `json:"VNFDConnection_point"`
+}
+
+// A VNFComponent as defined by ETSI GS NFV-MAN 001 V1.1.1
 type VNFComponent struct {
 	ID              string                 `json:"id"`
 	Version         int                    `json:"version"`

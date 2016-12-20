@@ -91,6 +91,12 @@ type NFVMessage interface {
 	Action() Action
 }
 
+type RequiresParameters struct {
+	ID         string   `json:"id"`
+	Version    int      `json:"version"`
+	Parameters []string `json:"parameters"`
+}
+
 type Script struct {
 	ID      string `json:"id"`
 	Version int    `json:"version"`

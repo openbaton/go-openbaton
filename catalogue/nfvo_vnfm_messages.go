@@ -1,22 +1,31 @@
 package catalogue
 
-type VNFMAllocateResourcesMessage struct {
+type vnfmAllocateResourcesMessage struct {
 	VNFR         *VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
 	VIMInstances map[string]*VIMInstance       `json:"vimInstances"`
 	Userdata     string                        `json:"userdata"`
-	keyPairs     []*Key                        `json:"keyPairs"`
+	KeyPairs     []*Key                        `json:"keyPairs"`
 }
 
-func (*VNFMAllocateResourcesMessage) Action() Action {
-	return ActionAllocateResources
-}
-
-type VNFMErrorMessage struct {
+type vnfmErrorMessage struct {
 	NSRID     string                        `json:"nsrId"`
 	VNFR      *VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
 	Exception map[string]interface{}        `json:"exception"` // I don't know how to deserialize a Java exception
 }
 
-func (*VNFMErrorMessage) Action() Action {
-	return ActionError
+type vnfmGenericMessage struct {
+	VNFR                *VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
+	VNFRecordDependency *VNFRecordDependency          `json:"vnfRecordDependency"`
+}
+
+type vnfmGrantLifecycleOperationMessage struct {
+	virtualNetworkFunctionDescriptor *VirtualNetworkFunctionDescriptor
+	vduSet                           []*VirtualDeploymentUnit
+	deploymentFlavourKey             string
+}
+
+type vnfmOrHealedMessage struct {
+	virtualNetworkFunctionRecord *VirtualNetworkFunctionRecord
+	vnfcInstance                 *VNFCInstance
+	cause                        string
 }

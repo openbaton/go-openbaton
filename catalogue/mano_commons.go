@@ -20,6 +20,15 @@ type ConnectionPoint struct {
 	Type    string `json:"type"`
 }
 
+// ConstituentVDU as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+type ConstituentVDU struct {
+	ID                string `json:"id"`
+	Version           int    `json:"version"`
+	VDUReference      string `json:"vdu_reference"`
+	NumberOfInstances int    `json:"number_of_instances"`
+	ConstituentVNFC   string `json:"constituent_vnfc"`
+}
+
 // ConstituentVNF as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type ConstituentVNF struct {
 	ID                    string          `json:"id"`
@@ -189,4 +198,10 @@ type VirtualLink struct {
 	TestAccess       []string `json:"test_access"`
 	ConnectivityType []string `json:"connectivity_type"`
 	Name             string   `json:"name"`
+}
+
+type VNFDeploymentFlavour struct {
+	DeploymentFlavour
+	DfConstraint   []string          `json:"df_constraint"`
+	ConstituentVDU []*ConstituentVDU `json:"constituent_vdu"`
 }
