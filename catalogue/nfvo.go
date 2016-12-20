@@ -22,6 +22,8 @@ const (
 	ActionStart                  = Action("START")
 	ActionStop                   = Action("STOP")
 	ActionResume                 = Action("RESUME")
+
+	NoActionSpecified = Action("")
 )
 
 type ConfigurationParameter struct {
