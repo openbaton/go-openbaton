@@ -137,3 +137,16 @@ type VNFCDependencyParameters struct {
 	Version    int                              `json:"version"`
 	Parameters map[string]*DependencyParameters `json:"parameters"`
 }
+
+type VNFPackage struct {
+	ID          string    `json:"id"`
+	Version     int       `json:"version"`
+	Name        string    `json:"name"`
+	NFVOVersion string    `json:"nfvo_version"`
+	VIMTypes    []string  `json:"vimTypes"`
+	ImageLink   string    `json:"imageLink"`
+	ScriptsLink string    `json:"scriptsLink"`
+	Image       *NFVImage `json:"image"`
+	Scripts     []*Script `json:"scripts"`
+	ProjectID   string    `json:"projectId"`
+}
