@@ -5,61 +5,60 @@ import (
 )
 
 type OrAllocateResources struct {
-    VDUSet []*catalogue.VirtualDeploymentUnit `json:"vduSet"`
+	VDUSet []*catalogue.VirtualDeploymentUnit `json:"vduSet"`
 }
 
 type OrError struct {
-    vnfr *catalogue.VirtualNetworkFunctionRecord
-    message string
+	VNFR    *catalogue.VirtualNetworkFunctionRecord `json:"vnfr"`
+	Message string                                  `json:"message"`
 }
 
 type OrGeneric struct {
-    vnfr *catalogue.VirtualNetworkFunctionRecord
-    vnfrd *catalogue.VNFRecordDependency
+	VNFR           *catalogue.VirtualNetworkFunctionRecord `json:"vnfr"`
+	VNFRDependency *catalogue.VNFRecordDependency          `json:"vnfrd"`
 }
 
 type OrGrantLifecycleOperation struct {
-    grantAllowed bool
-    vduVim map[string]*catalogue.VIMInstance
-    virtualNetworkFunctionRecord *catalogue.VirtualNetworkFunctionRecord
+	GrantAllowed bool                                    `json:"grantAllowed"`
+	VDUVIM       map[string]*catalogue.VIMInstance       `json:"vduVim"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
 }
 
 type OrHealVNFRequest struct {
-    vnfcInstance *catalogue.VNFCInstance
-    virtualNetworkFunctionRecord *catalogue.VirtualNetworkFunctionRecord
-    cause string
+	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
+	Cause        string                                  `json:"cause"`
 }
 
 type OrInstantiate struct {
-    vnfd *catalogue.VirtualNetworkFunctionDescriptor
-    vnfdf *catalogue.VNFDeploymentFlavour
-    vnfInstanceName string
-    vlrs []*catalogue.VirtualLinkRecord
-    extension map[string]string
-    vimInstances map[string][]*catalogue.VIMInstance
-    vnfPackage *catalogue.VNFPackage
-    keys []*catalogue.Key
+	VNFD            *catalogue.VirtualNetworkFunctionDescriptor `json:"vnfd"`
+	VNFDFlavour     *catalogue.VNFDeploymentFlavour             `json:"vnfdf"`
+	VNFInstanceName string                                      `json:"vnfInstanceName"`
+	VLRs            []*catalogue.VirtualLinkRecord              `json:"vlrs"`
+	Extension       map[string]string                           `json:"extension"`
+	VIMInstances    map[string][]*catalogue.VIMInstance         `json:"vimInstances"`
+	VNFPackage      *catalogue.VNFPackage                       `json:"vnfPackage"`
+	Keys            []*catalogue.Key                            `json:"keys"`
 }
 
 type OrScaling struct {
-    component *catalogue.VNFComponent
-    vnfcInstance *catalogue.VNFCInstance
-    vimInstance *catalogue.VimInstance
-    vnfPackage *catalogue.VNFPackage
-    virtualNetworkFunctionRecord *catalogue.VirtualNetworkFunctionRecord
-    dependency *catalogue.VNFRecordDependency
-    mode string
-    extension map[string]string
+	Component    *catalogue.VNFComponent                 `json:"component"`
+	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance"`
+	VIMInstance  *catalogue.VIMInstance                  `json:"vimInstance"`
+	VNFPackage   *catalogue.VNFPackage                   `json:"vnfPackage"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
+	Dependency   *catalogue.VNFRecordDependency          `json:"dependency"`
+	Mode         string                                  `json:"mode"`
+	Extension    map[string]string                       `json:"extension"`
 }
 
 type OrStartStop struct {
-    virtualNetworkFunctionRecord *catalogue.VirtualNetworkFunctionRecord
-    vnfcInstance *catalogue.VNFCInstance
-    vnfrd *catalogue.VNFRecordDependency
-    vnfrDependency *catalogue.VNFRecordDependency
+	VNFR           *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
+	VNFCInstance   *catalogue.VNFCInstance                 `json:"vnfcInstance"`
+	VNFRDependency *catalogue.VNFRecordDependency          `json:"vnfrDependency"`
 }
 
 type OrUpdate struct {
-    script *catalogue.Script
-    vnfr *catalogue.VirtualNetworkFunctionRecord
+	Script *catalogue.Script                       `json:"script"`
+	VNFR   *catalogue.VirtualNetworkFunctionRecord `json:"vnfr"`
 }

@@ -71,29 +71,35 @@ func (msg *message) UnmarshalJSON(data []byte) error {
 
 func (msg *message) unmarshalNFVOMessage(data []byte) error {
 	switch msg.Action() {
-	case catalogue.ActionAllocateResources:
 	case catalogue.ActionGrantOperation:
+		msg.content = &OrGrantLifecycleOperation{}
+
 	case catalogue.ActionScaleIn:
+		fallthrough
 	case catalogue.ActionScaleOut:
+		fallthrough
 	case catalogue.ActionScaling:
+		msg.content = &OrScaling{}
+
 	case catalogue.ActionError:
-	case catalogue.ActionReleaseResources:
+		msg.content = &OrError{}
+
 	case catalogue.ActionInstantiate:
-	case catalogue.ActionModify:
+		msg.content = &OrInstantiate{}
+
 	case catalogue.ActionHeal:
-	case catalogue.ActionUpdateVNFR:
+		msg.content = &OrHealVNFRequest{}
+
 	case catalogue.ActionUpdate:
-	case catalogue.ActionScaled:
-	case catalogue.ActionReleaseResourcesFinish:
-	case catalogue.ActionInstantiateFinish:
-	case catalogue.ActionConfigure:
+		msg.content = &OrUpdate{}
+
 	case catalogue.ActionStart:
+		fallthrough
 	case catalogue.ActionStop:
-	case catalogue.ActionResume:
-	case catalogue.NoActionSpecified:
+		msg.content = &OrStartStop{}
 
 	default:
-		return fmt.Errorf("received an invalid action while unmarshaling an NFVO message: %s", msg.Action())
+		msg.content = &OrGeneric{}
 	}
 
 	return json.Unmarshal(data, &msg.content)
