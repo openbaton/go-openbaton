@@ -13,7 +13,7 @@ func (orMessage) From() SenderType {
 type OrAllocateResources struct {
 	orMessage
 
-	VDUSet []*catalogue.VirtualDeploymentUnit `json:"vduSet"`
+	VDUSet []*catalogue.VirtualDeploymentUnit `json:"vduSet,omitempty"`
 }
 
 func (OrAllocateResources) DefaultAction() catalogue.Action {
@@ -23,8 +23,8 @@ func (OrAllocateResources) DefaultAction() catalogue.Action {
 type OrError struct {
 	orMessage
 
-	VNFR    *catalogue.VirtualNetworkFunctionRecord `json:"vnfr"`
-	Message string                                  `json:"message"`
+	VNFR    *catalogue.VirtualNetworkFunctionRecord `json:"vnfr,omitempty"`
+	Message string                                  `json:"message,omitempty"`
 }
 
 func (OrError) DefaultAction() catalogue.Action {
@@ -34,8 +34,8 @@ func (OrError) DefaultAction() catalogue.Action {
 type OrGeneric struct {
 	orMessage
 
-	VNFR           *catalogue.VirtualNetworkFunctionRecord `json:"vnfr"`
-	VNFRDependency *catalogue.VNFRecordDependency          `json:"vnfrd"`
+	VNFR           *catalogue.VirtualNetworkFunctionRecord `json:"vnfr,omitempty"`
+	VNFRDependency *catalogue.VNFRecordDependency          `json:"vnfrd,omitempty"`
 }
 
 func (OrGeneric) DefaultAction() catalogue.Action {
@@ -46,8 +46,8 @@ type OrGrantLifecycleOperation struct {
 	orMessage
 
 	GrantAllowed bool                                    `json:"grantAllowed"`
-	VDUVIM       map[string]*catalogue.VIMInstance       `json:"vduVim"`
-	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
+	VDUVIM       map[string]*catalogue.VIMInstance       `json:"vduVim,omitempty"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
 }
 
 func (OrGrantLifecycleOperation) DefaultAction() catalogue.Action {
@@ -57,9 +57,9 @@ func (OrGrantLifecycleOperation) DefaultAction() catalogue.Action {
 type OrHealVNFRequest struct {
 	orMessage
 
-	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance"`
-	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	Cause        string                                  `json:"cause"`
+	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance,omitempty"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	Cause        string                                  `json:"cause,omitempty"`
 }
 
 func (OrHealVNFRequest) DefaultAction() catalogue.Action {
@@ -69,14 +69,14 @@ func (OrHealVNFRequest) DefaultAction() catalogue.Action {
 type OrInstantiate struct {
 	orMessage
 
-	VNFD            *catalogue.VirtualNetworkFunctionDescriptor `json:"vnfd"`
-	VNFDFlavour     *catalogue.VNFDeploymentFlavour             `json:"vnfdf"`
-	VNFInstanceName string                                      `json:"vnfInstanceName"`
-	VLRs            []*catalogue.VirtualLinkRecord              `json:"vlrs"`
-	Extension       map[string]string                           `json:"extension"`
-	VIMInstances    map[string][]*catalogue.VIMInstance         `json:"vimInstances"`
-	VNFPackage      *catalogue.VNFPackage                       `json:"vnfPackage"`
-	Keys            []*catalogue.Key                            `json:"keys"`
+	VNFD            *catalogue.VirtualNetworkFunctionDescriptor `json:"vnfd,omitempty"`
+	VNFDFlavour     *catalogue.VNFDeploymentFlavour             `json:"vnfdf,omitempty"`
+	VNFInstanceName string                                      `json:"vnfInstanceName,omitempty"`
+	VLRs            []*catalogue.VirtualLinkRecord              `json:"vlrs,omitempty"`
+	Extension       map[string]string                           `json:"extension,omitempty"`
+	VIMInstances    map[string][]*catalogue.VIMInstance         `json:"vimInstances,omitempty"`
+	VNFPackage      *catalogue.VNFPackage                       `json:"vnfPackage,omitempty"`
+	Keys            []*catalogue.Key                            `json:"keys,omitempty"`
 }
 
 func (OrInstantiate) DefaultAction() catalogue.Action {
@@ -86,14 +86,14 @@ func (OrInstantiate) DefaultAction() catalogue.Action {
 type OrScaling struct {
 	orMessage
 
-	Component    *catalogue.VNFComponent                 `json:"component"`
-	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance"`
-	VIMInstance  *catalogue.VIMInstance                  `json:"vimInstance"`
-	VNFPackage   *catalogue.VNFPackage                   `json:"vnfPackage"`
-	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	Dependency   *catalogue.VNFRecordDependency          `json:"dependency"`
-	Mode         string                                  `json:"mode"`
-	Extension    map[string]string                       `json:"extension"`
+	Component    *catalogue.VNFComponent                 `json:"component,omitempty"`
+	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance,omitempty"`
+	VIMInstance  *catalogue.VIMInstance                  `json:"vimInstance,omitempty"`
+	VNFPackage   *catalogue.VNFPackage                   `json:"vnfPackage,omitempty"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	Dependency   *catalogue.VNFRecordDependency          `json:"dependency,omitempty"`
+	Mode         string                                  `json:"mode,omitempty"`
+	Extension    map[string]string                       `json:"extension,omitempty"`
 }
 
 func (OrScaling) DefaultAction() catalogue.Action {
@@ -103,9 +103,9 @@ func (OrScaling) DefaultAction() catalogue.Action {
 type OrStartStop struct {
 	orMessage
 
-	VNFR           *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	VNFCInstance   *catalogue.VNFCInstance                 `json:"vnfcInstance"`
-	VNFRDependency *catalogue.VNFRecordDependency          `json:"vnfrDependency"`
+	VNFR           *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	VNFCInstance   *catalogue.VNFCInstance                 `json:"vnfcInstance,omitempty"`
+	VNFRDependency *catalogue.VNFRecordDependency          `json:"vnfrDependency,omitempty"`
 }
 
 func (OrStartStop) DefaultAction() catalogue.Action {
@@ -115,8 +115,8 @@ func (OrStartStop) DefaultAction() catalogue.Action {
 type OrUpdate struct {
 	orMessage
 
-	Script *catalogue.Script                       `json:"script"`
-	VNFR   *catalogue.VirtualNetworkFunctionRecord `json:"vnfr"`
+	Script *catalogue.Script                       `json:"script,omitempty"`
+	VNFR   *catalogue.VirtualNetworkFunctionRecord `json:"vnfr,omitempty"`
 }
 
 func (OrUpdate) DefaultAction() catalogue.Action {

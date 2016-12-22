@@ -121,7 +121,7 @@ type VIMInstance struct {
 	Username       string               `json:"username"`
 	Password       string               `json:"password"`
 	KeyPair        string               `json:"keyPair"`
-	Location       *Location            `json:"location"`
+	Location       *Location            `json:"location,omitempty"`
 	SecurityGroups []string             `json:"securityGroups"`
 	Flavours       []*DeploymentFlavour `json:"flavours"`
 	Type           string               `json:"type"`
@@ -144,9 +144,9 @@ type VNFPackage struct {
 	Name        string    `json:"name"`
 	NFVOVersion string    `json:"nfvo_version"`
 	VIMTypes    []string  `json:"vimTypes"`
-	ImageLink   string    `json:"imageLink"`
-	ScriptsLink string    `json:"scriptsLink"`
-	Image       *NFVImage `json:"image"`
+	ImageLink   string    `json:"imageLink,omitempty"`
+	ScriptsLink string    `json:"scriptsLink,omitempty"`
+	Image       *NFVImage `json:"image,omitempty"`
 	Scripts     []*Script `json:"scripts"`
 	ProjectID   string    `json:"projectId"`
 }

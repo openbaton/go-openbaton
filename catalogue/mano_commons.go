@@ -8,10 +8,10 @@ type AutoScalePolicy struct {
 	ComparisonOperator string           `json:"comparisonOperator"`
 	Period             int              `json:"period"`
 	Cooldown           int              `json:"cooldown"`
-	Mode               ScalingMode      `json:"mode"`
-	Type               ScalingType      `json:"type"`
-	Alarms             []*ScalingAlarm  `json:"alarms"`
-	Actions            []*ScalingAction `json:"actions"`
+	Mode               ScalingMode      `json:"mode,omitempty"`
+	Type               ScalingType      `json:"type,omitempty"`
+	Alarms             []*ScalingAlarm  `json:"alarms,omitempty"`
+	Actions            []*ScalingAction `json:"actions,omitempty"`
 }
 
 type ConnectionPoint struct {
@@ -194,7 +194,7 @@ type VirtualLink struct {
 	ExtID            string   `json:"extId"`
 	RootRequirement  string   `json:"root_requirement"`
 	LeafRequirement  string   `json:"leaf_requirement"`
-	Qos              []string `json:"qos"`
+	QoS              []string `json:"qos"`
 	TestAccess       []string `json:"test_access"`
 	ConnectivityType []string `json:"connectivity_type"`
 	Name             string   `json:"name"`

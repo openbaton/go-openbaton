@@ -1,9 +1,12 @@
 package vnfm
 
-import "github.com/mcilloni/go-openbaton/catalogue"
+import (
+	"github.com/mcilloni/go-openbaton/catalogue"
+	"github.com/mcilloni/go-openbaton/catalogue/messages"
+)
 
-// The Executor interface defines an abstraction of the operations that a VNFM should provide.
-type Executor interface {
+// The Provider interface defines an abstraction of the operations that a VNFM should provide.
+type Provider interface {
 	// CheckEMS is executed to check if the EMS is up and running on a given hostname.
 	// This method may retry multiple times to allow an EMS to start up and register itself.
 	CheckEMS(hostname string) error
@@ -60,12 +63,18 @@ type Executor interface {
 
 	// UpgradeSoftware allows deploying a new software release to a VNF instance.
 	UpgradeSoftware() error
+
+	// UserData returns a string containing UserData.
+	UserData() string
 }
 
-type NFVOHelper interface {
-	Send(msg catalogue.NFVMessage) error
+type NFVOConnector interface {
+	Close() error
 
-	SendAndReceive(msg catalogue.NFVMessage) (catalogue.NFVMessage, error)
+	Exchange(msg messages.NFVMessage) (messages.NFVMessage, error)
+	ExchangeStrings(msg, queue string) (string, error)
 
-	SendAndReceiveStrings(msg, queue string) (string, error)
+	NotifyReceived() (<-chan messages.NFVMessage, error)
+
+	Send(msg messages.NFVMessage) error
 }

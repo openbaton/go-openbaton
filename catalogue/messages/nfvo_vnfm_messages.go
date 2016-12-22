@@ -11,10 +11,10 @@ func (vnfmMessage) From() SenderType {
 type VNFMAllocateResources struct {
 	vnfmMessage
 
-	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	VIMInstances map[string]*catalogue.VIMInstance       `json:"vimInstances"`
-	Userdata     string                                  `json:"userdata"`
-	KeyPairs     []*catalogue.Key                        `json:"keyPairs"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	VIMInstances map[string]*catalogue.VIMInstance       `json:"vimInstances,omitempty"`
+	Userdata     string                                  `json:"userdata,omitempty"`
+	KeyPairs     []*catalogue.Key                        `json:"keyPairs,omitempty"`
 }
 
 func (VNFMAllocateResources) DefaultAction() catalogue.Action {
@@ -24,9 +24,9 @@ func (VNFMAllocateResources) DefaultAction() catalogue.Action {
 type VNFMError struct {
 	vnfmMessage
 
-	NSRID     string                                  `json:"nsrId"`
-	VNFR      *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	Exception map[string]interface{}                  `json:"exception"` // I don't know how to deserialize a Java exception
+	NSRID     string                                  `json:"nsrId,omitempty"`
+	VNFR      *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	Exception map[string]interface{}                  `json:"exception,omitempty"` // I don't know how to deserialize a Java exception
 }
 
 func (VNFMError) DefaultAction() catalogue.Action {
@@ -36,8 +36,8 @@ func (VNFMError) DefaultAction() catalogue.Action {
 type VNFMGeneric struct {
 	vnfmMessage
 
-	VNFR                *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	VNFRecordDependency *catalogue.VNFRecordDependency          `json:"vnfRecordDependency"`
+	VNFR                *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	VNFRecordDependency *catalogue.VNFRecordDependency          `json:"vnfRecordDependency,omitempty"`
 }
 
 func (VNFMGeneric) DefaultAction() catalogue.Action {
@@ -47,9 +47,9 @@ func (VNFMGeneric) DefaultAction() catalogue.Action {
 type VNFMGrantLifecycleOperation struct {
 	vnfmMessage
 
-	VNFD                 *catalogue.VirtualNetworkFunctionDescriptor `json:"virtualNetworkFunctionDescriptor"`
-	VDUSet               []*catalogue.VirtualDeploymentUnit          `json:"vduSet"`
-	DeploymentFlavourKey string                                      `json:"deploymentFlavourKey"`
+	VNFD                 *catalogue.VirtualNetworkFunctionDescriptor `json:"virtualNetworkFunctionDescriptor,omitempty"`
+	VDUSet               []*catalogue.VirtualDeploymentUnit          `json:"vduSet,omitempty"`
+	DeploymentFlavourKey string                                      `json:"deploymentFlavourKey,omitempty"`
 }
 
 func (VNFMGrantLifecycleOperation) DefaultAction() catalogue.Action {
@@ -59,9 +59,9 @@ func (VNFMGrantLifecycleOperation) DefaultAction() catalogue.Action {
 type VNFMHealed struct {
 	vnfmMessage
 
-	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance"`
-	Cause        string                                  `json:"cause"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance,omitempty"`
+	Cause        string                                  `json:"cause,omitempty"`
 }
 
 func (VNFMHealed) DefaultAction() catalogue.Action {
@@ -71,7 +71,7 @@ func (VNFMHealed) DefaultAction() catalogue.Action {
 type VNFMInstantiate struct {
 	vnfmMessage
 
-	VNFR *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
+	VNFR *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
 }
 
 func (VNFMInstantiate) DefaultAction() catalogue.Action {
@@ -81,8 +81,8 @@ func (VNFMInstantiate) DefaultAction() catalogue.Action {
 type VNFMScaled struct {
 	vnfmMessage
 
-	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	vnfcInstance *catalogue.VNFCInstance                 `json:"vnfcInstance"`
+	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance,omitempty"`
 }
 
 func (VNFMScaled) DefaultAction() catalogue.Action {
@@ -92,8 +92,8 @@ func (VNFMScaled) DefaultAction() catalogue.Action {
 type VNFMScaling struct {
 	vnfmMessage
 
-	VNFR     *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	userData string                                  `json:"userData"`
+	VNFR     *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	UserData string                                  `json:"userData,omitempty"`
 }
 
 func (VNFMScaling) DefaultAction() catalogue.Action {
@@ -103,9 +103,9 @@ func (VNFMScaling) DefaultAction() catalogue.Action {
 type VNFMStartStop struct {
 	vnfmMessage
 
-	VNFR           *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord"`
-	VNFCInstance   *catalogue.VNFCInstance                 `json:"vnfcInstance"`
-	VNFRDependency *catalogue.VNFRecordDependency          `json:"vnfrDependency"`
+	VNFR           *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
+	VNFCInstance   *catalogue.VNFCInstance                 `json:"vnfcInstance,omitempty"`
+	VNFRDependency *catalogue.VNFRecordDependency          `json:"vnfrDependency,omitempty"`
 }
 
 func (VNFMStartStop) DefaultAction() catalogue.Action {

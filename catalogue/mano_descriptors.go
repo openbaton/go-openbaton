@@ -9,16 +9,31 @@ type InternalVirtualLink struct {
 type NetworkForwardingPath struct {
 	ID         string            `json:"id"`
 	Version    int               `json:"version"`
-	Policy     *Policy           `json:"policy"`
-	Connection map[string]string `json:"connection"`
+	Policy     *Policy           `json:"policy,omitempty"`
+	Connection map[string]string `json:"connection,omitempty"`
+}
+
+type NFVEntityDescriptor struct {
+	ID string `json:"id"`
+	HbVersion int `json:"hb_version,omitempty"`
+	Name string `json:"name"`
+	ProjectID string `json:"projectId"`
+	Vendor string `json:"vendor"`
+	Version string `json:"version"`
+	VNFFGD []*VNFForwardingGraphDescriptor `json:"vnffgd"`
+	VLD []*VirtualLinkDescriptor `json:"vld"`
+	MonitoringParameter []string `json:"monitoring_parameter"`
+	ServiceDeploymentFlavour []*DeploymentFlavour `json:"service_deployment_flavour"`
+	AutoScalePolicy []*AutoScalePolicy `json:"auto_scale_policy"`
+	ConnectionPoint []*ConnectionPoint `json:"connection_point"`
 }
 
 // VDUDepencency as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VDUDependency struct {
 	ID      string                 `json:"id"`
 	Version int                    `json:"version"`
-	Source  *VirtualDeploymentUnit `json:"source"`
-	Target  *VirtualDeploymentUnit `json:"target"`
+	Source  *VirtualDeploymentUnit `json:"source,omitempty"`
+	Target  *VirtualDeploymentUnit `json:"target,omitempty"`
 }
 
 type VirtualDeploymentUnit struct {
@@ -27,17 +42,17 @@ type VirtualDeploymentUnit struct {
 	ProjectID                       string                     `json:"projectId"`
 	Name                            string                     `json:"name"`
 	VmImage                         []string                   `json:"vm_image"`
-	ParentVdu                       string                     `json:"parent_vdu"`
+	ParentVDU                       string                     `json:"parent_vdu"`
 	ComputationRequirement          string                     `json:"computation_requirement"`
 	VirtualMemoryResourceElement    string                     `json:"virtual_memory_resource_element"`
 	VirtualNetworkBandwidthResource string                     `json:"virtual_network_bandwidth_resource"`
 	LifecycleEvent                  []*LifecycleEvent          `json:"lifecycle_event"`
 	VduConstraint                   string                     `json:"vdu_constraint"`
-	HighAvailability                *HighAvailability          `json:"high_availability"`
+	HighAvailability                *HighAvailability          `json:"high_availability,omitempty"`
 	FaultManagementPolicy           []*VRFaultManagementPolicy `json:"fault_management_policy"`
 	ScaleInOut                      int                        `json:"scale_in_out"`
-	Vnfc                            []*VNFComponent            `json:"vnfc"`
-	VnfcInstance                    []*VNFCInstance            `json:"vnfc_instance"`
+	VNFCs                           []*VNFComponent            `json:"vnfc"`
+	VNFCInstances                   []*VNFCInstance            `json:"vnfc_instance"`
 	MonitoringParameter             []string                   `json:"monitoring_parameter"`
 	Hostname                        string                     `json:"hostname"`
 	VimInstanceName                 []string                   `json:"vimInstanceName"`
@@ -51,14 +66,16 @@ type VirtualLinkDescriptor struct {
 	DescriptorVersion string    `json:"descriptor_version"`
 	NumberOfEndpoints int       `json:"number_of_endpoints"`
 	Connection        []string  `json:"connection"`
-	VLDSecurity       *Security `json:"vld_security"`
+	VLDSecurity       *Security `json:"vld_security,omitempty"`
 	Name              string    `json:"name"`
 }
 
 // VirtualNetworkFunctionDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VirtualNetworkFunctionDescriptor struct {
+	NFVEntityDescriptor
+
 	LifecycleEvent       []*LifecycleEvent              `json:"lifecycle_event"`
-	Configurations       Configuration                  `json:"configurations"`
+	Configurations       *Configuration                  `json:"configurations,omitempty"`
 	VDU                  []*VirtualDeploymentUnit       `json:"vdu"`
 	VirtualLink          []*InternalVirtualLink         `json:"virtual_link"`
 	VDUDependency        []*VDUDependency               `json:"vdu_dependency"`
@@ -68,7 +85,7 @@ type VirtualNetworkFunctionDescriptor struct {
 	Type                 string                         `json:"type"`
 	Endpoint             string                         `json:"-"`
 	VNFPackageLocation   string                         `json:"vnfPackageLocation"`
-	Requires             map[string]*RequiresParameters `json:"requires"`
+	Requires             map[string]*RequiresParameters `json:"requires,omitempty"`
 	Provides             []string                       `json:"provides"`
 	CyclicDependency     bool                           `json:"-"`
 	Connection_point     []*ConnectionPoint             `json:"connection_point"`
@@ -102,5 +119,5 @@ type VNFForwardingGraphDescriptor struct {
 	ConnectionPoint       []*ConnectionPoint       `json:"connection_point"`
 	DescriptorVersion     string                   `json:"descriptor_version"`
 	ConstituentVnfs       []*ConstituentVNF        `json:"constituent_vnfs"`
-	VnffgdSecurity        *Security                `json:"vnffgd_security"`
+	VnffgdSecurity        *Security                `json:"vnffgd_security,omitempty"`
 }

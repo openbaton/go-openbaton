@@ -104,70 +104,34 @@ type VirtualLinkRecord struct {
 	Connection            []string                    `json:"connection"`
 }
 
-// A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
-type VirtualNetworkFunctionRecord struct {
-	ID                           string                   `json:"id"`
-	HbVersion                    int                      `json:"hb_version"`
-	AutoScalePolicy              []*AutoScalePolicy       `json:"auto_scale_policy"`
-	ConnectionPoint              []*ConnectionPoint       `json:"connection_point"`
-	ProjectID                    string                   `json:"projectId"`
-	DeploymentFlavourKey         string                   `json:"deployment_flavour_key"`
-	Configurations               *Configuration           `json:"configurations"`
-	LifecycleEvent               []*LifecycleEvent        `json:"lifecycle_event"`
-	LifecycleEventHistory        []*HistoryLifecycleEvent `json:"lifecycle_event_history"`
-	Localization                 string                   `json:"localization"`
-	MonitoringParameter          []string                 `json:"monitoring_parameter"`
-	Vdu                          []*VirtualDeploymentUnit `json:"vdu"`
-	Vendor                       string                   `json:"vendor"`
-	Version                      string                   `json:"version"`
-	VirtualLink                  []InternalVirtualLink    `json:"virtual_link"`
-	ParentNsID                   string                   `json:"parent_ns_id"`
-	DescriptorReference          string                   `json:"descriptor_reference"`
-	VnfmID                       string                   `json:"vnfm_id"`
-	ConnectedExternalVirtualLink []VirtualLinkRecord      `json:"connected_external_virtual_link"`
-	VnfAddress                   []string                 `json:"vnf_address"`
-	Status                       Status                   `json:"status"`
-	Notification                 []string                 `json:"notification"`
-	AuditLog                     string                   `json:"audit_log"`
-	RuntimePolicyInfo            []string                 `json:"runtime_policy_info"`
-	Name                         string                   `json:"name"`
-	Type                         string                   `json:"type"`
-	Endpoint                     string                   `json:"endpoint"`
-	Task                         string                   `json:"task"`
-	Requires                     *Configuration           `json:"requires"`
-	Provides                     *Configuration           `json:"provides"`
-	CyclicDependency             bool                     `json:"cyclic_dependency"`
-	PackageID                    string                   `json:"packageId"`
-}
-
 type VNFCInstance struct {
-	VimID        string        `json:"vim_id"`
-	VcID         string        `json:"vc_id"`
+	VIMID        string        `json:"vim_id"`
+	VCID         string        `json:"vc_id"`
 	Hostname     string        `json:"hostname"`
 	State        string        `json:"state"`
-	VnfComponent *VNFComponent `json:"vnfComponent"`
-	FloatingIps  []*Ip         `json:"floatingIps"`
-	Ips          []*Ip         `json:"ips"`
+	VNFComponent *VNFComponent `json:"vnfComponent,omitempty"`
+	FloatingIPs  []*Ip         `json:"floatingIps"`
+	IPs          []*Ip         `json:"ips"`
 }
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphRecord struct {
 	ID                    string                          `json:"id"`
 	DescriptorReference   *VNFForwardingGraphDescriptor   `json:"descriptor_reference"`
-	ParentNs              *NetworkServiceRecord           `json:"parent_ns"`
+	ParentNS              *NetworkServiceRecord           `json:"parent_ns"`
 	DependentVirtualLink  []*VirtualLinkRecord            `json:"dependent_virtual_link"`
-	Status                *Status                         `json:"status"`
+	Status                *Status                         `json:"status,omitempty"`
 	Notification          []string                        `json:"notification"`
 	LifecycleEventHistory []*LifecycleEvent               `json:"lifecycle_event_history"`
 	AuditLog              string                          `json:"audit_log"`
-	NetworkForwardingPath *NetworkForwardingPath          `json:"network_forwarding_path"`
+	NetworkForwardingPath *NetworkForwardingPath          `json:"network_forwarding_path,omitempty"`
 	ConnectionPoint       []*VNFDConnectionPoint          `json:"connection_point"`
-	MemberVnfs            []*VirtualNetworkFunctionRecord `json:"member_vnfs"`
+	MemberVNFs            []*VirtualNetworkFunctionRecord `json:"member_vnfs"`
 	Vendor                string                          `json:"vendor"`
 	Version               string                          `json:"version"`
 	NumberOfEndpoints     int                             `json:"number_of_endpoints"`
-	NumberOfVnfs          int                             `json:"number_of_vnfs"`
-	NumberOfPnfs          int                             `json:"number_of_pnfs"`
+	NumberOfVNFs          int                             `json:"number_of_vnfs"`
+	NumberOfPNFs          int                             `json:"number_of_pnfs"`
 	NumberOfVirtualLinks  int                             `json:"number_of_virtual_links"`
 }
 
