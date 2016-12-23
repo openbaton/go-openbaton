@@ -1,31 +1,31 @@
-package catalogue
+﻿package catalogue
 
 // A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
 type VirtualNetworkFunctionRecord struct {
-	ID                           string                   `json:"id"`
+	ID                           ID                   `json:"id"`
 	HbVersion                    int                      `json:"hb_version"`
-	AutoScalePolicy              []*AutoScalePolicy       `json:"auto_scale_policy"`
-	ConnectionPoint              []*ConnectionPoint       `json:"connection_point"`
+	AutoScalePolicies              []*AutoScalePolicy       `json:"auto_scale_policy"`
+	ConnectionPoints              []*ConnectionPoint       `json:"connection_point"`
 	ProjectID                    string                   `json:"projectId"`
 	DeploymentFlavourKey         string                   `json:"deployment_flavour_key"`
 	Configurations               *Configuration           `json:"configurations,omitempty"`
-	LifecycleEvent               []*LifecycleEvent        `json:"lifecycle_event"`
+	LifecycleEvents               []*LifecycleEvent        `json:"lifecycle_event"`
 	LifecycleEventHistory        []*HistoryLifecycleEvent `json:"lifecycle_event_history"`
 	Localization                 string                   `json:"localization"`
-	MonitoringParameter          []string                 `json:"monitoring_parameter"`
+	MonitoringParameters          []string                 `json:"monitoring_parameter"`
 	VDUs                         []*VirtualDeploymentUnit `json:"vdu"`
 	Vendor                       string                   `json:"vendor"`
 	Version                      string                   `json:"version"`
-	VirtualLink                  []InternalVirtualLink    `json:"virtual_link"`
+	VirtualLinks                  []InternalVirtualLink    `json:"virtual_link"`
 	ParentNsID                   string                   `json:"parent_ns_id"`
 	DescriptorReference          string                   `json:"descriptor_reference"`
-	VnfmID                       string                   `json:"vnfm_id"`
-	ConnectedExternalVirtualLink []VirtualLinkRecord      `json:"connected_external_virtual_link"`
-	VnfAddress                   []string                 `json:"vnf_address"`
+	VNFMID                       string                   `json:"vnfm_id"`
+	ConnectedExternalVirtualLinks []VirtualLinkRecord      `json:"connected_external_virtual_link"`
+	VnfAddresses                   []string                 `json:"vnf_address"`
 	Status                       Status                   `json:"status"`
-	Notification                 []string                 `json:"notification"`
+	Notifications                 []string                 `json:"notification"`
 	AuditLog                     string                   `json:"audit_log"`
-	RuntimePolicyInfo            []string                 `json:"runtime_policy_info"`
+	RuntimePolicyInfos            []string                 `json:"runtime_policy_info"`
 	Name                         string                   `json:"name"`
 	Type                         string                   `json:"type"`
 	Endpoint                     string                   `json:"endpoint"`
@@ -43,7 +43,10 @@ func NewVNFR(
 	  extension map[string]string,
 	  vimInstances    map[string][]*catalogue.VIMInstance) (*VirtualNetworkFunctionRecord, error) {
 
-    nsrID := extension["nsr-id"]
+    autoScalePolicies := make([]*AutoScalePolicy, len(vnfd.AutoScalePolicies))
+    for _, asp := vnfd.AutoScalePolicies {
+      autoScalePolicies = append(autoScalePolicies, cloneAutoScalePolicy(asp, vnfd))
+    }
 
     configurations := &Configuration{
         Name: vnfd.Name,
@@ -54,127 +57,74 @@ func NewVNFR(
         configurations.Name = vnfd.Configurations.Name
 
         for _, confParam := range vnfd.Configurations.ConfigurationParameters {
-            configurations.ConfigurationParameters = append(configurations.ConfigurationParameters, &ConfigurationParameter{
+            configurations.ConfigurationParameter.Append(&ConfigurationParameter{
                 ConfKey: confParam.ConfKey,
                 Value: confParam.Value,
             })
         }
-    } 
+    }
+
+    var endpoint string
+    if vnfd.Endpoint != "" {
+      endpoint = vnfd.Endpoint
+    } else {
+      endpoint = vnfd.Type
+    }
+
+    monitoringParameters := make([]string, len(vnfd.MonitoringParameters))
+    copy(monitoringParameters, vnfd.MonitoringParameters)
     
+    nsrID := extension["nsr-id"]
+
+    provides := &Configuration{
+      Name: "provides",
+      ConfigurationParameters: []*ConfigurationParameter{},
+    }
+
+    if vnfd.Provides != nil {
+      for _, key := range vnfd.Provides {
+        requires.Append(&ConfigurationParameter{
+          ConfKey: key,
+        })
+      }
+    }
+
+    requires := &Configuration{
+      Name: "requires",
+      ConfigurationParameters: []*ConfigurationParameter{},
+    }
+
+    if vnfd.Requires != nil {
+      for _, requiresParam := range vnfd.Requires {
+        for _, key := range requiresParam.Parameters {
+          requires.Append(&ConfigurationParameter{ConfKey: key})
+        }
+      }
+    }
+
+    vdus := make([]*VirtualDeploymentUnit, len(vnfd.VDUs))
+    for _, vdu := vnfd.VDUs {
+      vdus = append(vdus, cloneVDU(vdu))
+    }
+
     vnfr := &VirtualNetworkFunctionRecord{
         Name: vnfd.Name,
 
-        Configurations: &Configuration{
-            ConfigurationParameters: configurations,
-        },
-
+        AutoScalePolicies: autoScalePolicies,
+        Configurations: configurations,
         CyclicDependency: vnfd.CyclicDependency,
+        Endpoint: endpoint,
         LifecycleEventHistory: []*HistoryLifecycleEvent{},
+        MonitoringParameters: monitoringParameters,
+        PackageID: vnfd.VNFPackageLocation,
         ParentNsID: nsrID,
+        Provides: provides,
+        Requires: requires,
         Type: vnfd.Type,
-
-    }
-
-    Configuration requires = new Configuration();
-    requires.setName("requires");
-    requires.setConfigurationParameters(new HashSet<ConfigurationParameter>());
-    virtualNetworkFunctionRecord.setRequires(requires);
-
-    if (vnfd.getRequires() != null) {
-      for (String vnfdName : vnfd.getRequires().keySet()) {
-        for (String key : vnfd.getRequires().get(vnfdName).getParameters()) {
-          ConfigurationParameter configurationParameter = new ConfigurationParameter();
-          log.debug("Adding " + key + " to requires");
-          configurationParameter.setConfKey(key);
-          virtualNetworkFunctionRecord
-              .getRequires()
-              .getConfigurationParameters()
-              .add(configurationParameter);
-        }
-      }
-    }
-
-    Configuration provides = new Configuration();
-    provides.setConfigurationParameters(new HashSet<ConfigurationParameter>());
-    provides.setName("provides");
-    virtualNetworkFunctionRecord.setProvides(provides);
-
-    if (vnfd.getProvides() != null) {
-      for (String key : vnfd.getProvides()) {
-        ConfigurationParameter configurationParameter = new ConfigurationParameter();
-        log.debug("Adding " + key + " to provides");
-        configurationParameter.setConfKey(key);
-        virtualNetworkFunctionRecord
-            .getProvides()
-            .getConfigurationParameters()
-            .add(configurationParameter);
-      }
-    }
-
-    //        if (vnfd.getVnfPackageLocation() != null) {
-    //            VNFPackage vnfPackage = new VNFPackage();
-    //            vnfPackage.setImageLink(vnfd.getVnfPackageLocation().getImageLink());
-    //            vnfPackage.setScriptsLink(vnfd.getVnfPackageLocation().getScriptsLink());
-    //            vnfPackage.setName(vnfd.getVnfPackageLocation().getName());
-    //
-    //            //TODO check for ordering
-    //            vnfPackage.setScripts(new HashSet<Script>());
-    //
-    //            for (Script script : vnfd.getVnfPackageLocation().getScripts()) {
-    //                Script s = new Script();
-    //                s.setName(script.getName());
-    //                s.setPayload(script.getPayload());
-    //                vnfPackage.getScripts().add(s);
-    //            }
-    //
-    //            vnfPackage.setImage(vnfd.getVnfPackageLocation().getImage());
-    //        }
-    virtualNetworkFunctionRecord.setPackageId(vnfd.getVnfPackageLocation());
-
-    if (vnfd.getEndpoint() != null) {
-      virtualNetworkFunctionRecord.setEndpoint(vnfd.getEndpoint());
-    } else virtualNetworkFunctionRecord.setEndpoint(vnfd.getType());
-
-    virtualNetworkFunctionRecord.setMonitoring_parameter(new HashSet<String>());
-    virtualNetworkFunctionRecord.getMonitoring_parameter().addAll(vnfd.getMonitoring_parameter());
-    virtualNetworkFunctionRecord.setVendor(vnfd.getVendor());
-    virtualNetworkFunctionRecord.setAuto_scale_policy(new HashSet<AutoScalePolicy>());
-    for (AutoScalePolicy autoScalePolicy : vnfd.getAuto_scale_policy()) {
-      AutoScalePolicy newAutoScalePolicy = new AutoScalePolicy();
-      newAutoScalePolicy.setName(autoScalePolicy.getName());
-      newAutoScalePolicy.setType(autoScalePolicy.getType());
-      newAutoScalePolicy.setCooldown(autoScalePolicy.getCooldown());
-      newAutoScalePolicy.setPeriod(autoScalePolicy.getPeriod());
-      newAutoScalePolicy.setComparisonOperator(autoScalePolicy.getComparisonOperator());
-      newAutoScalePolicy.setThreshold(autoScalePolicy.getThreshold());
-      newAutoScalePolicy.setMode(autoScalePolicy.getMode());
-      newAutoScalePolicy.setActions(new HashSet<ScalingAction>());
-      for (ScalingAction action : autoScalePolicy.getActions()) {
-        ScalingAction newAction = new ScalingAction();
-        newAction.setValue(action.getValue());
-        newAction.setType(action.getType());
-        if (action.getTarget() == null || action.getTarget().equals("")) {
-          newAction.setTarget(vnfd.getType());
-        } else {
-          newAction.setTarget(action.getTarget());
-        }
-        newAutoScalePolicy.getActions().add(newAction);
-      }
-      newAutoScalePolicy.setAlarms(new HashSet<ScalingAlarm>());
-      for (ScalingAlarm alarm : autoScalePolicy.getAlarms()) {
-        ScalingAlarm newAlarm = new ScalingAlarm();
-        newAlarm.setComparisonOperator(alarm.getComparisonOperator());
-        newAlarm.setMetric(alarm.getMetric());
-        newAlarm.setStatistic(alarm.getStatistic());
-        newAlarm.setThreshold(alarm.getThreshold());
-        newAlarm.setWeight(alarm.getWeight());
-        newAutoScalePolicy.getAlarms().add(newAlarm);
-      }
-      virtualNetworkFunctionRecord.getAuto_scale_policy().add(newAutoScalePolicy);
+        Vendor: vnfd.Vendor,
     }
 
     // TODO mange the VirtualLinks and links...
-    //        virtualNetworkFunctionRecord.setConnected_external_virtual_link(vnfd.getVirtual_link());
 
     virtualNetworkFunctionRecord.setVdu(new HashSet<VirtualDeploymentUnit>());
     for (VirtualDeploymentUnit virtualDeploymentUnit : vnfd.getVdu()) {
@@ -339,4 +289,103 @@ func (vnfr *VirtualNetworkFunctionRecord) FindComponentInstance(component *VNFCo
 	}
 
 	return nil
+}
+
+func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDescriptor) *AutoScalePolicy {
+  // copy all in bulk, and then deep clone the pointers
+  newAsp := *asp
+
+  newAsp.Actions = make([]*ScalingAction, len(asp.Actions))
+  for _, action := range asp.Actions {
+    target := action.Target
+    if target == "" {
+      target = vnfd.Type
+    }
+
+    newAsp.Actions = append(newAsp.Actions, &ScalingAction{
+      Target: target,
+      Type: action.Type,
+      Value: action.Value,
+    })
+  }
+  
+  newAsp.Alarms = make([]*ScalingAlarm, len(asp.Alarms))
+  for _, alarm := range asp.Alarms {
+    newAsp.Alarms = append(newAsp.Alarms, &ScalingAlarm{
+      ComparisonOperator: alarm.ComparisonOperator,
+      Metric: alarm.Metric,
+      Statistic: alarm.Statistic,
+      Threshold: alarm.Threshold,
+      Weight: alarm.Weight,
+    })
+  }
+
+  return &newAsp
+}
+
+func init(vdu *VirtualDeploymentUnit) *VirtualDeploymentUnit {
+  newVDU := *vdu
+  
+  vdu_new.setParent_vdu(virtualDeploymentUnit.getId());
+
+  HashSet<VNFComponent> vnfComponents = new HashSet<>();
+  for (VNFComponent component : virtualDeploymentUnit.getVnfc()) {
+    VNFComponent component_new = new VNFComponent();
+    HashSet<VNFDConnectionPoint> connectionPoints = new HashSet<>();
+    for (VNFDConnectionPoint connectionPoint : component.getConnection_point()) {
+      VNFDConnectionPoint connectionPoint_new = new VNFDConnectionPoint();
+      connectionPoint_new.setVirtual_link_reference(
+          connectionPoint.getVirtual_link_reference());
+      connectionPoint_new.setType(connectionPoint.getType());
+      connectionPoint_new.setFloatingIp(connectionPoint.getFloatingIp());
+      connectionPoints.add(connectionPoint_new);
+    }
+    component_new.setConnection_point(connectionPoints);
+    vnfComponents.add(component_new);
+  }
+  vdu_new.setVnfc(vnfComponents);
+  vdu_new.setVnfc_instance(new HashSet<VNFCInstance>());
+  HashSet<LifecycleEvent> lifecycleEvents = new HashSet<>();
+  for (LifecycleEvent lifecycleEvent : virtualDeploymentUnit.getLifecycle_event()) {
+    LifecycleEvent lifecycleEvent_new = new LifecycleEvent();
+    lifecycleEvent_new.setEvent(lifecycleEvent.getEvent());
+    lifecycleEvent_new.setLifecycle_events(lifecycleEvent.getLifecycle_events());
+    lifecycleEvents.add(lifecycleEvent_new);
+  }
+  vdu_new.setLifecycle_event(lifecycleEvents);
+  vdu_new.setVimInstanceName(virtualDeploymentUnit.getVimInstanceName());
+  vdu_new.setHostname(virtualDeploymentUnit.getHostname());
+  vdu_new.setHigh_availability(virtualDeploymentUnit.getHigh_availability());
+  vdu_new.setComputation_requirement(virtualDeploymentUnit.getComputation_requirement());
+  vdu_new.setScale_in_out(virtualDeploymentUnit.getScale_in_out());
+  HashSet<String> monitoringParameters = new HashSet<>();
+  monitoringParameters.addAll(virtualDeploymentUnit.getMonitoring_parameter());
+  vdu_new.setMonitoring_parameter(monitoringParameters);
+  vdu_new.setVdu_constraint(virtualDeploymentUnit.getVdu_constraint());
+
+  //Set Faultmanagement policies
+  Set<VRFaultManagementPolicy> vrFaultManagementPolicies = new HashSet<>();
+  if (virtualDeploymentUnit.getFault_management_policy() != null) {
+    log.debug(
+        "Adding the fault management policies: "
+            + virtualDeploymentUnit.getFault_management_policy());
+    for (VRFaultManagementPolicy vrfmp : virtualDeploymentUnit.getFault_management_policy()) {
+      vrFaultManagementPolicies.add(vrfmp);
+    }
+  }
+  vdu_new.setFault_management_policy(vrFaultManagementPolicies);
+  //Set Faultmanagement policies end
+
+  HashSet<String> vmImages = new HashSet<>();
+  vmImages.addAll(virtualDeploymentUnit.getVm_image());
+  vdu_new.setVm_image(vmImages);
+
+  vdu_new.setVirtual_network_bandwidth_resource(
+      virtualDeploymentUnit.getVirtual_network_bandwidth_resource());
+  vdu_new.setVirtual_memory_resource_element(
+      virtualDeploymentUnit.getVirtual_memory_resource_element());
+  virtualNetworkFunctionRecord.getVdu().add(vdu_new);
+
+
+  return &newVDU
 }

@@ -1,7 +1,7 @@
 package catalogue
 
 type AutoScalePolicy struct {
-	ID                 string           `json:"id"`
+	ID                 ID               `json:"id"`
 	Version            int              `json:"version"`
 	Name               string           `json:"name"`
 	Threshold          float64          `json:"threshold"`
@@ -15,14 +15,14 @@ type AutoScalePolicy struct {
 }
 
 type ConnectionPoint struct {
-	ID      string `json:"id"`
+	ID      ID     `json:"id"`
 	Version int    `json:"version"`
 	Type    string `json:"type"`
 }
 
 // ConstituentVDU as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type ConstituentVDU struct {
-	ID                string `json:"id"`
+	ID                ID     `json:"id"`
 	Version           int    `json:"version"`
 	VDUReference      string `json:"vdu_reference"`
 	NumberOfInstances int    `json:"number_of_instances"`
@@ -31,7 +31,7 @@ type ConstituentVDU struct {
 
 // ConstituentVNF as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type ConstituentVNF struct {
-	ID                    string          `json:"id"`
+	ID                    ID              `json:"id"`
 	VnfReference          string          `json:"vnf_reference"`
 	VnfFlavourIDReference string          `json:"vnf_flavour_id_reference"`
 	RedundancyModel       RedundancyModel `json:"redundancy_modelid"`
@@ -43,7 +43,7 @@ type ConstituentVNF struct {
 
 // DeploymentFlavour as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type DeploymentFlavour struct {
-	ID         string `json:"id"`
+	ID         ID     `json:"id"`
 	Version    int    `json:"version"`
 	FlavourKey string `json:"flavour_key"`
 	ExtID      string `json:"extId"`
@@ -79,7 +79,7 @@ const (
 )
 
 type HighAvailability struct {
-	ID               string          `json:"id"`
+	ID               ID              `json:"id"`
 	Version          int             `json:"version"`
 	ResiliencyLevel  ResiliencyLevel `json:"resiliencyLevel"`
 	GeoRedundancy    bool            `json:"geoRedundancy"`
@@ -87,7 +87,7 @@ type HighAvailability struct {
 }
 
 type Ip struct {
-	ID      string `json:"id"`
+	ID      ID     `json:"id"`
 	Version int    `json:"version"`
 	NetName string `json:"netname"`
 	Ip      string `json:"ip"`
@@ -95,7 +95,7 @@ type Ip struct {
 
 // LifecycleEvent as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type LifecycleEvent struct {
-	ID              string   `json:"id"`
+	ID              ID       `json:"id"`
 	Version         int      `json:"version"`
 	Event           Event    `json:"event"`
 	LifecycleEvents []string `json:"lifecycle_events"`
@@ -133,11 +133,11 @@ const (
 )
 
 type ScalingAction struct {
-	ID      string            `json:"id"`
+	ID      ID                `json:"id"`
 	Version int               `json:"version"`
 	Type    ScalingActionType `json:"type"`
-	Value   string            `json:"value"`
-	Target  string            `json:"target"`
+	Value   string            `json:"value,omitempty"`
+	Target  string            `json:"target,omitempty"`
 }
 
 type ScalingActionType string
@@ -152,7 +152,7 @@ const (
 )
 
 type ScalingAlarm struct {
-	ID                 string  `json:"id"`
+	ID                 ID      `json:"id"`
 	Version            int     `json:"version"`
 	Metric             string  `json:"metric"`
 	Statistic          string  `json:"statistic"`
@@ -178,8 +178,8 @@ const (
 )
 
 type Security struct {
-	ID      string `json:"id"`
-	Version int    `json:"version"`
+	ID      ID  `json:"id"`
+	Version int `json:"version"`
 }
 
 // VirtualLink (abstract) based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
@@ -189,7 +189,7 @@ type Security struct {
 // on VNFs in ETSI GS NFV-SWA 001 [i.8]. Therefore a set of VLs in a Network Service can be mapped
 // to a Network Connectivity Topology (NCT) as defined in ETSI GS NFV-SWA 001 [i.8].
 type VirtualLink struct {
-	ID               string   `json:"id"`
+	ID               ID       `json:"id"`
 	HbVersion        int      `json:"hb_version"`
 	ExtID            string   `json:"extId"`
 	RootRequirement  string   `json:"root_requirement"`

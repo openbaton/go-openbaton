@@ -1,4 +1,4 @@
-package messages
+﻿package messages
 
 import (
 	"github.com/mcilloni/go-openbaton/catalogue"

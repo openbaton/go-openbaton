@@ -27,36 +27,40 @@ const (
 )
 
 type ConfigurationParameter struct {
-	ID          string `json:"id"`
-	Version     int    `json:"version"`
-	Description string `json:"description"`
+	ID          ID     `json:"id"`
+	Version     int    `json:"version,omitempty"`
+	Description string `json:"description,omitempty"`
 	ConfKey     string `json:"confKey"`
-	Value       string `json:"value"`
+	Value       string `json:"value,omitempty"`
 }
 
 type Configuration struct {
-	ID                      string                    `json:"id"`
+	ID                      ID                        `json:"id"`
 	Version                 int                       `json:"version"`
 	ProjectID               string                    `json:"projectId"`
 	ConfigurationParameters []*ConfigurationParameter `json:"configurationParameters"`
 	Name                    string                    `json:"name"`
 }
 
+func (cfg *Configuration) Append(p *ConfigurationParameter) {
+	cfg.ConfigurationParameters = append(cfg.ConfigurationParameters, p)
+}
+
 type DependencyParameters struct {
-	ID         string            `json:"id"`
+	ID         ID                `json:"id"`
 	Version    int               `json:"version"`
 	Parameters map[string]string `json:"parameters"`
 }
 
 type HistoryLifecycleEvent struct {
-	ID          string `json:"id"`
+	ID          ID     `json:"id"`
 	Event       string `json:"event"`
 	Description string `json:"description"`
 	ExecutedAt  string `json:"executedAt"`
 }
 
 type Location struct {
-	ID        string `json:"id"`
+	ID        ID     `json:"id"`
 	Version   int    `json:"id"`
 	Name      string `json:"id"`
 	Latitude  string `json:"id"`
@@ -64,7 +68,7 @@ type Location struct {
 }
 
 type Network struct {
-	ID       string    `json:"id"`
+	ID       ID        `json:"id"`
 	Version  int       `json:"version"`
 	Name     string    `json:"name"`
 	ExtID    string    `json:"extId"`
@@ -74,7 +78,7 @@ type Network struct {
 }
 
 type NFVImage struct {
-	ID              string `json:"id"`
+	ID              ID     `json:"id"`
 	Version         int    `json:"version"`
 	ExtID           string `json:"extId"`
 	Name            string `json:"name"`
@@ -90,20 +94,20 @@ type NFVImage struct {
 }
 
 type RequiresParameters struct {
-	ID         string   `json:"id"`
+	ID         ID       `json:"id"`
 	Version    int      `json:"version"`
 	Parameters []string `json:"parameters"`
 }
 
 type Script struct {
-	ID      string `json:"id"`
+	ID      ID     `json:"id"`
 	Version int    `json:"version"`
 	Name    string `json:"name"`
 	Payload []byte `json:"-"`
 }
 
 type Subnet struct {
-	ID        string `json:"id"`
+	ID        ID     `json:"id"`
 	Version   int    `json:"version"`
 	Name      string `json:"name"`
 	ExtID     string `json:"extId"`
@@ -113,7 +117,7 @@ type Subnet struct {
 }
 
 type VIMInstance struct {
-	ID             string               `json:"id"`
+	ID             ID                   `json:"id"`
 	Version        int                  `json:"version"`
 	Name           string               `json:"name"`
 	AuthURL        string               `json:"authUrl"`
@@ -133,13 +137,13 @@ type VIMInstance struct {
 
 type VNFCDependencyParameters struct {
 	VNFCID     string                           `json:"vnfcId"`
-	ID         string                           `json:"id"`
+	ID         ID                               `json:"id"`
 	Version    int                              `json:"version"`
 	Parameters map[string]*DependencyParameters `json:"parameters"`
 }
 
 type VNFPackage struct {
-	ID          string    `json:"id"`
+	ID          ID        `json:"id"`
 	Version     int       `json:"version"`
 	Name        string    `json:"name"`
 	NFVOVersion string    `json:"nfvo_version"`

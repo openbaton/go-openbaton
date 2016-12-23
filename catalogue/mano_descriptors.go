@@ -7,37 +7,37 @@ type InternalVirtualLink struct {
 }
 
 type NetworkForwardingPath struct {
-	ID         string            `json:"id"`
+	ID         ID                `json:"id"`
 	Version    int               `json:"version"`
 	Policy     *Policy           `json:"policy,omitempty"`
 	Connection map[string]string `json:"connection,omitempty"`
 }
 
 type NFVEntityDescriptor struct {
-	ID string `json:"id"`
-	HbVersion int `json:"hb_version,omitempty"`
-	Name string `json:"name"`
-	ProjectID string `json:"projectId"`
-	Vendor string `json:"vendor"`
-	Version string `json:"version"`
-	VNFFGD []*VNFForwardingGraphDescriptor `json:"vnffgd"`
-	VLD []*VirtualLinkDescriptor `json:"vld"`
-	MonitoringParameter []string `json:"monitoring_parameter"`
-	ServiceDeploymentFlavour []*DeploymentFlavour `json:"service_deployment_flavour"`
-	AutoScalePolicy []*AutoScalePolicy `json:"auto_scale_policy"`
-	ConnectionPoint []*ConnectionPoint `json:"connection_point"`
+	ID                        ID                              `json:"id"`
+	HbVersion                 int                             `json:"hb_version,omitempty"`
+	Name                      string                          `json:"name"`
+	ProjectID                 string                          `json:"projectId"`
+	Vendor                    string                          `json:"vendor"`
+	Version                   string                          `json:"version"`
+	VNFFGDs                   []*VNFForwardingGraphDescriptor `json:"vnffgd"`
+	VLDs                      []*VirtualLinkDescriptor        `json:"vld"`
+	MonitoringParameters      []string                        `json:"monitoring_parameter"`
+	ServiceDeploymentFlavours []*DeploymentFlavour            `json:"service_deployment_flavour"`
+	AutoScalePolicies         []*AutoScalePolicy              `json:"auto_scale_policy"`
+	ConnectionPoints          []*ConnectionPoint              `json:"connection_point"`
 }
 
 // VDUDepencency as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VDUDependency struct {
-	ID      string                 `json:"id"`
+	ID      ID                     `json:"id"`
 	Version int                    `json:"version"`
 	Source  *VirtualDeploymentUnit `json:"source,omitempty"`
 	Target  *VirtualDeploymentUnit `json:"target,omitempty"`
 }
 
 type VirtualDeploymentUnit struct {
-	ID                              string                     `json:"id"`
+	ID                              ID                         `json:"id"`
 	Version                         int                        `json:"version"`
 	ProjectID                       string                     `json:"projectId"`
 	Name                            string                     `json:"name"`
@@ -74,27 +74,27 @@ type VirtualLinkDescriptor struct {
 type VirtualNetworkFunctionDescriptor struct {
 	NFVEntityDescriptor
 
-	LifecycleEvent       []*LifecycleEvent              `json:"lifecycle_event"`
-	Configurations       *Configuration                  `json:"configurations,omitempty"`
-	VDU                  []*VirtualDeploymentUnit       `json:"vdu"`
-	VirtualLink          []*InternalVirtualLink         `json:"virtual_link"`
-	VDUDependency        []*VDUDependency               `json:"vdu_dependency"`
-	DeploymentFlavour    []*VNFDeploymentFlavour        `json:"deployment_flavour"`
+	LifecycleEvents      []*LifecycleEvent              `json:"lifecycle_event"`
+	Configurations       *Configuration                 `json:"configurations,omitempty"`
+	VDUs                 []*VirtualDeploymentUnit       `json:"vdu"`
+	VirtualLinks         []*InternalVirtualLink         `json:"virtual_link"`
+	VDUDependencies      []*VDUDependency               `json:"vdu_dependency"`
+	DeploymentFlavours   []*VNFDeploymentFlavour        `json:"deployment_flavour"`
 	ManifestFile         string                         `json:"manifest_file"`
 	ManifestFileSecurity []*Security                    `json:"manifest_file_security"`
 	Type                 string                         `json:"type"`
 	Endpoint             string                         `json:"-"`
 	VNFPackageLocation   string                         `json:"vnfPackageLocation"`
 	Requires             map[string]*RequiresParameters `json:"requires,omitempty"`
-	Provides             []string                       `json:"provides"`
+	Provides             []string                       `json:"provides,omitempty"`
 	CyclicDependency     bool                           `json:"-"`
-	Connection_point     []*ConnectionPoint             `json:"connection_point"`
-	VNFDConnection_point []*VNFDConnectionPoint         `json:"VNFDConnection_point"`
+	ConnectionPoints     []*ConnectionPoint             `json:"connection_point"`
+	VNFDConnectionPoints []*VNFDConnectionPoint         `json:"VNFDConnection_point"`
 }
 
 // A VNFComponent as defined by ETSI GS NFV-MAN 001 V1.1.1
 type VNFComponent struct {
-	ID              string                 `json:"id"`
+	ID              ID                     `json:"id"`
 	Version         int                    `json:"version"`
 	ConnectionPoint []*VNFDConnectionPoint `json:"connection_component"`
 }
@@ -108,7 +108,7 @@ type VNFDConnectionPoint struct {
 
 // VNFForwardingGraphDescriptor as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphDescriptor struct {
-	ID                    string                   `json:"id"`
+	ID                    ID                       `json:"id"`
 	HbVersion             int                      `json:"hb_version"`
 	Vendor                string                   `json:"vendor"`
 	Version               string                   `json:"version"`
