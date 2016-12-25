@@ -10,8 +10,8 @@ import (
 type ID string
 
 var (
-    zeroID = ID("")
-    idType = reflect.TypeOf(zeroID)
+	zeroID = ID("")
+	idType = reflect.TypeOf(zeroID)
 )
 
 func GenerateID() ID {
@@ -38,7 +38,7 @@ func EnsureID(v interface{}) ID {
 			if reflect.DeepEqual(structField.Type, idType) {
 				fValue := vValue.FieldByNameFunc(filterFunc)
 				if reflect.DeepEqual(fValue.Interface(), zeroID) {
-                    newID := GenerateID()
+					newID := GenerateID()
 
 					fValue.SetString(newID)
 					return newID

@@ -135,6 +135,16 @@ type VIMInstance struct {
 	Active         bool                 `json:"active"`
 }
 
+func (vi *VIMInstance) HasFlavour(key string) bool {
+	for _, df := range vi.Flavours {
+		if df.FlavourKey == key || df.ExtID == key || df.ID == key {
+			return true
+		}
+	}
+
+	return false
+}
+
 type VNFCDependencyParameters struct {
 	VNFCID     string                           `json:"vnfcId"`
 	ID         ID                               `json:"id"`

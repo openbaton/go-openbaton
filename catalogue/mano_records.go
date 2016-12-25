@@ -89,6 +89,8 @@ const (
 )
 
 type VirtualLinkRecord struct {
+	VirtualLink
+
 	Vendor                string                      `json:"vendor"`
 	Version               string                      `json:"version"`
 	NumberOfEndpoints     int                         `json:"number_of_endpoints"`

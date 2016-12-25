@@ -40,5 +40,7 @@ const (
 )
 
 type VRFaultManagementPolicy struct {
+	FaultManagementPolicy
+
 	Action FaultManagementAction `json:"action"`
 }
