@@ -14,18 +14,27 @@ type logger *log.Logger
 
 type VNFM struct {
 	logger
+
 	conn     NFVOConnector
 	impl      Provider
 	props Properties
+	timeout time.Duration
 	quitChan chan struct{}
 }
 
 func Start(connector NFVOConnector, impl Provider, properties Properties) (*VNFM, error) {
+	timeout := 2 * time.Second
+
+	if timeoutInt, ok := properties.ValueInt("vnfm.timeout"); !ok {
+		timeout = time.Duration(timeoutInt)
+	}
+
 	vnfm := &VNFM{
 		conn:     connector,
 		impl:      impl,
 		logger:   logger(log.New()),
 		props: properties,
+		timeout: timeout,
 		quitChan: make(chan struct{}),
 	}
 
@@ -58,14 +67,70 @@ func (vnfm *VNFM) Stop() error {
 	}
 }
 
-type vnfrError struct {
+type vnfmError struct {
 	msg string
 	vnfr *catalogue.VirtualNetworkFunctionRecord
 	nsrID string
 }
 
-func (e *vnfrError) Error() string {
+func (e *vnfmError) Error() string {
 	return msg
+}
+
+func (vnfm *VNFM) allocateResources(
+	vnfr *catalogue.VirtualNetworkFunctionRecord,
+	vimInstances map[string]*catalogue.VIMInstance,
+	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
+
+	userData = vnfm.impl.UserData()
+	vnfm.Debugf("Userdata sent to NFVO: %s\n", userData)
+
+	msg, err := messages.NewMessage(&messages.VNFMAllocateResources{
+		VNFR: vnfr,
+		VIMInstances: vimInstances,
+		Userdata: userData,
+		KeyPairs:  keyPairs,
+	})
+	if err != nil {
+		vnfm.Panicf("BUG: %v\n", err)
+	}
+
+	nfvoResp, err := vnfm.conn.Exchange(msg, vnfm.timeout)
+	if err != nil {
+		vnfm.Errorln(err.Error())
+        return nil, &vnfmError{
+            msg: "Not able to allocate Resources", 
+			nsrID: vnfr.ParentNsID,
+			vnfr: vnfr,
+		}
+	}
+
+	if nfvoResp != nil {
+        if nfvoResp.Action() == catalogue.ActionError {
+			errorMessage := nfvoResp.Content().(*messages.OrError)
+
+			vnfm.Errorln(errorMessage.Message)
+
+			errVNFR := errorMessage.VNFR
+
+			return nil, &vnfmError{
+				msg: fmt.Sprintf("Not able to allocate Resources because: %s\n", errorMessage.Message),
+				vnfr: errVNFR,
+				nsrID: vnfr.ParentNsID,
+			}
+        }
+
+        message := nfvoResp.Content().(*messages.OrGeneric)
+        vnfm.Debugf("Received from ALLOCATE: %s\n", message.VNFR)
+
+        return message.VNFR, nil
+      }
+
+      return nil, &vnfmError{
+		  msg: "received an empty message from NFVO", 
+		  nsrID: vnfr.ParentNsID,
+		  vnfr: vnfr,
+	  }
 }
 
 func (vnfm *VNFM) handle(message messages.NFVMessage) {
@@ -75,7 +140,7 @@ func (vnfm *VNFM) handle(message messages.NFVMessage) {
 	content := message.Content()
 
 	var reply messages.NFVMessage
-	var err *vnfrError
+	var err *vnfmError
 
 	switch message.Action() {
 	case catalogue.ActionScaleIn:
@@ -232,20 +297,20 @@ func (vnfm *VNFM) handle(message messages.NFVMessage) {
     }
 }
 
-func (vnfm *VNFM) handleError(errorMessage *messages.OrError) *vnfrError {
+func (vnfm *VNFM) handleError(errorMessage *messages.OrError) *vnfmError {
 	vnfr := errorMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	
 	vnfm.Errorf("received an error from the NFVO: %s\n", errorMessage.Message)
 
 	if err := vnfm.impl.HandleError(errorMessage.VNFR); err != nil {
-		return &vnfrError{err.Error(), nsrID, vnfr}
+		return &vnfmError{err.Error(), nsrID, vnfr}
 	}
 
 	return nil
 }
 
-func (vnfm *VNFM) handleInstantiate(instantiateMessage *messages.OrInstantiate) (messages.NFVMessage, *vnfrError) {
+func (vnfm *VNFM) handleInstantiate(instantiateMessage *messages.OrInstantiate) (messages.NFVMessage, *vnfmError) {
 	extension := instantiateMessage.Extension
 
 	vnfm.Debugf("received extensions: %v\n", extension);
@@ -253,130 +318,140 @@ func (vnfm *VNFM) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 
 	vimInstances := instantiateMessage.VIMInstances
 	
-	vnfr =
-		createVirtualNetworkFunctionRecord(
-			orVnfmInstantiateMessage.getVnfd(),
-			orVnfmInstantiateMessage.getVnfdf().getFlavour_key(),
-			orVnfmInstantiateMessage.getVlrs(),
-			orVnfmInstantiateMessage.getExtension(),
+	vnfr, err := catalogue.NewVNFR(
+			instantiateMessage.VNFD,
+			instantiateMessage.VNFDFlavour.FlavourKey,
+			instantiateMessage.VLRs,
+			instantiateMessage.Extension,
 			vimInstances)
-	GrantOperation grantOperation = new GrantOperation()
-	grantOperation.setVirtualNetworkFunctionRecord(vnfr)
 
-	Future<OrVnfmGrantLifecycleOperationMessage> result = executor.submit(grantOperation)
-	OrVnfmGrantLifecycleOperationMessage msg
-	try {
-	msg = result.get()
-	if (msg == null) {
-		return
-	}
-	} catch (ExecutionException e) {
-	log.error("Got exception while allocating vms")
-	throw e.getCause()
+    msg := messages.NewMessage(catalogue.ActionGrantOperation, &messages.VNFMGeneric{
+		VNFR: vnfr,
+	})
+
+	resp, err := vnfm.conn.Exchange(msg, vnfm.timeout)
+
+	if err != nil {
+		return nil, &vnfmError{err.Error(), vnfr.ParentNsID, vnfr}
 	}
 
-	vnfr = msg.getVirtualNetworkFunctionRecord()
-	Map<String, VimInstance> vimInstanceChosen = msg.getVduVim()
-
-	vnfm.Debugln("VERSION IS: " + vnfr.getHb_version())
-
-	if (!properties.getProperty("allocate", "true").equalsIgnoreCase("true")) {
-	AllocateResources allocateResources = new AllocateResources()
-	allocateResources.setVirtualNetworkFunctionRecord(vnfr)
-	allocateResources.setVimInstances(vimInstanceChosen)
-	allocateResources.setKeyPairs(orVnfmInstantiateMessage.getKeys())
-	try {
-		vnfr = executor.submit(allocateResources).get()
-		if (vnfr == null) {
-		return
+	resp, ok := resp.Content().(*messages.OrGrantLifecycleOperation)
+	if !ok {
+		return nil, &vnfmError{
+			msg: fmt.Sprintf("expected OrGrantLifecycleOperation, got %t", respMsg.Content())
 		}
-	} catch (ExecutionException e) {
-		log.error("Got exception while allocating vms")
-		throw e.getCause()
 	}
-	}
-	setupProvides(vnfr)
 
-	for (VirtualDeploymentUnit virtualDeploymentUnit :
-		vnfr.getVdu()) {
-	for (VNFCInstance vnfcInstance : virtualDeploymentUnit.getVnfc_instance()) {
-		checkEMS(vnfcInstance.getHostname())
+	recvVNFR := resp.VNFR
+	vimInstanceChosen := resp.VDUVIM
+
+	vnfm.Debugf("VERSION IS: %d\n", recvVNFR.HbVersion)
+
+	if allocate, set := vnfm.props.ValueBool("vnfm.allocate"); set && allocate {
+		allocatedVNFR, err := vnfm.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
+		if err != nil {
+			return nil, err
+		}
+
+		recvVNFR = allocatedVNFR
 	}
+
+	for _, vdu := range recvVNFR.VDUs {
+		for _, vnfcInstance := range vdu.VNFCInstances {
+			if err := vnfm.impl.CheckEMS(vnfcInstance.Hostname); err != nil {
+				return nil, &vnfmError{
+					msg: fmt.Sprintf("error whilee checking for EMS at hostname %s: %s", vnfcInstance.Hostname, err.Error()),
+					nsrID: recvVNFR.ParentNsID,
+					vnfr: recvVNFR,
+				}
+			}
+		}
 	}
-	if (orVnfmInstantiateMessage.getVnfPackage() != null) {
-	if (orVnfmInstantiateMessage.getVnfPackage().getScriptsLink() != null) {
-		vnfr =
-			instantiate(
-				vnfr,
-				orVnfmInstantiateMessage.getVnfPackage().getScriptsLink(),
-				vimInstances)
+
+	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
+
+	if instantiateMessage.VNFPackage != nil {
+		pkg := instantiateMessage.VNFPackage
+
+		if pkg.ScriptsLink != "" {
+			resultVNFR, err = vnfm.impl.Instantiate(recvVNFR, pkg.ScriptsLink, vimInstances)
+		} else {
+			resultVNFR, err = vnfm.impl.Instantiate(recvVNFR, pkg.Scripts, vimInstances)
+		}
 	} else {
-		vnfr =
-			instantiate(
-				vnfr,
-				orVnfmInstantiateMessage.getVnfPackage().getScripts(),
-				vimInstances)
+		resultVNFR, err = vnfm.impl.Instantiate(recvVNFR, nil, vimInstances)
 	}
-	} else {
-	vnfr =
-		instantiate(vnfr, null, vimInstances)
+
+	if err != nil {
+		return nil, &vnfmError{
+			msg: err.Error(),
+			nsrID: recvVNFR.ParentNsID,
+			vnfr: recvVNFR,
+		}
 	}
-	nfvMessage = VnfmUtils.getNfvMessage(Action.INSTANTIATE, vnfr)
-	break
+
+	nfvMessage, err := messages.NewMessage(catalogue.ActionInstantiate, &messages.VNFMGeneric{
+		VNFR: resultVNFR,
+	})
+	if err != nil {
+		return nil, &vnfmError{err.Error(), resultVNFR, resultVNFR.ParentNsID}
+	}
+
+	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleModify(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfrError) {
+func (vnfm *VNFM) handleModify(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	vnfr := genericMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
 	resultVNFR, err := vnfm.impl.Modify(vnfr, genericMessage.VNFRDependency)
 	if err != nil {
-		return nil, &vnfrError{err.Error(), vnfr, nsrID}
+		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
 
 	nfvMessage, err := messages.NewMessage(messages.ActionModify, &messages.VNFMGeneric{
 		VNFR: resultVNFR,
 	})
 	if err != nil {
-		return nil, &vnfrError{err.Error(), resultVNFR, nsrID}
+		return nil, &vnfmError{err.Error(), resultVNFR, nsrID}
 	}
 
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleReleaseResources(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfrError) {
+func (vnfm *VNFM) handleReleaseResources(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	vnfr := genericMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
 	resultVNFR, err := vnfm.impl.Terminate(vnfr)
 	if err != nil {
-		return nil, &vnfrError{err.Error(), vnfr, nsrID}
+		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
 
 	nfvMessage, err := messages.NewMessage(messages.ActionReleaseResources, &messages.VNFMGeneric{
 		VNFR: resultVNFR,
 	})
 	if err != nil {
-		return nil, &vnfrError{err.Error(), resultVNFR, nsrID}
+		return nil, &vnfmError{err.Error(), resultVNFR, nsrID}
 	}
 
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleScaleIn(scalingMessage *messages.OrScaling) *vnfrError {
+func (vnfm *VNFM) handleScaleIn(scalingMessage *messages.OrScaling) *vnfmError {
 	vnfr := scalingMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	
 	vnfcInstanceToRemove := scalingMessage.getVnfcInstance()
 
 	if _, err := vnfm.impl.Scale(catalogue.ActionScaleIn, vnfr, vnfcInstanceToRemove, nil, nil); err != nil {
-		return &vnfrError{err.Error(), nsrID, vnfr}
+		return &vnfmError{err.Error(), nsrID, vnfr}
 	}
 	
 	return nil
 }
 
-func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.NFVMessage, *vnfrError) {
+func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.NFVMessage, *vnfmError) {
 	vnfr := scalingMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	component := scalingMessage.Component
@@ -393,7 +468,7 @@ func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		})
 
 		if err != nil {
-			return nil, &vnfrError{err.Error(), nsrID, vnfr}
+			return nil, &vnfmError{err.Error(), nsrID, vnfr}
 		}
 
 		var replyVNFR *catalogue.VirtualNetworkFunctionRecord
@@ -405,7 +480,7 @@ func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		
 		case messages.OrError:
 			if err := vnfm.impl.HandleError(content.VNFR); err != nil {
-				return nil, &vnfrError{err.Error(), nsrID, content.VNFR}
+				return nil, &vnfmError{err.Error(), nsrID, content.VNFR}
 			}
 
 			return nil, nil
@@ -415,7 +490,7 @@ func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		}
 
 		if newVNFCInstance = replyVNFR.FindComponentInstance(component); newVNFCInstance == nil {
-			return nil, vnfrError{"no new VNFCInstance found. This should not happen.", nsrID, replyVNFR}
+			return nil, vnfmError{"no new VNFCInstance found. This should not happen.", nsrID, replyVNFR}
 		}
 
 		vnfm.Debugf("VNFComponentInstance FOUND : %v\n", newVNFCInstance.VNFComponent)
@@ -446,7 +521,7 @@ func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 
 	resultVNFR, err := vnfm.impl.Scale(catalogue.ActionScaleOut, vnfr, newVNFCInstance, scripts, scalingMessage.Dependency)
 	if err != nil {
-		return nil, &vnfrError{err.Error(), nsrID, vnfr}
+		return nil, &vnfmError{err.Error(), nsrID, vnfr}
 	}
 
 	nfvMessage, err := messages.NewMessage(Action.SCALED, &messages.VNFMScaled{
@@ -455,7 +530,7 @@ func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 	})
 
 	if err != nil {
-		return nil, &vnfrError{err.Error(), nsrID, resultVNFR}
+		return nil, &vnfmError{err.Error(), nsrID, resultVNFR}
 	}
 
 	return nfvMessage, nil

@@ -46,7 +46,7 @@ type DeploymentFlavour struct {
 	ID         ID     `json:"id"`
 	Version    int    `json:"version"`
 	FlavourKey string `json:"flavour_key"`
-	ExtID      string `json:"extId"`
+	ExtID      ID     `json:"extId"`
 	RAM        int    `json:"ram"`
 	Disk       int    `json:"disk"`
 	VCPUs      int    `json:"vcpus"`

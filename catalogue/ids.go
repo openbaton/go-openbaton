@@ -15,7 +15,7 @@ var (
 )
 
 func GenerateID() ID {
-	return ID(uuid.NewV4())
+	return ID(uuid.NewV4().String())
 }
 
 // EnsureID checks if v contains a field named "ID" of catalogue.ID type, and
@@ -40,7 +40,7 @@ func EnsureID(v interface{}) ID {
 				if reflect.DeepEqual(fValue.Interface(), zeroID) {
 					newID := GenerateID()
 
-					fValue.SetString(newID)
+					fValue.SetString(string(newID))
 					return newID
 				}
 			}

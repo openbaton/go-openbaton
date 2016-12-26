@@ -1,6 +1,8 @@
 package vnfm
 
 import (
+	"time"
+
 	"github.com/mcilloni/go-openbaton/catalogue"
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 )
@@ -23,6 +25,10 @@ type Provider interface {
 
 	Heal(vnfr *catalogue.VirtualNetworkFunctionRecord,
 		component *catalogue.VNFCInstance, cause string) (*catalogue.VirtualNetworkFunctionRecord, error)
+
+	// Instantiate allows to create a VNF instance.
+	Instantiate(vnfr *catalogue.VirtualNetworkFunctionRecord, scripts interface{},
+		vimInstances map[string][]*catalogue.VIMInstance) (*catalogue.VirtualNetworkFunctionRecord, error)
 
 	// Modify allows making structural changes (e.g.configuration, topology, behavior, redundancy model) to a VNF instance.
 	Modify(vnfr *catalogue.VirtualNetworkFunctionRecord,
@@ -71,10 +77,27 @@ type Provider interface {
 type NFVOConnector interface {
 	Close() error
 
-	Exchange(msg messages.NFVMessage) (messages.NFVMessage, error)
-	ExchangeStrings(msg, queue string) (string, error)
+	Exchange(msg messages.NFVMessage, timeout time.Duration) (messages.NFVMessage, error)
+	ExchangeStrings(msg, queue string, timeout time.Duration) (string, error)
 
 	NotifyReceived() (<-chan messages.NFVMessage, error)
 
 	Send(msg messages.NFVMessage) error
+}
+
+type NFVOResponse struct {
+	messages.NFVMessage
+	error
+}
+
+func ExchangeAsync(conn NFVOConnector, msg messages.NFVMessage, timeout time.Duration) <-chan *NFVOResponse {
+	ret := make(chan *NFVOResponse, 1)
+
+	go func() {
+		msg, err := conn.Exchange(msg, timeout)
+
+		ret <- &NFVOResponse{msg, err}
+	}()
+
+	return ret
 }

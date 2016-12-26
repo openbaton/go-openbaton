@@ -137,7 +137,7 @@ type VIMInstance struct {
 
 func (vi *VIMInstance) HasFlavour(key string) bool {
 	for _, df := range vi.Flavours {
-		if df.FlavourKey == key || df.ExtID == key || df.ID == key {
+		if df.FlavourKey == key || df.ExtID == ID(key) || df.ID == ID(key) {
 			return true
 		}
 	}

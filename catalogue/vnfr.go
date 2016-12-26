@@ -144,7 +144,7 @@ func NewVNFR(
 	}
 
 	return &VirtualNetworkFunctionRecord{
-		ID: GenerateID(),
+		ID:   GenerateID(),
 		Name: vnfd.Name,
 
 		AutoScalePolicies:     autoScalePolicies,
@@ -237,13 +237,17 @@ func cloneInternalVirtualLink(oldIVL *InternalVirtualLink, vlrs []*VirtualLinkRe
 	copy(testAccess, oldIVL.TestAccess)
 
 	return &InternalVirtualLink{
-		Name: name,
+		VirtualLink: VirtualLink{
+			Name:             name,
+			ConnectivityType: oldIVL.ConnectivityType,
+			ExtID:            extID,
+			LeafRequirement:  oldIVL.LeafRequirement,
+			QoS:              qos,
+			RootRequirement:  oldIVL.RootRequirement,
+			TestAccess:       testAccess,
+		},
+
 		ConnectionPointsReferences: cpReferences,
-		ConnectivityType:           oldIVL.ConnectivityType,
-		LeafRequirement:            oldIVL.LeafRequirement,
-		QoS:                        qos,
-		RootRequirement:            oldIVL.RootRequirement,
-		TestAccess:                 testAccess,
 	}
 }
 
@@ -252,7 +256,6 @@ func cloneVRFaultManagementPolicy(oldVRFMP *VRFaultManagementPolicy) *VRFaultMan
 
 	newVRFMP.Criteria = make([]*Criteria, len(oldVRFMP.Criteria))
 	for _, criteria := range oldVRFMP.Criteria {
-		ù
 		newCriteria := *criteria
 		newVRFMP.Criteria = append(newVRFMP.Criteria, &newCriteria)
 	}
@@ -274,8 +277,11 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 		connectionPoints := make([]*VNFDConnectionPoint, len(parentVDU.VNFCs))
 		for _, connectionPoint := range component.ConnectionPoints {
 			connectionPoints = append(connectionPoints, &VNFDConnectionPoint{
+				ConnectionPoint: ConnectionPoint{
+					Type: connectionPoint.Type,
+				},
+
 				FloatingIP:           connectionPoint.FloatingIP,
-				Type:                 connectionPoint.Type,
 				VirtualLinkReference: connectionPoint.VirtualLinkReference,
 			})
 		}
