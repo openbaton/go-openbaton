@@ -1,4 +1,4 @@
-package vnfm
+package config
 
 import (
 	"strings"

@@ -1,14 +1,11 @@
 package vnfm
 
 import (
-	"time"
-
 	"github.com/mcilloni/go-openbaton/catalogue"
-	"github.com/mcilloni/go-openbaton/catalogue/messages"
 )
 
-// The Provider interface defines an abstraction of the operations that a VNFM should provide.
-type Provider interface {
+// The Handler interface defines an abstraction of the operations that a VNFM should provide.
+type Handler interface {
 	// ActionForResume uses the given VNFR and VNFCInstance to return a valid
 	// action for resume. NoSuchAction is returned in case no such Action exists.
 	ActionForResume(vnfr *catalogue.VirtualNetworkFunctionRecord,
@@ -77,34 +74,4 @@ type Provider interface {
 
 	// UserData returns a string containing UserData.
 	UserData() string
-}
-
-type NFVOConnector interface {
-	Close() error
-
-	Establish() error
-
-	Exchange(msg messages.NFVMessage, timeout time.Duration) (messages.NFVMessage, error)
-	ExchangeStrings(msg, queue string, timeout time.Duration) (string, error)
-
-	NotifyReceived() (<-chan messages.NFVMessage, error)
-
-	Send(msg messages.NFVMessage) error
-}
-
-type NFVOResponse struct {
-	messages.NFVMessage
-	error
-}
-
-func ExchangeAsync(conn NFVOConnector, msg messages.NFVMessage, timeout time.Duration) <-chan *NFVOResponse {
-	ret := make(chan *NFVOResponse, 1)
-
-	go func() {
-		msg, err := conn.Exchange(msg, timeout)
-
-		ret <- &NFVOResponse{msg, err}
-	}()
-
-	return ret
 }

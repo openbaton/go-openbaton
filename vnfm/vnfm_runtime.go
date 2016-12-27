@@ -7,9 +7,23 @@ import (
 
 	"github.com/mcilloni/go-openbaton/catalogue"
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
+	"github.com/mcilloni/go-openbaton/vnfm/channel"
+	"github.com/mcilloni/go-openbaton/vnfm/config"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
+
+func Register(name string, driver channel.Driver) {
+	if _, ok := impls[name]; ok {
+		panic(fmt.Sprintf("trying to register driver of type %T with already existing name '%s'", driver, name))
+	}
+
+	if driver == nil {
+		panic("nil driver")
+	}
+
+	impls[name] = driver
+}
 
 type VNFM interface {
 	Logger() *log.Logger
@@ -17,35 +31,35 @@ type VNFM interface {
 	Stop() error
 }
 
-func Start(connector NFVOConnector, impl Provider, logger *log.Logger, properties Properties) (VNFM, error) {
+func New(implName string, handler Handler, properties config.Properties, logger *log.Logger) (VNFM, error) {
+	if _, ok := impls[implName]; !ok {
+		return nil, fmt.Errorf("no implementation available for %s. Have you forgot to import a package?", implName)
+	}
+
 	timeout := 2 * time.Second
 
 	if timeoutInt, ok := properties.ValueInt("vnfm.timeout"); !ok {
 		timeout = time.Duration(timeoutInt)
 	}
 
-	msgChan, err := connector.NotifyReceived()
-	if err != nil {
-		return nil, err
-	}
-
 	return &vnfm{
-		conn:     connector,
-		impl:     impl,
+		hnd:      handler,
 		l:        logger,
-		msgChan:  msgChan,
 		props:    properties,
 		quitChan: make(chan struct{}),
 		timeout:  timeout,
 	}, nil
 }
 
+var impls map[string]channel.Driver
+
 type vnfm struct {
-	conn     NFVOConnector
-	impl     Provider
+	cnl      channel.Channel
+	hnd      Handler
+	implName string
 	l        *log.Logger
 	msgChan  <-chan messages.NFVMessage
-	props    Properties
+	props    config.Properties
 	quitChan chan struct{}
 	timeout  time.Duration
 }
@@ -55,18 +69,25 @@ func (vnfm *vnfm) Logger() *log.Logger {
 }
 
 func (vnfm *vnfm) Serve() error {
-	if err := vnfm.conn.Establish(); err != nil {
+	var err error
+	if vnfm.cnl, err = impls[vnfm.implName].Init(vnfm.props); err != nil {
 		return err
 	}
 
 	defer func() {
-		if r := recover(); r != nil {
-			if err := vnfm.conn.Close(); err != nil {
-				vnfm.l.Errorln(err)
-			}
+		r := recover()
+		if err := vnfm.cnl.Close(); err != nil {
+			vnfm.l.Errorln(err)
+		}
+
+		if r != nil {
 			vnfm.l.Panicln(r)
 		}
 	}()
+
+	if vnfm.msgChan, err = vnfm.cnl.NotifyReceived(); err != nil {
+		return err
+	}
 
 MainLoop:
 	for {
@@ -117,7 +138,7 @@ func (vnfm *vnfm) allocateResources(
 	vimInstances map[string]*catalogue.VIMInstance,
 	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
 
-	userData := vnfm.impl.UserData()
+	userData := vnfm.hnd.UserData()
 	vnfm.l.Debugf("Userdata sent to NFVO: %s\n", userData)
 
 	msg, err := messages.New(&messages.VNFMAllocateResources{
@@ -130,7 +151,7 @@ func (vnfm *vnfm) allocateResources(
 		vnfm.l.Panicf("BUG: %v\n", err)
 	}
 
-	nfvoResp, err := vnfm.conn.Exchange(msg, vnfm.timeout)
+	nfvoResp, err := vnfm.cnl.Exchange(msg, vnfm.timeout)
 	if err != nil {
 		vnfm.l.Errorln(err.Error())
 		return nil, &vnfmError{
@@ -250,7 +271,7 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 			vnfm.l.Panicf("BUG: shouldn't happen: %v\n", err)
 		}
 
-		if err := vnfm.conn.Send(errorMsg); err != nil {
+		if err := vnfm.cnl.Send(errorMsg); err != nil {
 			vnfm.l.Errorf("cannot send error message to the NFVO: %v\n", err)
 		}
 	} else {
@@ -260,7 +281,7 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 			}
 			vnfm.l.Debugf("sending action: '%s' and a content '%T' to NFVO", reply.Action(), reply.Content())
 
-			if err := vnfm.conn.Send(reply); err != nil {
+			if err := vnfm.cnl.Send(reply); err != nil {
 				vnfm.l.Errorf("cannot send a reply to the NFVO: %v\n", err)
 			}
 		}
@@ -286,7 +307,7 @@ func (vnfm *vnfm) handleError(errorMessage *messages.OrError) *vnfmError {
 
 	vnfm.l.Errorf("received an error from the NFVO: %s\n", errorMessage.Message)
 
-	if err := vnfm.impl.HandleError(errorMessage.VNFR); err != nil {
+	if err := vnfm.hnd.HandleError(errorMessage.VNFR); err != nil {
 		return &vnfmError{err.Error(), vnfr, nsrID}
 	}
 
@@ -298,7 +319,7 @@ func (vnfm *vnfm) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.N
 	nsrID := vnfr.ParentNsID
 	vnfcInstance := healMessage.VNFCInstance
 
-	vnfrObtained, err := vnfm.impl.Heal(vnfr, vnfcInstance, healMessage.Cause)
+	vnfrObtained, err := vnfm.hnd.Heal(vnfr, vnfcInstance, healMessage.Cause)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -336,7 +357,7 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		vnfm.l.Panicf("BUG: should not happen: %v\n", err)
 	}
 
-	resp, err := vnfm.conn.Exchange(msg, vnfm.timeout)
+	resp, err := vnfm.cnl.Exchange(msg, vnfm.timeout)
 
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, vnfr.ParentNsID}
@@ -367,7 +388,7 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 
 	for _, vdu := range recvVNFR.VDUs {
 		for _, vnfcInstance := range vdu.VNFCInstances {
-			if err := vnfm.impl.CheckEMS(vnfcInstance.Hostname); err != nil {
+			if err := vnfm.hnd.CheckEMS(vnfcInstance.Hostname); err != nil {
 				return nil, &vnfmError{
 					msg:   fmt.Sprintf("error whilee checking for EMS at hostname %s: %s", vnfcInstance.Hostname, err.Error()),
 					nsrID: recvVNFR.ParentNsID,
@@ -383,12 +404,12 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		pkg := instantiateMessage.VNFPackage
 
 		if pkg.ScriptsLink != "" {
-			resultVNFR, err = vnfm.impl.Instantiate(recvVNFR, pkg.ScriptsLink, vimInstances)
+			resultVNFR, err = vnfm.hnd.Instantiate(recvVNFR, pkg.ScriptsLink, vimInstances)
 		} else {
-			resultVNFR, err = vnfm.impl.Instantiate(recvVNFR, pkg.Scripts, vimInstances)
+			resultVNFR, err = vnfm.hnd.Instantiate(recvVNFR, pkg.Scripts, vimInstances)
 		}
 	} else {
-		resultVNFR, err = vnfm.impl.Instantiate(recvVNFR, nil, vimInstances)
+		resultVNFR, err = vnfm.hnd.Instantiate(recvVNFR, nil, vimInstances)
 	}
 
 	if err != nil {
@@ -413,7 +434,7 @@ func (vnfm *vnfm) handleModify(genericMessage *messages.OrGeneric) (messages.NFV
 	vnfr := genericMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
-	resultVNFR, err := vnfm.impl.Modify(vnfr, genericMessage.VNFRDependency)
+	resultVNFR, err := vnfm.hnd.Modify(vnfr, genericMessage.VNFRDependency)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -432,7 +453,7 @@ func (vnfm *vnfm) handleReleaseResources(genericMessage *messages.OrGeneric) (me
 	vnfr := genericMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
-	resultVNFR, err := vnfm.impl.Terminate(vnfr)
+	resultVNFR, err := vnfm.hnd.Terminate(vnfr)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -452,8 +473,8 @@ func (vnfm *vnfm) handleResume(genericMessage *messages.OrGeneric) (messages.NFV
 	vnfrDependency := genericMessage.VNFRDependency
 	nsrID := vnfr.ParentNsID
 
-	if actionForResume := vnfm.impl.ActionForResume(vnfr, nil); actionForResume != catalogue.NoActionSpecified {
-		resumedVNFR, err := vnfm.impl.Resume(vnfr, nil, vnfrDependency)
+	if actionForResume := vnfm.hnd.ActionForResume(vnfr, nil); actionForResume != catalogue.NoActionSpecified {
+		resumedVNFR, err := vnfm.hnd.Resume(vnfr, nil, vnfrDependency)
 		if err != nil {
 			return nil, &vnfmError{err.Error(), vnfr, nsrID}
 		}
@@ -480,7 +501,7 @@ func (vnfm *vnfm) handleScaleIn(scalingMessage *messages.OrScaling) *vnfmError {
 
 	vnfcInstanceToRemove := scalingMessage.VNFCInstance
 
-	if _, err := vnfm.impl.Scale(catalogue.ActionScaleIn, vnfr, vnfcInstanceToRemove, nil, nil); err != nil {
+	if _, err := vnfm.hnd.Scale(catalogue.ActionScaleIn, vnfr, vnfcInstanceToRemove, nil, nil); err != nil {
 		return &vnfmError{err.Error(), vnfr, nsrID}
 	}
 
@@ -500,7 +521,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 	if allocate, set := vnfm.props.ValueBool("vnfm.allocate"); set && allocate {
 		newMsg, err := messages.New(&messages.VNFMScaling{
 			VNFR:     vnfr,
-			UserData: vnfm.impl.UserData(),
+			UserData: vnfm.hnd.UserData(),
 		})
 
 		if err != nil {
@@ -515,7 +536,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 			vnfm.l.Debugf("HB_VERSION == %d\n", replyVNFR.HbVersion)
 
 		case messages.OrError:
-			if err := vnfm.impl.HandleError(content.VNFR); err != nil {
+			if err := vnfm.hnd.HandleError(content.VNFR); err != nil {
 				return nil, &vnfmError{err.Error(), content.VNFR, nsrID}
 			}
 
@@ -535,7 +556,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 			newVNFCInstance.State = "STANDBY"
 		}
 
-		vnfm.impl.CheckEMS(newVNFCInstance.Hostname)
+		vnfm.hnd.CheckEMS(newVNFCInstance.Hostname)
 
 		vnfr = replyVNFR
 	} else {
@@ -555,7 +576,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		scripts = scalingMessage.VNFPackage.Scripts
 	}
 
-	resultVNFR, err := vnfm.impl.Scale(catalogue.ActionScaleOut, vnfr, newVNFCInstance, scripts, scalingMessage.Dependency)
+	resultVNFR, err := vnfm.hnd.Scale(catalogue.ActionScaleOut, vnfr, newVNFCInstance, scripts, scalingMessage.Dependency)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -581,9 +602,9 @@ func (vnfm *vnfm) handleStart(startStopMessage *messages.OrStartStop) (messages.
 
 	var err error
 	if vnfcInstance == nil { // Start the VNF Record
-		startStop.VNFR, err = vnfm.impl.Start(vnfr)
+		startStop.VNFR, err = vnfm.hnd.Start(vnfr)
 	} else { // Start the VNFC Instance
-		startStop.VNFR, err = vnfm.impl.StartVNFCInstance(vnfr, vnfcInstance)
+		startStop.VNFR, err = vnfm.hnd.StartVNFCInstance(vnfr, vnfcInstance)
 	}
 
 	if err != nil {
@@ -607,9 +628,9 @@ func (vnfm *vnfm) handleStop(startStopMessage *messages.OrStartStop) (messages.N
 
 	var err error
 	if vnfcInstance == nil { // Start the VNF Record
-		startStop.VNFR, err = vnfm.impl.Stop(vnfr)
+		startStop.VNFR, err = vnfm.hnd.Stop(vnfr)
 	} else { // Start the VNFC Instance
-		startStop.VNFR, err = vnfm.impl.StopVNFCInstance(vnfr, vnfcInstance)
+		startStop.VNFR, err = vnfm.hnd.StopVNFCInstance(vnfr, vnfcInstance)
 	}
 
 	if err != nil {
@@ -629,7 +650,7 @@ func (vnfm *vnfm) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMe
 	nsrID := vnfr.ParentNsID
 	script := updateMessage.Script
 
-	replyVNFR, err := vnfm.impl.UpdateSoftware(script, vnfr)
+	replyVNFR, err := vnfm.hnd.UpdateSoftware(script, vnfr)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
