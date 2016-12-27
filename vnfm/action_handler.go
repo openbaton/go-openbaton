@@ -82,6 +82,8 @@ type Provider interface {
 type NFVOConnector interface {
 	Close() error
 
+	Establish() error
+
 	Exchange(msg messages.NFVMessage, timeout time.Duration) (messages.NFVMessage, error)
 	ExchangeStrings(msg, queue string, timeout time.Duration) (string, error)
 

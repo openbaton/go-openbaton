@@ -11,30 +11,17 @@ import (
 	"strings"
 )
 
-type VNFM struct {
-	l *log.Logger
-
-	conn     NFVOConnector
-	impl     Provider
-	props    Properties
-	timeout  time.Duration
-	quitChan chan struct{}
+type VNFM interface {
+	Logger() *log.Logger
+	Serve() error
+	Stop() error
 }
 
-func Start(connector NFVOConnector, impl Provider, properties Properties) (*VNFM, error) {
+func Start(connector NFVOConnector, impl Provider, logger *log.Logger, properties Properties) (VNFM, error) {
 	timeout := 2 * time.Second
 
 	if timeoutInt, ok := properties.ValueInt("vnfm.timeout"); !ok {
 		timeout = time.Duration(timeoutInt)
-	}
-
-	vnfm := &VNFM{
-		conn:     connector,
-		impl:     impl,
-		l:        log.New(),
-		props:    properties,
-		timeout:  timeout,
-		quitChan: make(chan struct{}),
 	}
 
 	msgChan, err := connector.NotifyReceived()
@@ -42,27 +29,76 @@ func Start(connector NFVOConnector, impl Provider, properties Properties) (*VNFM
 		return nil, err
 	}
 
-	go vnfm.loop(msgChan)
-
-	return vnfm, nil
+	return &vnfm{
+		conn:     connector,
+		impl:     impl,
+		l:        logger,
+		msgChan:  msgChan,
+		props:    properties,
+		quitChan: make(chan struct{}),
+		timeout:  timeout,
+	}, nil
 }
 
-func (vnfm *VNFM) Logger() *log.Logger {
+type vnfm struct {
+	conn     NFVOConnector
+	impl     Provider
+	l        *log.Logger
+	msgChan  <-chan messages.NFVMessage
+	props    Properties
+	quitChan chan struct{}
+	timeout  time.Duration
+}
+
+func (vnfm *vnfm) Logger() *log.Logger {
 	return vnfm.l
 }
 
-func (vnfm *VNFM) SetLogger(log *log.Logger) {
+func (vnfm *vnfm) Serve() error {
+	if err := vnfm.conn.Establish(); err != nil {
+		return err
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			if err := vnfm.conn.Close(); err != nil {
+				vnfm.l.Errorln(err)
+			}
+			vnfm.l.Panicln(r)
+		}
+	}()
+
+MainLoop:
+	for {
+		select {
+		case msg := <-vnfm.msgChan:
+			if err := vnfm.handle(msg); err != nil {
+				vnfm.l.Errorln(err)
+			}
+
+		case <-vnfm.quitChan:
+			break MainLoop
+
+		default:
+
+		}
+	}
+
+	return nil
+}
+
+func (vnfm *vnfm) SetLogger(log *log.Logger) {
 	vnfm.l = log
 }
 
-func (vnfm *VNFM) Stop() error {
+func (vnfm *vnfm) Stop() error {
 	vnfm.quitChan <- struct{}{}
 
 	select {
 	case <-vnfm.quitChan:
 		return nil
 	case <-time.After(time.Second):
-		return errors.New("the VNFM refused to quit")
+		return errors.New("the vnfm refused to quit")
 	}
 }
 
@@ -76,7 +112,7 @@ func (e *vnfmError) Error() string {
 	return e.msg
 }
 
-func (vnfm *VNFM) allocateResources(
+func (vnfm *vnfm) allocateResources(
 	vnfr *catalogue.VirtualNetworkFunctionRecord,
 	vimInstances map[string]*catalogue.VIMInstance,
 	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
@@ -132,9 +168,9 @@ func (vnfm *VNFM) allocateResources(
 	}
 }
 
-func (vnfm *VNFM) handle(message messages.NFVMessage) error {
+func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 
-	vnfm.l.Debugf("VNFM: Received Message: '%s'\n", message.Action())
+	vnfm.l.Debugf("vnfm: Received Message: '%s'\n", message.Action())
 
 	content := message.Content()
 
@@ -233,7 +269,7 @@ func (vnfm *VNFM) handle(message messages.NFVMessage) error {
 	return err
 }
 
-func (vnfm *VNFM) handleConfigure(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleConfigure(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	nfvMessage, err := messages.New(catalogue.ActionConfigure, &messages.VNFMGeneric{
 		VNFR: genericMessage.VNFR,
 	})
@@ -244,7 +280,7 @@ func (vnfm *VNFM) handleConfigure(genericMessage *messages.OrGeneric) (messages.
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleError(errorMessage *messages.OrError) *vnfmError {
+func (vnfm *vnfm) handleError(errorMessage *messages.OrError) *vnfmError {
 	vnfr := errorMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
@@ -257,7 +293,7 @@ func (vnfm *VNFM) handleError(errorMessage *messages.OrError) *vnfmError {
 	return nil
 }
 
-func (vnfm *VNFM) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.NFVMessage, *vnfmError) {
 	vnfr := healMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	vnfcInstance := healMessage.VNFCInstance
@@ -278,7 +314,7 @@ func (vnfm *VNFM) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.N
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleInstantiate(instantiateMessage *messages.OrInstantiate) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) (messages.NFVMessage, *vnfmError) {
 	extension := instantiateMessage.Extension
 
 	vnfm.l.Debugf("received extensions: %v\n", extension)
@@ -373,7 +409,7 @@ func (vnfm *VNFM) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleModify(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleModify(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	vnfr := genericMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
@@ -392,7 +428,7 @@ func (vnfm *VNFM) handleModify(genericMessage *messages.OrGeneric) (messages.NFV
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleReleaseResources(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleReleaseResources(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	vnfr := genericMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
@@ -411,7 +447,7 @@ func (vnfm *VNFM) handleReleaseResources(genericMessage *messages.OrGeneric) (me
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleResume(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleResume(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	vnfr := genericMessage.VNFR
 	vnfrDependency := genericMessage.VNFRDependency
 	nsrID := vnfr.ParentNsID
@@ -438,7 +474,7 @@ func (vnfm *VNFM) handleResume(genericMessage *messages.OrGeneric) (messages.NFV
 	return nil, nil
 }
 
-func (vnfm *VNFM) handleScaleIn(scalingMessage *messages.OrScaling) *vnfmError {
+func (vnfm *vnfm) handleScaleIn(scalingMessage *messages.OrScaling) *vnfmError {
 	vnfr := scalingMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
@@ -451,7 +487,7 @@ func (vnfm *VNFM) handleScaleIn(scalingMessage *messages.OrScaling) *vnfmError {
 	return nil
 }
 
-func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.NFVMessage, *vnfmError) {
 	vnfr := scalingMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	component := scalingMessage.Component
@@ -536,7 +572,7 @@ func (vnfm *VNFM) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleStart(startStopMessage *messages.OrStartStop) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleStart(startStopMessage *messages.OrStartStop) (messages.NFVMessage, *vnfmError) {
 	vnfr := startStopMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	vnfcInstance := startStopMessage.VNFCInstance
@@ -562,7 +598,7 @@ func (vnfm *VNFM) handleStart(startStopMessage *messages.OrStartStop) (messages.
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleStop(startStopMessage *messages.OrStartStop) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleStop(startStopMessage *messages.OrStartStop) (messages.NFVMessage, *vnfmError) {
 	vnfr := startStopMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	vnfcInstance := startStopMessage.VNFCInstance
@@ -588,7 +624,7 @@ func (vnfm *VNFM) handleStop(startStopMessage *messages.OrStartStop) (messages.N
 	return nfvMessage, nil
 }
 
-func (vnfm *VNFM) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMessage, *vnfmError) {
+func (vnfm *vnfm) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMessage, *vnfmError) {
 	vnfr := updateMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	script := updateMessage.Script
@@ -606,31 +642,4 @@ func (vnfm *VNFM) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMe
 	}
 
 	return nfvMessage, nil
-}
-
-func (vnfm *VNFM) loop(msgChan <-chan messages.NFVMessage) {
-	defer func() {
-		if r := recover(); r != nil {
-			if err := vnfm.conn.Close(); err != nil {
-				vnfm.l.Errorln(err)
-			}
-			vnfm.l.Panicln(r)
-		}
-	}()
-
-MainLoop:
-	for {
-		select {
-		case msg := <-msgChan:
-			if err := vnfm.handle(msg); err != nil {
-				vnfm.l.Errorln(err)
-			}
-
-		case <-vnfm.quitChan:
-			break MainLoop
-
-		default:
-
-		}
-	}
 }
