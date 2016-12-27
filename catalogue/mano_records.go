@@ -9,6 +9,9 @@ const (
 	LinkOfflineThroughManagementAction = LinkStatus("OFFLINETHROUGHMANAGEMENTACTION")
 )
 
+// Component represents a generic component.
+type Component interface{}
+
 // NetworkServiceRecord as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type NetworkServiceRecord struct {
 	ID                       ID                               `json:"id"`
@@ -107,13 +110,15 @@ type VirtualLinkRecord struct {
 }
 
 type VNFCInstance struct {
-	VIMID        string        `json:"vim_id"`
-	VCID         string        `json:"vc_id"`
-	Hostname     string        `json:"hostname"`
-	State        string        `json:"state"`
-	VNFComponent *VNFComponent `json:"vnfComponent,omitempty"`
-	FloatingIPs  []*Ip         `json:"floatingIps"`
-	IPs          []*Ip         `json:"ips"`
+	VNFComponent
+
+	VIMID              string        `json:"vim_id"`
+	VCID               string        `json:"vc_id"`
+	Hostname           string        `json:"hostname"`
+	State              string        `json:"state"`
+	NestedVNFComponent *VNFComponent `json:"vnfComponent,omitempty"`
+	FloatingIPs        []*Ip         `json:"floatingIps"`
+	IPs                []*Ip         `json:"ips"`
 }
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)

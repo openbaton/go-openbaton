@@ -9,11 +9,11 @@ type NFVMessage interface {
 	From() SenderType
 }
 
-// NewMessage creates dynamically a new NFVMessage from the given parameters.
+// New creates dynamically a new NFVMessage from the given parameters.
 // The function accepts a message body and an optional catalogue.Action before, such as in
 // messages.NewMessage(catalogue.ActionError, &VNFMError{}).
 // If no Action is specified, it is inferred using the DefaultAction() method of the body.
-func NewMessage(params ...interface{}) (NFVMessage, error) {
+func New(params ...interface{}) (NFVMessage, error) {
 	action := catalogue.NoActionSpecified
 	var content body
 

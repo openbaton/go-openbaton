@@ -8,7 +8,9 @@ type Properties map[string]interface{}
 
 func (p Properties) Section(key string) (section Properties, ok bool) {
 	if val, ok := p.Value(key); ok {
-		return val.(Properties)
+		ret, ok := val.(Properties)
+
+		return ret, ok
 	}
 
 	return nil, false
@@ -34,31 +36,38 @@ func (p Properties) Value(key string) (interface{}, bool) {
 		current = Properties(subMap)
 	}
 
-	return current[keys[0]]
+	ret, ok := current[keys[0]]
+	return ret, ok
 }
 
 func (p Properties) ValueBool(key string) (value, ok bool) {
 	if val, ok := p.Value(key); ok {
-		return val.(bool)
+		ret, ok := val.(bool)
+
+		return ret, ok
 	}
 
-	return nil, false
+	return false, false
 }
 
 func (p Properties) ValueInt(key string) (value int, ok bool) {
 	if val, ok := p.Value(key); ok {
-		return val.(int)
+		ret, ok := val.(int)
+
+		return ret, ok
 	}
 
-	return nil, false
+	return -1, false
 }
 
 func (p Properties) ValueString(key string) (value string, ok bool) {
 	if val, ok := p.Value(key); ok {
-		return val.(string)
+		ret, ok := val.(string)
+
+		return ret, ok
 	}
 
-	return nil, false
+	return "", false
 }
 
 type stack []string
@@ -72,8 +81,8 @@ func (s *stack) Pop() string {
 		return ""
 	}
 
-	ret := *s[0]
-	*s = *s[1:]
+	ret := (*s)[0]
+	*s = (*s)[1:]
 
 	return ret
 }

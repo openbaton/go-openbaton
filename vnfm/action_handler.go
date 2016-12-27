@@ -9,6 +9,11 @@ import (
 
 // The Provider interface defines an abstraction of the operations that a VNFM should provide.
 type Provider interface {
+	// ActionForResume uses the given VNFR and VNFCInstance to return a valid
+	// action for resume. NoSuchAction is returned in case no such Action exists.
+	ActionForResume(vnfr *catalogue.VirtualNetworkFunctionRecord,
+		vnfcInstance *catalogue.VNFCInstance) catalogue.Action
+
 	// CheckEMS is executed to check if the EMS is up and running on a given hostname.
 	// This method may retry multiple times to allow an EMS to start up and register itself.
 	CheckEMS(hostname string) error
@@ -28,7 +33,7 @@ type Provider interface {
 
 	// Instantiate allows to create a VNF instance.
 	Instantiate(vnfr *catalogue.VirtualNetworkFunctionRecord, scripts interface{},
-		vimInstances map[string][]*catalogue.VIMInstance) (*catalogue.VirtualNetworkFunctionRecord, error)
+		vimInstances map[catalogue.ID][]*catalogue.VIMInstance) (*catalogue.VirtualNetworkFunctionRecord, error)
 
 	// Modify allows making structural changes (e.g.configuration, topology, behavior, redundancy model) to a VNF instance.
 	Modify(vnfr *catalogue.VirtualNetworkFunctionRecord,
@@ -44,7 +49,7 @@ type Provider interface {
 	// Scale allows scaling (out / in, up / down) a VNF instance.
 	Scale(scaleInOrOut catalogue.Action,
 		vnfr *catalogue.VirtualNetworkFunctionRecord,
-		component *catalogue.VNFComponent,
+		component catalogue.Component,
 		scripts interface{},
 		dependency *catalogue.VNFRecordDependency) (*catalogue.VirtualNetworkFunctionRecord, error)
 
