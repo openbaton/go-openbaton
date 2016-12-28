@@ -1,0 +1,3 @@
+﻿[vnfm]
+allocate = true
+timeout = 2

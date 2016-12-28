@@ -9,8 +9,9 @@ import (
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/mcilloni/go-openbaton/vnfm/config"
-	log "github.com/sirupsen/logrus"
+	"github.com/mcilloni/go-openbaton/log"
 	"strings"
+	"os"
 )
 
 func Register(name string, driver channel.Driver) {
@@ -31,23 +32,27 @@ type VNFM interface {
 	Stop() error
 }
 
-func New(implName string, handler Handler, properties config.Properties, logger *log.Logger) (VNFM, error) {
+func New(implName string, handler Handler, config *config.Config) (VNFM, error) {
 	if _, ok := impls[implName]; !ok {
-		return nil, fmt.Errorf("no implementation available for %s. Have you forgot to import a package?", implName)
+		return nil, fmt.Errorf("no implementation available for %s. Have you forgot to import its package?", implName)
 	}
 
-	timeout := 2 * time.Second
+	logger := log.New()
 
-	if timeoutInt, ok := properties.ValueInt("vnfm.timeout"); !ok {
-		timeout = time.Duration(timeoutInt)
-	}
+	if config.LogFile != "" {
+		file, err := os.Open(config.LogFile)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't open the log file %s: %s", config.LogFile, err.Error())
+		}
+
+		logger.Out = file
+	}	
 
 	return &vnfm{
 		hnd:      handler,
+		conf:	  config,
 		l:        logger,
-		props:    properties,
 		quitChan: make(chan struct{}),
-		timeout:  timeout,
 	}, nil
 }
 
@@ -55,11 +60,11 @@ var impls map[string]channel.Driver
 
 type vnfm struct {
 	cnl      channel.Channel
+	conf     *config.Config
 	hnd      Handler
 	implName string
 	l        *log.Logger
 	msgChan  <-chan messages.NFVMessage
-	props    config.Properties
 	quitChan chan struct{}
 	timeout  time.Duration
 }
@@ -70,12 +75,18 @@ func (vnfm *vnfm) Logger() *log.Logger {
 
 func (vnfm *vnfm) Serve() error {
 	var err error
-	if vnfm.cnl, err = impls[vnfm.implName].Init(vnfm.props); err != nil {
+	if vnfm.cnl, err = impls[vnfm.implName].Init(vnfm.conf, vnfm.l); err != nil {
 		return err
 	}
 
 	defer func() {
 		r := recover()
+
+		// If it's not stderr, it's the file we opened in New. 
+		if vnfm.l.Out != os.Stderr {
+			vnfm.l.Out.(*os.File).Close()
+		}
+
 		if err := vnfm.cnl.Close(); err != nil {
 			vnfm.l.Errorln(err)
 		}
@@ -377,7 +388,7 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 
 	vnfm.l.Debugf("VERSION IS: %d\n", recvVNFR.HbVersion)
 
-	if allocate, set := vnfm.props.ValueBool("vnfm.allocate"); set && allocate {
+	if vnfm.conf.Allocate {
 		allocatedVNFR, err := vnfm.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
 		if err != nil {
 			return nil, err
@@ -518,7 +529,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 	vnfm.l.Debugf("The mode is: %s\n", scalingMessage.Mode)
 
 	var newVNFCInstance *catalogue.VNFCInstance
-	if allocate, set := vnfm.props.ValueBool("vnfm.allocate"); set && allocate {
+	if vnfm.conf.Allocate {
 		newMsg, err := messages.New(&messages.VNFMScaling{
 			VNFR:     vnfr,
 			UserData: vnfm.hnd.UserData(),

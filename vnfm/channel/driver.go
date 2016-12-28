@@ -5,12 +5,21 @@ import (
 
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/config"
+	"github.com/mcilloni/go-openbaton/log"
+)
+
+type Status int
+
+const (
+	Running Status = iota
+	Reconnecting
+	Stopped
 )
 
 type Driver interface {
-	// Init initialises a Channel instance using the given config.Properties.
-	// props must contain all the values required by the current implementation.
-	Init(props config.Properties) (Channel, error)
+	// Init initialises a Channel instance using the given config.Config.
+	// conf.Properties must contain all the values required by the current implementation.
+	Init(conf *config.Config, log *log.Logger) (Channel, error)
 }
 
 type Channel interface {
@@ -22,6 +31,8 @@ type Channel interface {
 	NotifyReceived() (<-chan messages.NFVMessage, error)
 
 	Send(msg messages.NFVMessage) error
+
+	Status() Status
 }
 
 type NFVOResponse struct {

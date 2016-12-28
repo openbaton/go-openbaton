@@ -1,88 +1,71 @@
 package config
 
 import (
-	"strings"
+	"time"
+	"io"
+	"os"
+
+	"github.com/BurntSushi/toml"
+	"errors"
 )
 
-type Properties map[string]interface{}
+// Config represents a generic config type for a VNFM,
+// exporting some basic variables from the '[vnfm]' section of 
+// the config file.
+type Config struct {
+    Allocate bool
 
-func (p Properties) Section(key string) (section Properties, ok bool) {
-	if val, ok := p.Value(key); ok {
-		ret, ok := val.(Properties)
+    LogFile string
 
-		return ret, ok
-	}
+    // Properties contain the raw Properties from which this config has
+    // been extracted. They also may contain implementation specific fields that 
+    // may be needed.
+    Properties Properties
 
-	return nil, false
+    // Timeout represents the amount of time to be waited before timing out.
+    Timeout time.Duration
 }
 
-func (p Properties) Value(key string) (interface{}, bool) {
-	keys := stack(strings.Split(key, "."))
-	current := p
+// Load loads a Config from an io.Reader containing TOML data.
+func Load(reader io.Reader) (*Config, error) {
+    props := make(Properties)
 
-	for len(keys) > 1 {
-		key := keys.Pop()
+    if _, err := toml.DecodeReader(reader, props); err != nil {
+        return nil, err
+    }
 
-		iface, ok := current.Value(key)
-		if !ok {
-			return nil, false
-		}
-
-		subMap, ok := iface.(map[string]interface{})
-		if !ok {
-			return nil, false
-		}
-
-		current = Properties(subMap)
-	}
-
-	ret, ok := current[keys[0]]
-	return ret, ok
+    return New(props)
 }
 
-func (p Properties) ValueBool(key string) (value, ok bool) {
-	if val, ok := p.Value(key); ok {
-		ret, ok := val.(bool)
+func LoadFile(fileName string) (*Config, error) {
+    reader, err := os.Open(fileName)
+    if err != nil {
+        return nil, err
+    }
 
-		return ret, ok
-	}
-
-	return false, false
+    return Load(reader)
 }
 
-func (p Properties) ValueInt(key string) (value int, ok bool) {
-	if val, ok := p.Value(key); ok {
-		ret, ok := val.(int)
+func New(props Properties) (*Config, error) {
+    vnfm, ok := props.Section("vnfm")
+    if !ok {
+        return nil, errors.New("malformed config - missing '[vnfm]' section")
+    }
 
-		return ret, ok
-	}
+    allocate, _ := vnfm.ValueBool("allocate", true)
 
-	return -1, false
-}
+    logFile, set := vnfm.ValueString("logfile-path", "")
+    if !set {
+        logFile = ""
+    } 
 
-func (p Properties) ValueString(key string) (value string, ok bool) {
-	if val, ok := p.Value(key); ok {
-		ret, ok := val.(string)
+	timeoutInt, _ := vnfm.ValueInt("timeout", 2000)
+    timeout := time.Duration(timeoutInt) * time.Millisecond
 
-		return ret, ok
-	}
-
-	return "", false
-}
-
-type stack []string
-
-func (s *stack) Empty() bool {
-	return len(*s) == 0
-}
-
-func (s *stack) Pop() string {
-	if s.Empty() {
-		return ""
-	}
-
-	ret := (*s)[0]
-	*s = (*s)[1:]
-
-	return ret
+    return &Config{
+        Allocate: allocate,
+        LogFile: logFile,
+        Properties: props,
+        Timeout: timeout,
+    }, nil
 }
