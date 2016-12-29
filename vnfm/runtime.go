@@ -66,7 +66,6 @@ type vnfm struct {
 	l        *log.Logger
 	msgChan  <-chan messages.NFVMessage
 	quitChan chan struct{}
-	timeout  time.Duration
 }
 
 func (vnfm *vnfm) Logger() *log.Logger {
@@ -162,7 +161,7 @@ func (vnfm *vnfm) allocateResources(
 		vnfm.l.Panicf("BUG: %v\n", err)
 	}
 
-	nfvoResp, err := vnfm.cnl.Exchange(msg, vnfm.timeout)
+	nfvoResp, err := vnfm.cnl.NFVOExchange(msg)
 	if err != nil {
 		vnfm.l.Errorln(err.Error())
 		return nil, &vnfmError{
@@ -282,7 +281,7 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 			vnfm.l.Panicf("BUG: shouldn't happen: %v\n", err)
 		}
 
-		if err := vnfm.cnl.Send(errorMsg); err != nil {
+		if err := vnfm.cnl.NFVOSend(errorMsg); err != nil {
 			vnfm.l.Errorf("cannot send error message to the NFVO: %v\n", err)
 		}
 	} else {
@@ -292,7 +291,7 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 			}
 			vnfm.l.Debugf("sending action: '%s' and a content '%T' to NFVO", reply.Action(), reply.Content())
 
-			if err := vnfm.cnl.Send(reply); err != nil {
+			if err := vnfm.cnl.NFVOSend(reply); err != nil {
 				vnfm.l.Errorf("cannot send a reply to the NFVO: %v\n", err)
 			}
 		}
@@ -368,7 +367,7 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		vnfm.l.Panicf("BUG: should not happen: %v\n", err)
 	}
 
-	resp, err := vnfm.cnl.Exchange(msg, vnfm.timeout)
+	resp, err := vnfm.cnl.NFVOExchange(msg)
 
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, vnfr.ParentNsID}

@@ -1,8 +1,6 @@
 package channel
 
 import (
-	"time"
-
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/config"
 	"github.com/mcilloni/go-openbaton/log"
@@ -25,12 +23,14 @@ type Driver interface {
 type Channel interface {
 	Close() error
 
-	Exchange(msg messages.NFVMessage, timeout time.Duration) (messages.NFVMessage, error)
-	ExchangeStrings(msg, queue string, timeout time.Duration) (string, error)
+	Exchange(dest string, msg []byte) ([]byte, error)
+	
+	NFVOExchange(msg messages.NFVMessage) (messages.NFVMessage, error)
+	NFVOSend(msg messages.NFVMessage) error
 
 	NotifyReceived() (<-chan messages.NFVMessage, error)
 
-	Send(msg messages.NFVMessage) error
+	Send(dest string, msg []byte) error
 
 	Status() Status
 }
@@ -40,11 +40,11 @@ type NFVOResponse struct {
 	error
 }
 
-func ExchangeAsync(cnl Channel, msg messages.NFVMessage, timeout time.Duration) <-chan *NFVOResponse {
+func NFVOExchangeAsync(cnl Channel, msg messages.NFVMessage) <-chan *NFVOResponse {
 	ret := make(chan *NFVOResponse, 1)
 
 	go func() {
-		msg, err := cnl.Exchange(msg, timeout)
+		msg, err := cnl.NFVOExchange(msg)
 
 		ret <- &NFVOResponse{msg, err}
 	}()

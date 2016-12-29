@@ -1,7 +1,6 @@
 package config
 
 import (
-	"time"
 	"io"
 	"os"
 
@@ -21,9 +20,6 @@ type Config struct {
     // been extracted. They also may contain implementation specific fields that 
     // may be needed.
     Properties Properties
-
-    // Timeout represents the amount of time to be waited before timing out.
-    Timeout time.Duration
 }
 
 // Load loads a Config from an io.Reader containing TOML data.
@@ -59,13 +55,9 @@ func New(props Properties) (*Config, error) {
         logFile = ""
     } 
 
-	timeoutInt, _ := vnfm.ValueInt("timeout", 2000)
-    timeout := time.Duration(timeoutInt) * time.Millisecond
-
     return &Config{
         Allocate: allocate,
         LogFile: logFile,
         Properties: props,
-        Timeout: timeout,
     }, nil
 }

@@ -13,6 +13,17 @@ var (
 	ErrMalformedMessage = errors.New("received JSON is malformed")
 )
 
+func Marshal(msg NFVMessage) ([]byte, error) {
+	return json.MarshalIndent(msg, "", "  ")
+}
+
+func Unmarshal(msgBytes []byte) (NFVMessage, error) {
+	msg := message{}
+	err := json.Unmarshal(msgBytes, &msg)
+
+	return &msg, err
+}
+
 func (msg *message) MarshalJSON() ([]byte, error) {
 	// We need to serialize the message structure into a
 	// compatible JSON message.
