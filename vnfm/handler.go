@@ -11,13 +11,6 @@ type Handler interface {
 	ActionForResume(vnfr *catalogue.VirtualNetworkFunctionRecord,
 		vnfcInstance *catalogue.VNFCInstance) catalogue.Action
 
-	// CheckEMS is executed to check if the EMS is up and running on a given hostname.
-	// This method may retry multiple times to allow an EMS to start up and register itself.
-	CheckEMS(hostname string) error
-
-	// CheckEMSStarted is executed to check if the EMS has already completed its startup on a given VDU.
-	CheckEMSStarted(vduHostame string) error
-
 	// CheckInstantiationFeasibility allows the VNFM to verify if the VNF instantiation is possible.
 	CheckInstantiationFeasibility() error
 

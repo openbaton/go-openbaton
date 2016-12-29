@@ -396,18 +396,6 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		recvVNFR = allocatedVNFR
 	}
 
-	for _, vdu := range recvVNFR.VDUs {
-		for _, vnfcInstance := range vdu.VNFCInstances {
-			if err := vnfm.hnd.CheckEMS(vnfcInstance.Hostname); err != nil {
-				return nil, &vnfmError{
-					msg:   fmt.Sprintf("error whilee checking for EMS at hostname %s: %s", vnfcInstance.Hostname, err.Error()),
-					nsrID: recvVNFR.ParentNsID,
-					vnfr:  recvVNFR,
-				}
-			}
-		}
-	}
-
 	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
 
 	if instantiateMessage.VNFPackage != nil {
@@ -566,15 +554,12 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 			newVNFCInstance.State = "STANDBY"
 		}
 
-		vnfm.hnd.CheckEMS(newVNFCInstance.Hostname)
-
 		vnfr = replyVNFR
 	} else {
 		vnfm.l.Warnln("vnfm.allocate is not set. No new VNFCInstance has been instantiated.")
 	}
 
 	var scripts interface{}
-
 	switch {
 	case scalingMessage.VNFPackage == nil:
 		scripts = []*catalogue.Script{}

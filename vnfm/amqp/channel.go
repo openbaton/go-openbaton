@@ -1,6 +1,7 @@
 package amqp
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -53,9 +54,10 @@ type amqpChannel struct {
 
 	conn *amqp.Connection
 	cnl  *amqp.Channel
+	
+	receiverDeliveryChan chan (<-chan amqp.Delivery)
 
 	l            *log.Logger
-	notifyChans  []chan<- messages.NFVMessage
 	numOfWorkers int
 	quitChan     chan struct{}
 	sendQueue    chan *exchange
@@ -85,7 +87,6 @@ func newChannel(props config.Properties, log *log.Logger) (*amqpChannel, error) 
 
 	acnl := &amqpChannel{
 		l:           log,
-		notifyChans: []chan<- messages.NFVMessage{},
 		quitChan:    make(chan struct{}),
 		status:      channel.Stopped,
 		subChan:     make(chan chan messages.NFVMessage),
@@ -150,11 +151,33 @@ func newChannel(props config.Properties, log *log.Logger) (*amqpChannel, error) 
 	acnl.sendQueue = make(chan *exchange, jobQueueSize)
 	acnl.numOfWorkers = workers
 	acnl.statusChan = make(chan channel.Status, workers)
+	acnl.receiverDeliveryChan = make(chan (<-chan amqp.Delivery), 1)
 
 	return acnl, acnl.spawn()
 }
 
-func (acnl *amqpChannel) setup() (chan *amqp.Error, error) {
+func (acnl *amqpChannel) endpoint() *catalogue.Endpoint {
+	return &catalogue.Endpoint{
+		Active:       true,
+		Description:  acnl.cfg.vnfmDescr,
+		Enabled:      true,
+		Endpoint:     acnl.cfg.vnfmEndpoint,
+		EndpointType: "RABBIT",
+		ID:           catalogue.GenerateID(),
+		Type:         acnl.cfg.vnfmType,
+	}
+}
+
+func (acnl *amqpChannel) register() error {
+	msg, err := json.Marshal(acnl.endpoint())
+	if err != nil {
+		return err
+	}
+
+	return acnl.publish(QueueVNFMRegister, msg)
+}
+
+func (acnl *amqpChannel) setup() (<-chan *amqp.Error, error) {
 	acnl.l.Infof("dialing AMQP with uri %s\n", acnl.cfg.connstr)
 
 	conn, err := amqp.DialConfig(acnl.cfg.connstr, acnl.cfg.cfg)
@@ -179,12 +202,28 @@ func (acnl *amqpChannel) setup() (chan *amqp.Error, error) {
 	acnl.conn = conn
 	acnl.cnl = cnl
 
+	// setup incoming deliveries
+	deliveries, err := cnl.Consume(
+		acnl.cfg.queues.generic, // queue
+		"",     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	acnl.receiverDeliveryChan <- deliveries
+
 	return conn.NotifyClose(make(chan *amqp.Error)), nil
 }
 
 // Pretty random, should be checked
 func (acnl *amqpChannel) setupQueues(cnl *amqp.Channel) error {
-	if _, err := cnl.QueueDeclare(QueueVNFMRegister, true, acnl.cfg.queues.autodelete,
+	/*if _, err := cnl.QueueDeclare(QueueVNFMRegister, true, acnl.cfg.queues.autodelete,
 		acnl.cfg.queues.exclusive, false, nil); err != nil {
 
 		return err
@@ -222,8 +261,9 @@ func (acnl *amqpChannel) setupQueues(cnl *amqp.Channel) error {
 
 	if err := cnl.QueueBind(QueueVNFMCoreActionsReply, QueueVNFMCoreActionsReply, acnl.cfg.exchange.name, false, nil); err != nil {
 		return err
-	}
-	
+	}*/
+
+	// is this needed? 
 	if _, err := cnl.QueueDeclare(acnl.cfg.queues.generic, true, acnl.cfg.queues.autodelete,
 		acnl.cfg.queues.exclusive, false, nil); err != nil {
 
@@ -234,4 +274,35 @@ func (acnl *amqpChannel) setupQueues(cnl *amqp.Channel) error {
 		return err
 	}
 	return nil
+}
+
+// unregister attempts several times to unregister the Endpoint,
+// reestablishing the connection in case of previous failure.
+func (acnl *amqpChannel) unregister() error {
+	const Attempts = 2
+
+	msg, err := json.Marshal(acnl.endpoint())
+	if err != nil {
+		return err
+	}
+
+	unregFn := func() error {
+		return acnl.publish(QueueVNFMUnregister, msg)
+	}
+
+	for i := 0; i < Attempts; i++ {
+		if i > 0 {
+			acnl.l.Warnf("endpoint unregister request failed to send. Reinitializing the connection (tentative #%d)\n", i)
+			if _, err = acnl.setup(); err != nil {
+				continue
+			}
+		}
+
+		if err = unregFn(); err == nil {
+			acnl.l.Infof("endpoint unregister request successfully sent at tentative %d\n", i)
+			return nil
+		}	
+	}
+
+	return err
 }
