@@ -52,6 +52,17 @@ type DependencyParameters struct {
 	Parameters map[string]string `json:"parameters"`
 }
 
+type Endpoint struct {
+	ID           ID     `json:"id"`
+	Version      int    `json:"version"`
+	Type         string `json:"type"`
+	EndpointType string `json:"endpointType"`
+	Endpoint     string `json:"endpoint"`
+	Description  string `json:"description"`
+	Enabled      bool   `json:"enabled"`
+	Active       bool   `json:"active"`
+}
+
 type HistoryLifecycleEvent struct {
 	ID          ID     `json:"id"`
 	Event       string `json:"event"`
