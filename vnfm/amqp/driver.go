@@ -17,7 +17,7 @@ func init() {
 type amqpDriver struct{}
 
 func (amqpDriver) Init(cnf *config.Config, log *log.Logger) (channel.Channel, error) {
-	ret, err := newChannel(cnf.Properties, log)
+	ret, err := newChannel(cnf, log)
 	if err != nil {
 		return nil, err
 	}

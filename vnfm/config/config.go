@@ -4,60 +4,79 @@ import (
 	"io"
 	"os"
 
-	"github.com/BurntSushi/toml"
 	"errors"
+	"github.com/BurntSushi/toml"
 )
 
 // Config represents a generic config type for a VNFM,
-// exporting some basic variables from the '[vnfm]' section of 
+// exporting some basic variables from the '[vnfm]' section of
 // the config file.
 type Config struct {
-    Allocate bool
+	Allocate bool
 
-    LogFile string
+	LogFile string
 
-    // Properties contain the raw Properties from which this config has
-    // been extracted. They also may contain implementation specific fields that 
-    // may be needed.
-    Properties Properties
+	Type        string
+	Endpoint    string
+	Description string
+
+	// Properties contain the raw Properties from which this config has
+	// been extracted. They also may contain implementation specific fields that
+	// may be needed.
+	Properties Properties
 }
 
 // Load loads a Config from an io.Reader containing TOML data.
 func Load(reader io.Reader) (*Config, error) {
-    props := make(Properties)
+	props := make(Properties)
 
-    if _, err := toml.DecodeReader(reader, props); err != nil {
-        return nil, err
-    }
+	if _, err := toml.DecodeReader(reader, props); err != nil {
+		return nil, err
+	}
 
-    return New(props)
+	return New(props)
 }
 
 func LoadFile(fileName string) (*Config, error) {
-    reader, err := os.Open(fileName)
-    if err != nil {
-        return nil, err
-    }
+	reader, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
 
-    return Load(reader)
+	return Load(reader)
 }
 
 func New(props Properties) (*Config, error) {
-    vnfm, ok := props.Section("vnfm")
-    if !ok {
-        return nil, errors.New("malformed config - missing '[vnfm]' section")
-    }
+	vnfm, ok := props.Section("vnfm")
+	if !ok {
+		return nil, errors.New("malformed config - missing '[vnfm]' section")
+	}
 
-    allocate, _ := vnfm.ValueBool("allocate", true)
+	allocate, _ := vnfm.ValueBool("allocate", true)
 
-    logFile, set := vnfm.ValueString("logfile-path", "")
-    if !set {
-        logFile = ""
-    } 
+	logFile, set := vnfm.ValueString("logfile-path", "")
+	if !set {
+		logFile = ""
+	}
 
-    return &Config{
-        Allocate: allocate,
-        LogFile: logFile,
-        Properties: props,
-    }, nil
+	vnfmType, set := vnfm.ValueString("type", "")
+	if !set {
+		return nil, errors.New("no vnfm.type in config")
+	}
+
+	endpoint, set := vnfm.ValueString("endpoint", "")
+	if !set {
+		return nil, errors.New("no vnfm.endpoint in config")
+	}
+
+	descr, _ := vnfm.ValueString("description", "")
+
+	return &Config{
+		Allocate:    allocate,
+		Description: descr,
+		Endpoint:    endpoint,
+		LogFile:     logFile,
+		Properties:  props,
+		Type:        vnfmType,
+	}, nil
 }

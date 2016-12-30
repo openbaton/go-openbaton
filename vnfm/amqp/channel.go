@@ -66,24 +66,8 @@ type amqpChannel struct {
 	subChan      chan chan messages.NFVMessage
 }
 
-func newChannel(props config.Properties, log *log.Logger) (*amqpChannel, error) {
-	vnfmType := ""
-	vnfmEndpoint := ""
-	vnfmDescr := ""
-
-	if sect, ok := props.Section("vnfm"); ok {
-		if vnfmType, ok = sect.ValueString("type", ""); !ok {
-			return nil, errors.New("no vnfm.type in config")
-		}
-
-		if vnfmEndpoint, ok = sect.ValueString("endpoint", ""); !ok {
-			return nil, errors.New("no vnfm.endpoint in config")
-		}
-
-		vnfmDescr, _ = sect.ValueString("description", vnfmDescr)
-	} else {
-		return nil, errors.New("no section [vnfm] in config")
-	}
+func newChannel(config *config.Config, log *log.Logger) (*amqpChannel, error) {
+	props := config.Properties
 
 	acnl := &amqpChannel{
 		l:           log,
@@ -93,10 +77,10 @@ func newChannel(props config.Properties, log *log.Logger) (*amqpChannel, error) 
 		subChan:     make(chan chan messages.NFVMessage),
 	}
 
-	acnl.cfg.vnfmDescr = vnfmDescr
-	acnl.cfg.vnfmEndpoint = vnfmEndpoint
-	acnl.cfg.vnfmType = vnfmType
-	acnl.cfg.queues.generic = fmt.Sprintf("nfvo.%s.actions", vnfmType)
+	acnl.cfg.vnfmDescr = config.Description
+	acnl.cfg.vnfmEndpoint = config.Endpoint
+	acnl.cfg.vnfmType = config.Type
+	acnl.cfg.queues.generic = fmt.Sprintf("nfvo.%s.actions", config.Type)
 
 	// defaults
 	host := "localhost"
