@@ -1,9 +1,9 @@
-package channel
+﻿package channel
 
 import (
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/config"
-	"github.com/mcilloni/go-openbaton/log"
+	log "github.com/sirupsen/logrus"
 )
 
 type Status int

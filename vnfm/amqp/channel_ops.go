@@ -74,13 +74,13 @@ func (acnl *amqpChannel) Status() channel.Status {
 
 func (acnl *amqpChannel) publish(queue string, msg []byte) error {
 	return acnl.cnl.Publish(
-		acnl.cfg.exchange.name, 
+		acnl.cfg.exchange.name,
 		queue,
 		false,
 		false,
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body: msg,
+			Body:        msg,
 		},
 	)
 }
@@ -93,12 +93,12 @@ func (acnl *amqpChannel) rpc(queue string, msg []byte) ([]byte, error) {
 
 	deliveries, err := acnl.cnl.Consume(
 		replyQueue, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		"",         // consumer
+		true,       // auto-ack
+		false,      // exclusive
+		false,      // no-local
+		false,      // no-wait
+		nil,        // args
 	)
 	if err != nil {
 		return nil, err
@@ -107,15 +107,15 @@ func (acnl *amqpChannel) rpc(queue string, msg []byte) ([]byte, error) {
 	corrID := string(catalogue.GenerateID())
 
 	err = acnl.cnl.Publish(
-		acnl.cfg.exchange.name, 
+		acnl.cfg.exchange.name,
 		queue,
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType:   "text/plain",
 			CorrelationId: corrID,
-			ReplyTo: replyQueue,
-			Body: msg,
+			ReplyTo:       replyQueue,
+			Body:          msg,
 		},
 	)
 	if err != nil {

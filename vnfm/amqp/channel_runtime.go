@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
+	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/streadway/amqp"
 )
 
@@ -15,7 +15,7 @@ var (
 
 func (acnl *amqpChannel) closeQueues() {
 	acnl.setStatus(channel.Quitting)
-	
+
 	close(acnl.statusChan)
 	close(acnl.sendQueue)
 	close(acnl.subChan)
@@ -89,7 +89,7 @@ func (acnl *amqpChannel) spawn() error {
 	return nil
 }
 
-// spawnReceiver spawns a goroutine which handles the reception of 
+// spawnReceiver spawns a goroutine which handles the reception of
 // incoming messages from the NFVO on a dedicated queue.
 // The receiver main channel is updated by setup() with a new
 // consumer each time the connection is reestablished.
@@ -101,54 +101,55 @@ func (acnl *amqpChannel) spawnReceiver() {
 		notifyChans := []chan<- messages.NFVMessage{}
 
 		var deliveryChan <-chan amqp.Delivery
-		RecvLoop: for {
+	RecvLoop:
+		for {
 			select {
-				// setup delivers a new channel to this receiver, to
-				// be listened for Deliveries. 
-				case deliveryChan = <-acnl.receiverDeliveryChan:
-					if deliveryChan == nil {
-						break RecvLoop
+			// setup delivers a new channel to this receiver, to
+			// be listened for Deliveries.
+			case deliveryChan = <-acnl.receiverDeliveryChan:
+				if deliveryChan == nil {
+					break RecvLoop
+				}
+				acnl.l.Debugln("receiver: new delivery channel received")
+				// chan updated
+
+			// receives and adds a chan to the list of notifyChans
+			case notifyChan := <-acnl.subChan:
+				acnl.l.Debugln("receiver: new notify channel received")
+				notifyChans = append(notifyChans, notifyChan)
+
+			case delivery, ok := <-deliveryChan:
+				if ok {
+					msg, err := messages.Unmarshal(delivery.Body)
+					if err != nil {
+						acnl.l.Errorf("while receiving message: %v\n", err)
+						continue RecvLoop
 					}
-					acnl.l.Debugln("receiver: new delivery channel received")
-					// chan updated
 
-				// receives and adds a chan to the list of notifyChans 
-				case notifyChan := <-acnl.subChan:
-					acnl.l.Debugln("receiver: new notify channel received")
-					notifyChans = append(notifyChans, notifyChan)
+					last := 0
+					for _, c := range notifyChans {
+						select {
+						// message sent successfully.
+						case c <- msg:
+							// keep the channel around for the next time
+							notifyChans[last] = c
+							last++
 
-				case delivery, ok := <-deliveryChan:
-					if ok {
-						msg, err := messages.Unmarshal(delivery.Body)
-						if err != nil {
-							acnl.l.Errorf("while receiving message: %v\n", err)
-							continue RecvLoop
+						// nobody is listening at the other end of the channel.
+						case <-time.After(1 * time.Second):
+							close(c)
 						}
-
-						last := 0
-						for _, c := range notifyChans {
-							select {
-							// message sent successfully.
-							case c <- msg:
-								// keep the channel around for the next time
-								notifyChans[last] = c
-								last++
-
-							// nobody is listening at the other end of the channel.
-							case <-time.After(1 * time.Second):
-								close(c)
-							}
-						}
-
-						// notifyChans trimmed of dead chans
-						notifyChans = notifyChans[last:]
-					} else {
-						// make deliveryChan nil if someone closes it:
-						// a closed channel always immediately returns a zero value, thus never
-						// allowing the select to block.
-						// A nil channel always blocks.
-						deliveryChan = nil
 					}
+
+					// notifyChans trimmed of dead chans
+					notifyChans = notifyChans[last:]
+				} else {
+					// make deliveryChan nil if someone closes it:
+					// a closed channel always immediately returns a zero value, thus never
+					// allowing the select to block.
+					// A nil channel always blocks.
+					deliveryChan = nil
+				}
 			}
 		}
 
@@ -182,7 +183,8 @@ func (acnl *amqpChannel) worker(id int) {
 		return nil
 	}
 
-	WorkerLoop: for {
+WorkerLoop:
+	for {
 		select {
 		// Updates the status. If it becomes Running, the next loop will accept incoming jobs again
 		case status = <-acnl.statusChan:

@@ -2,15 +2,14 @@ package amqp
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/mcilloni/go-openbaton/catalogue"
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
-	"github.com/mcilloni/go-openbaton/log"
 	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/mcilloni/go-openbaton/vnfm/config"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -54,7 +53,7 @@ type amqpChannel struct {
 
 	conn *amqp.Connection
 	cnl  *amqp.Channel
-	
+
 	receiverDeliveryChan chan (<-chan amqp.Delivery)
 
 	l            *log.Logger
@@ -70,11 +69,11 @@ func newChannel(config *config.Config, log *log.Logger) (*amqpChannel, error) {
 	props := config.Properties
 
 	acnl := &amqpChannel{
-		l:           log,
-		quitChan:    make(chan struct{}),
+		l:                    log,
+		quitChan:             make(chan struct{}),
 		receiverDeliveryChan: make(chan (<-chan amqp.Delivery), 1),
-		status:      channel.Stopped,
-		subChan:     make(chan chan messages.NFVMessage),
+		status:               channel.Stopped,
+		subChan:              make(chan chan messages.NFVMessage),
 	}
 
 	acnl.cfg.vnfmDescr = config.Description
@@ -189,12 +188,12 @@ func (acnl *amqpChannel) setup() (<-chan *amqp.Error, error) {
 	// setup incoming deliveries
 	deliveries, err := cnl.Consume(
 		acnl.cfg.queues.generic, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		"",    // consumer
+		true,  // auto-ack
+		false, // exclusive
+		false, // no-local
+		false, // no-wait
+		nil,   // args
 	)
 	if err != nil {
 		return nil, err
@@ -247,7 +246,7 @@ func (acnl *amqpChannel) setupQueues(cnl *amqp.Channel) error {
 		return err
 	}*/
 
-	// is this needed? 
+	// is this needed?
 	if _, err := cnl.QueueDeclare(acnl.cfg.queues.generic, true, acnl.cfg.queues.autodelete,
 		acnl.cfg.queues.exclusive, false, nil); err != nil {
 
@@ -285,7 +284,7 @@ func (acnl *amqpChannel) unregister() error {
 		if err = unregFn(); err == nil {
 			acnl.l.Infof("endpoint unregister request successfully sent at tentative %d\n", i)
 			return nil
-		}	
+		}
 	}
 
 	return err

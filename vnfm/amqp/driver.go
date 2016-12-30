@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"strconv"
 
-	"github.com/mcilloni/go-openbaton/log"
 	"github.com/mcilloni/go-openbaton/vnfm"
 	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/mcilloni/go-openbaton/vnfm/config"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {

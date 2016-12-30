@@ -9,9 +9,9 @@ import (
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/mcilloni/go-openbaton/vnfm/config"
-	"github.com/mcilloni/go-openbaton/log"
-	"strings"
+	log "github.com/sirupsen/logrus"
 	"os"
+	"strings"
 )
 
 func Register(name string, driver channel.Driver) {
@@ -46,11 +46,11 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 		}
 
 		logger.Out = file
-	}	
+	}
 
 	return &vnfm{
 		hnd:      handler,
-		conf:	  config,
+		conf:     config,
 		l:        logger,
 		quitChan: make(chan struct{}),
 	}, nil
@@ -81,7 +81,7 @@ func (vnfm *vnfm) Serve() error {
 	defer func() {
 		r := recover()
 
-		// If it's not stderr, it's the file we opened in New. 
+		// If it's not stderr, it's the file we opened in New.
 		if vnfm.l.Out != os.Stderr {
 			vnfm.l.Out.(*os.File).Close()
 		}
