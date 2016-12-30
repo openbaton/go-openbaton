@@ -139,14 +139,14 @@ func (vnfm *vnfm) spawnWorkers() {
 }
 
 func (vnfm *vnfm) worker(id int) {
-	vnfm.l.Infof("VNFM worker %d spawned\n", id)
+	vnfm.l.Infof("VNFM worker %d spawned", id)
 
 	// msgChan should be closed by the driver when exiting.
 	for msg := range vnfm.msgChan {
 		if err := vnfm.handle(msg); err != nil {
-			vnfm.l.Errorf("in VNFM worker %d: %v\n", id, err)
+			vnfm.l.Errorf("in VNFM worker %d: %v", id, err)
 		}
 	}
 
-	vnfm.l.Infof("VNFM worker %d exiting\n", id)
+	vnfm.l.Infof("VNFM worker %d exiting", id)
 }

@@ -24,7 +24,7 @@ func (vnfm *vnfm) allocateResources(
 	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
 
 	userData := vnfm.hnd.UserData()
-	vnfm.l.Debugf("Userdata sent to NFVO: %s\n", userData)
+	vnfm.l.Debugf("Userdata sent to NFVO: %s", userData)
 
 	msg, err := messages.New(&messages.VNFMAllocateResources{
 		VNFR:         vnfr,
@@ -33,7 +33,7 @@ func (vnfm *vnfm) allocateResources(
 		KeyPairs:     keyPairs,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: %v\n", err)
+		vnfm.l.Panicf("BUG: %v", err)
 	}
 
 	nfvoResp, err := vnfm.cnl.NFVOExchange(msg)
@@ -55,14 +55,14 @@ func (vnfm *vnfm) allocateResources(
 			errVNFR := errorMessage.VNFR
 
 			return nil, &vnfmError{
-				msg:   fmt.Sprintf("Not able to allocate Resources because: %s\n", errorMessage.Message),
+				msg:   fmt.Sprintf("Not able to allocate Resources because: %s", errorMessage.Message),
 				vnfr:  errVNFR,
 				nsrID: vnfr.ParentNsID,
 			}
 		}
 
 		message := nfvoResp.Content().(*messages.OrGeneric)
-		vnfm.l.Debugf("Received from ALLOCATE: %s\n", message.VNFR)
+		vnfm.l.Debugf("Received from ALLOCATE: %s", message.VNFR)
 
 		return message.VNFR, nil
 	}
@@ -76,7 +76,7 @@ func (vnfm *vnfm) allocateResources(
 
 func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 
-	vnfm.l.Debugf("vnfm: Received Message: '%s'\n", message.Action())
+	vnfm.l.Debugf("vnfm: Received Message: '%s'", message.Action())
 
 	content := message.Content()
 
@@ -141,7 +141,7 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 		reply, err = vnfm.handleResume(genericMessage)
 
 	default:
-		vnfm.l.Warnf("received unsupported action '%s'\n", message.Action())
+		vnfm.l.Warnf("received unsupported action '%s'", message.Action())
 
 	}
 
@@ -153,11 +153,11 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 			NSRID: err.nsrID,
 		})
 		if err != nil {
-			vnfm.l.Panicf("BUG: shouldn't happen: %v\n", err)
+			vnfm.l.Panicf("BUG: shouldn't happen: %v", err)
 		}
 
 		if err := vnfm.cnl.NFVOSend(errorMsg); err != nil {
-			vnfm.l.Errorf("cannot send error message to the NFVO: %v\n", err)
+			vnfm.l.Errorf("cannot send error message to the NFVO: %v", err)
 		}
 	} else {
 		if reply != nil {
@@ -167,7 +167,7 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 			vnfm.l.Debugf("sending action: '%s' and a content '%T' to NFVO", reply.Action(), reply.Content())
 
 			if err := vnfm.cnl.NFVOSend(reply); err != nil {
-				vnfm.l.Errorf("cannot send a reply to the NFVO: %v\n", err)
+				vnfm.l.Errorf("cannot send a reply to the NFVO: %v", err)
 			}
 		}
 	}
@@ -180,7 +180,7 @@ func (vnfm *vnfm) handleConfigure(genericMessage *messages.OrGeneric) (messages.
 		VNFR: genericMessage.VNFR,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouldn't happen: %v\n", err)
+		vnfm.l.Panicf("BUG: shouldn't happen: %v", err)
 	}
 
 	return nfvMessage, nil
@@ -190,7 +190,7 @@ func (vnfm *vnfm) handleError(errorMessage *messages.OrError) *vnfmError {
 	vnfr := errorMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
-	vnfm.l.Errorf("received an error from the NFVO: %s\n", errorMessage.Message)
+	vnfm.l.Errorf("received an error from the NFVO: %s", errorMessage.Message)
 
 	if err := vnfm.hnd.HandleError(errorMessage.VNFR); err != nil {
 		return &vnfmError{err.Error(), vnfr, nsrID}
@@ -214,7 +214,7 @@ func (vnfm *vnfm) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.N
 		VNFCInstance: vnfcInstance,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouln't happen: %v\n", err)
+		vnfm.l.Panicf("BUG: shouln't happen: %v", err)
 	}
 
 	return nfvMessage, nil
@@ -223,8 +223,8 @@ func (vnfm *vnfm) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.N
 func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) (messages.NFVMessage, *vnfmError) {
 	extension := instantiateMessage.Extension
 
-	vnfm.l.Debugf("received extensions: %v\n", extension)
-	vnfm.l.Debugf("received keys: %v\n", instantiateMessage.Keys)
+	vnfm.l.Debugf("received extensions: %v", extension)
+	vnfm.l.Debugf("received keys: %v", instantiateMessage.Keys)
 
 	vimInstances := instantiateMessage.VIMInstances
 
@@ -239,7 +239,7 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		VNFR: vnfr,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: should not happen: %v\n", err)
+		vnfm.l.Panicf("BUG: should not happen: %v", err)
 	}
 
 	resp, err := vnfm.cnl.NFVOExchange(msg)
@@ -260,7 +260,7 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 	recvVNFR := respContent.VNFR
 	vimInstanceChosen := respContent.VDUVIM
 
-	vnfm.l.Debugf("VERSION IS: %d\n", recvVNFR.HbVersion)
+	vnfm.l.Debugf("VERSION IS: %d", recvVNFR.HbVersion)
 
 	if vnfm.conf.Allocate {
 		allocatedVNFR, err := vnfm.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
@@ -356,10 +356,10 @@ func (vnfm *vnfm) handleResume(genericMessage *messages.OrGeneric) (messages.NFV
 			VNFR: resumedVNFR,
 		})
 		if err != nil {
-			vnfm.l.Panicf("BUG: shouln't happen: %v\n", err)
+			vnfm.l.Panicf("BUG: shouln't happen: %v", err)
 		}
 
-		vnfm.l.Debugf("Resuming vnfr '%d' with dependency target: '%s' for action: '%s'\n",
+		vnfm.l.Debugf("Resuming vnfr '%d' with dependency target: '%s' for action: '%s'",
 			vnfr.ID, vnfrDependency.Target, actionForResume)
 
 		return nfvMessage, nil
@@ -386,9 +386,9 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 	nsrID := vnfr.ParentNsID
 	component := scalingMessage.Component
 
-	vnfm.l.Debugf("HB_VERSION == %d\n", vnfr.HbVersion)
-	vnfm.l.Infof("Adding VNFComponent: %v\n", component)
-	vnfm.l.Debugf("The mode is: %s\n", scalingMessage.Mode)
+	vnfm.l.Debugf("HB_VERSION == %d", vnfr.HbVersion)
+	vnfm.l.Infof("Adding VNFComponent: %v", component)
+	vnfm.l.Debugf("The mode is: %s", scalingMessage.Mode)
 
 	var newVNFCInstance *catalogue.VNFCInstance
 	if vnfm.conf.Allocate {
@@ -406,7 +406,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		switch content := newMsg.Content().(type) {
 		case messages.OrGeneric:
 			replyVNFR = content.VNFR
-			vnfm.l.Debugf("HB_VERSION == %d\n", replyVNFR.HbVersion)
+			vnfm.l.Debugf("HB_VERSION == %d", replyVNFR.HbVersion)
 
 		case messages.OrError:
 			if err := vnfm.hnd.HandleError(content.VNFR); err != nil {
@@ -423,7 +423,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 			return nil, &vnfmError{"no new VNFCInstance found. This should not happen.", replyVNFR, nsrID}
 		}
 
-		vnfm.l.Debugf("VNFComponentInstance FOUND : %v\n", newVNFCInstance.VNFComponent)
+		vnfm.l.Debugf("VNFComponentInstance FOUND : %v", newVNFCInstance.VNFComponent)
 
 		if strings.EqualFold(scalingMessage.Mode, "STANDBY") {
 			newVNFCInstance.State = "STANDBY"
@@ -483,7 +483,7 @@ func (vnfm *vnfm) handleStart(startStopMessage *messages.OrStartStop) (messages.
 
 	nfvMessage, err := messages.New(catalogue.ActionStart, startStop)
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouln't happen: %v\n", err)
+		vnfm.l.Panicf("BUG: shouln't happen: %v", err)
 	}
 
 	return nfvMessage, nil
@@ -509,7 +509,7 @@ func (vnfm *vnfm) handleStop(startStopMessage *messages.OrStartStop) (messages.N
 
 	nfvMessage, err := messages.New(catalogue.ActionStop, startStop)
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouln't happen: %v\n", err)
+		vnfm.l.Panicf("BUG: shouln't happen: %v", err)
 	}
 
 	return nfvMessage, nil
@@ -529,7 +529,7 @@ func (vnfm *vnfm) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMe
 		VNFR: replyVNFR,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouldn't happen: %v\n", err)
+		vnfm.l.Panicf("BUG: shouldn't happen: %v", err)
 	}
 
 	return nfvMessage, nil
