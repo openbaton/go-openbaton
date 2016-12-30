@@ -19,11 +19,6 @@ type exchange struct {
 	replyChan chan response
 }
 
-type exchangeTicket struct {
-	id       catalogue.ID
-	respChan chan<- []byte
-}
-
 type response struct {
 	msg []byte
 	error

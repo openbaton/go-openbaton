@@ -1,11 +1,14 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 
-	"errors"
 	"github.com/BurntSushi/toml"
+	log "github.com/sirupsen/logrus"
 )
 
 // Config represents a generic config type for a VNFM,
@@ -14,7 +17,8 @@ import (
 type Config struct {
 	Allocate bool
 
-	LogFile string
+	LogFile  string
+	LogLevel log.Level
 
 	Type        string
 	Endpoint    string
@@ -71,12 +75,46 @@ func New(props Properties) (*Config, error) {
 
 	descr, _ := vnfm.ValueString("description", "")
 
+	lvlStr, _ := vnfm.ValueString("log-level", "WARN")
+	lvl, err := toLogLevel(lvlStr)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		Allocate:    allocate,
 		Description: descr,
 		Endpoint:    endpoint,
 		LogFile:     logFile,
+		LogLevel:    lvl,
 		Properties:  props,
 		Type:        vnfmType,
 	}, nil
+}
+
+func toLogLevel(lvlStr string) (lvl log.Level, err error) {
+	switch strings.ToUpper(lvlStr) {
+	case "DEBUG":
+		lvl = log.DebugLevel
+
+	case "INFO":
+		lvl = log.InfoLevel
+
+	case "WARN":
+		lvl = log.WarnLevel
+
+	case "ERROR":
+		lvl = log.ErrorLevel
+
+	case "FATAL":
+		lvl = log.FatalLevel
+
+	case "PANIC":
+		lvl = log.PanicLevel
+
+	default:
+		err = fmt.Errorf("invalid error level '%s'", lvlStr)
+	}
+
+	return
 }

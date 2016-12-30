@@ -38,6 +38,7 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 	}
 
 	logger := log.New()
+	logger.Level = config.LogLevel
 
 	if config.LogFile != "" {
 		file, err := os.Open(config.LogFile)
