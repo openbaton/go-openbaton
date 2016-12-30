@@ -51,6 +51,7 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 
 	return &vnfm{
 		hnd:      handler,
+		implName: implName,
 		conf:     config,
 		l:        logger,
 		quitChan: make(chan struct{}),
