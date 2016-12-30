@@ -34,7 +34,7 @@ type Config struct {
 func Load(reader io.Reader) (*Config, error) {
 	props := make(Properties)
 
-	if _, err := toml.DecodeReader(reader, props); err != nil {
+	if _, err := toml.DecodeReader(reader, &props); err != nil {
 		return nil, err
 	}
 

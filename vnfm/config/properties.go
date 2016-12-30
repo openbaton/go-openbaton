@@ -8,9 +8,13 @@ type Properties map[string]interface{}
 
 func (p Properties) Section(key string) (section Properties, ok bool) {
 	if val, ok := p.Value(key, nil); ok {
-		ret, ok := val.(Properties)
-
-		return ret, ok
+		switch ret := val.(type) {
+		case Properties:
+			return ret, true
+			
+		case map[string]interface{}:
+			return Properties(ret), true
+		}
 	}
 
 	return nil, false

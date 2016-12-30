@@ -12,6 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var impls = make(map[string]channel.Driver)
+
 func Register(name string, driver channel.Driver) {
 	if _, ok := impls[name]; ok {
 		panic(fmt.Sprintf("trying to register driver of type %T with already existing name '%s'", driver, name))
@@ -54,8 +56,6 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 		quitChan: make(chan struct{}),
 	}, nil
 }
-
-var impls map[string]channel.Driver
 
 type vnfm struct {
 	cnl      channel.Channel
