@@ -88,6 +88,7 @@ func newChannel(props config.Properties, log *log.Logger) (*amqpChannel, error) 
 	acnl := &amqpChannel{
 		l:           log,
 		quitChan:    make(chan struct{}),
+		receiverDeliveryChan: make(chan (<-chan amqp.Delivery), 1),
 		status:      channel.Stopped,
 		subChan:     make(chan chan messages.NFVMessage),
 	}
@@ -151,7 +152,6 @@ func newChannel(props config.Properties, log *log.Logger) (*amqpChannel, error) 
 	acnl.sendQueue = make(chan *exchange, jobQueueSize)
 	acnl.numOfWorkers = workers
 	acnl.statusChan = make(chan channel.Status, workers)
-	acnl.receiverDeliveryChan = make(chan (<-chan amqp.Delivery), 1)
 
 	return acnl, acnl.spawn()
 }

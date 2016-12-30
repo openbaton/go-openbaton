@@ -14,7 +14,11 @@ var (
 )
 
 func (acnl *amqpChannel) closeQueues() {
+	acnl.setStatus(channel.Quitting)
+	
+	close(acnl.statusChan)
 	close(acnl.sendQueue)
+	close(acnl.subChan)
 	close(acnl.quitChan)
 	close(acnl.receiverDeliveryChan)
 }
@@ -178,10 +182,13 @@ func (acnl *amqpChannel) worker(id int) {
 		return nil
 	}
 
-	for {
+	WorkerLoop: for {
 		select {
+		// Updates the status. If it becomes Running, the next loop will accept incoming jobs again
 		case status = <-acnl.statusChan:
-			// Updates the status. If it becomes Running, the next loop will accept incoming jobs again
+			if status == channel.Quitting {
+				break WorkerLoop
+			}
 
 		case exc := <-work():
 			if exc.replyChan != nil { // RPC request

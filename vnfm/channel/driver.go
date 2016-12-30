@@ -12,6 +12,7 @@ const (
 	Running Status = iota
 	Reconnecting
 	Stopped
+	Quitting
 )
 
 type Driver interface {
