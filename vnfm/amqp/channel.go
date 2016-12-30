@@ -156,7 +156,7 @@ func (acnl *amqpChannel) register() error {
 }
 
 func (acnl *amqpChannel) setup() (<-chan *amqp.Error, error) {
-	acnl.l.Infof("dialing AMQP with uri %s\n", acnl.cfg.connstr)
+	acnl.l.Infof("dialing AMQP with uri %s", acnl.cfg.connstr)
 
 	conn, err := amqp.DialConfig(acnl.cfg.connstr, acnl.cfg.cfg)
 	if err != nil {
@@ -270,14 +270,14 @@ func (acnl *amqpChannel) unregister() error {
 
 	for i := 0; i < Attempts; i++ {
 		if i > 0 {
-			acnl.l.Warnf("endpoint unregister request failed to send. Reinitializing the connection (tentative #%d)\n", i)
+			acnl.l.Warnf("endpoint unregister request failed to send. Reinitializing the connection (tentative #%d)", i)
 			if _, err = acnl.setup(); err != nil {
 				continue
 			}
 		}
 
 		if err = unregFn(); err == nil {
-			acnl.l.Infof("endpoint unregister request successfully sent at tentative %d\n", i)
+			acnl.l.Infof("endpoint unregister request successfully sent at tentative %d", i)
 			return nil
 		}
 	}

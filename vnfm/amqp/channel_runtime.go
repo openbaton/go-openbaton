@@ -48,12 +48,12 @@ func (acnl *amqpChannel) spawn() error {
 			select {
 			case <-acnl.quitChan:
 				if err := acnl.conn.Close(); err != nil {
-					acnl.l.Errorf("while closing AMQP Connection: %v\n", err)
+					acnl.l.Errorf("while closing AMQP Connection: %v", err)
 
 					acnl.closeQueues()
 
 					if err := acnl.unregister(); err != nil {
-						acnl.l.Errorf("unregister failed: %v\n", err)
+						acnl.l.Errorf("unregister failed: %v", err)
 					}
 
 					return
@@ -122,7 +122,7 @@ func (acnl *amqpChannel) spawnReceiver() {
 				if ok {
 					msg, err := messages.Unmarshal(delivery.Body)
 					if err != nil {
-						acnl.l.Errorf("while receiving message: %v\n", err)
+						acnl.l.Errorf("while receiving message: %v", err)
 						continue RecvLoop
 					}
 
@@ -168,7 +168,7 @@ func (acnl *amqpChannel) spawnWorkers() {
 }
 
 func (acnl *amqpChannel) worker(id int) {
-	acnl.l.Infof("starting worker %d\n", id)
+	acnl.l.Infof("starting worker %d", id)
 
 	status := channel.Stopped
 
@@ -199,11 +199,11 @@ WorkerLoop:
 				exc.replyChan <- response{resp, err}
 			} else { //send only
 				if err := acnl.publish(exc.queue, exc.msg); err != nil {
-					acnl.l.Errorf("while publishing from worker #%d: %v\n", id, err)
+					acnl.l.Errorf("while publishing from worker #%d: %v", id, err)
 				}
 			}
 		}
 	}
 
-	acnl.l.Infof("quitting worker %d\n", id)
+	acnl.l.Infof("quitting worker %d", id)
 }
