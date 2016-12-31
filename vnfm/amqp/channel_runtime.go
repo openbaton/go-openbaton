@@ -41,6 +41,7 @@ func (acnl *amqpChannel) spawn() error {
 	acnl.register()
 
 	acnl.spawnWorkers()
+	acnl.spawnReceiver()
 	acnl.setStatus(channel.Running)
 
 	go func() {

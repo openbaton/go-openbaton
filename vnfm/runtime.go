@@ -101,8 +101,7 @@ func (vnfm *vnfm) Serve() error {
 
 	vnfm.spawnWorkers()
 
-MainLoop:
-	for {
+	MainLoop: for {
 		select {
 		case <-vnfm.quitChan:
 			break MainLoop
