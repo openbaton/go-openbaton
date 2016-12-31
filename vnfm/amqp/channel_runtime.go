@@ -168,7 +168,7 @@ func (acnl *amqpChannel) spawnWorkers() {
 }
 
 func (acnl *amqpChannel) worker(id int) {
-	acnl.l.Infof("starting worker %d", id)
+	acnl.l.Infof("AMQP worker %d: starting", id)
 
 	status := channel.Stopped
 
@@ -205,5 +205,5 @@ WorkerLoop:
 		}
 	}
 
-	acnl.l.Infof("quitting worker %d", id)
+	acnl.l.Infof("AMQP worker %d: stopping", id)
 }

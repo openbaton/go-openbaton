@@ -120,13 +120,18 @@ func (vnfm *vnfm) SetLogger(log *log.Logger) {
 }
 
 func (vnfm *vnfm) Stop() error {
-	vnfm.quitChan <- struct{}{}
+	select {
+	case vnfm.quitChan <- struct{}{}:
+	
+	case <-time.After(time.Second):
+		return errors.New("the VNFM is not listening")
+	}
 
 	select {
 	case <-vnfm.quitChan:
 		return nil
 	case <-time.After(time.Second):
-		return errors.New("the vnfm refused to quit")
+		return errors.New("the VNFM refused to quit")
 	}
 }
 
@@ -139,7 +144,7 @@ func (vnfm *vnfm) spawnWorkers() {
 }
 
 func (vnfm *vnfm) worker(id int) {
-	vnfm.l.Infof("VNFM worker %d spawned", id)
+	vnfm.l.Infof("VNFM worker %d: starting", id)
 
 	// msgChan should be closed by the driver when exiting.
 	for msg := range vnfm.msgChan {
@@ -148,5 +153,5 @@ func (vnfm *vnfm) worker(id int) {
 		}
 	}
 
-	vnfm.l.Infof("VNFM worker %d exiting", id)
+	vnfm.l.Infof("VNFM worker %d: exiting", id)
 }
