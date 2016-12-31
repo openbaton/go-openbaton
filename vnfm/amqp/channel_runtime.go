@@ -49,7 +49,7 @@ func (acnl *amqpChannel) spawn() error {
 			select {
 			case <-acnl.quitChan:
 				if err := acnl.conn.Close(); err != nil {
-					acnl.l.Errorf("while closing AMQP Connection: %v", err)
+					acnl.l.Errorf("closing AMQP Connection failed: %v", err)
 
 					acnl.closeQueues()
 
@@ -59,6 +59,8 @@ func (acnl *amqpChannel) spawn() error {
 
 					return
 				}
+
+				acnl.l.Infoln("initiating clean AMQP shutdown")
 				// Close will cause the reception of nil on errChan.
 
 			case err = <-errChan:

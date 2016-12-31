@@ -17,7 +17,7 @@ func (acnl *amqpChannel) Close() error {
 	case <-acnl.quitChan:
 		return nil
 
-	case <-time.After(2 * time.Second):
+	case <-time.After(1 * time.Minute):
 		return errors.New("timed out afer waiting for AMQP handler loop to close")
 	}
 }

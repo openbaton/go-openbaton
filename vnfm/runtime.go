@@ -130,7 +130,7 @@ func (vnfm *vnfm) Stop() error {
 	select {
 	case <-vnfm.quitChan:
 		return nil
-	case <-time.After(time.Second):
+	case <-time.After(1 * time.Minute):
 		return errors.New("the VNFM refused to quit")
 	}
 }
