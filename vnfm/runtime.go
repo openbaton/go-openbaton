@@ -101,7 +101,8 @@ func (vnfm *vnfm) Serve() error {
 
 	vnfm.spawnWorkers()
 
-	MainLoop: for {
+MainLoop:
+	for {
 		select {
 		case <-vnfm.quitChan:
 			break MainLoop
@@ -121,7 +122,7 @@ func (vnfm *vnfm) SetLogger(log *log.Logger) {
 func (vnfm *vnfm) Stop() error {
 	select {
 	case vnfm.quitChan <- struct{}{}:
-	
+
 	case <-time.After(time.Second):
 		return errors.New("the VNFM is not listening")
 	}
