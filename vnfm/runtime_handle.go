@@ -2,10 +2,12 @@ package vnfm
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/mcilloni/go-openbaton/catalogue"
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
+	log "github.com/sirupsen/logrus"
 )
 
 type vnfmError struct {
@@ -18,13 +20,46 @@ func (e *vnfmError) Error() string {
 	return e.msg
 }
 
-func (vnfm *vnfm) allocateResources(
+type worker struct {
+	*vnfm
+	id int
+}
+
+func (wk *worker) spawn() {
+	wk.l.WithFields(log.Fields{
+		"tag":       "worker-vnfm",
+		"worker-id": wk.id,
+	}).Info("VNFM worker starting")
+
+	// msgChan should be closed by the driver when exiting.
+	for msg := range wk.msgChan {
+		if err := wk.handle(msg); err != nil {
+			wk.l.WithFields(log.Fields{
+				"tag":       "worker-vnfm",
+				"worker-id": wk.id,
+				"err":       err,
+			}).Error("Handling error")
+		}
+	}
+
+	wk.l.WithFields(log.Fields{
+		"tag":       "worker-vnfm",
+		"worker-id": wk.id,
+	}).Info("VNFM worker exiting")
+}
+
+func (wk *worker) allocateResources(
 	vnfr *catalogue.VirtualNetworkFunctionRecord,
 	vimInstances map[string]*catalogue.VIMInstance,
 	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
 
-	userData := vnfm.hnd.UserData()
-	vnfm.l.Debugf("Userdata sent to NFVO: %s", userData)
+	userData := wk.hnd.UserData()
+
+	wk.l.WithFields(log.Fields{
+		"tag":       "worker-vnfm",
+		"worker-id": wk.id,
+		"user-data": userData,
+	}).Debug("will send to NFVO UserData")
 
 	msg, err := messages.New(&messages.VNFMAllocateResources{
 		VNFR:         vnfr,
@@ -33,12 +68,21 @@ func (vnfm *vnfm) allocateResources(
 		KeyPairs:     keyPairs,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: %v", err)
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"err":       err,
+		}).Panicf("BUG")
 	}
 
-	nfvoResp, err := vnfm.cnl.NFVOExchange(msg)
+	nfvoResp, err := wk.cnl.NFVOExchange(msg)
 	if err != nil {
-		vnfm.l.Errorln(err.Error())
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"err":       err,
+		}).Error("exchange error")
+
 		return nil, &vnfmError{
 			msg:   "Not able to allocate Resources",
 			nsrID: vnfr.ParentNsID,
@@ -50,7 +94,11 @@ func (vnfm *vnfm) allocateResources(
 		if nfvoResp.Action() == catalogue.ActionError {
 			errorMessage := nfvoResp.Content().(*messages.OrError)
 
-			vnfm.l.Errorln(errorMessage.Message)
+			wk.l.WithFields(log.Fields{
+				"tag":          "worker-vnfm",
+				"worker-id":    wk.id,
+				"nfvo-err-msg": errorMessage.Message,
+			}).Errorln("received error message from the NFVO")
 
 			errVNFR := errorMessage.VNFR
 
@@ -62,7 +110,11 @@ func (vnfm *vnfm) allocateResources(
 		}
 
 		message := nfvoResp.Content().(*messages.OrGeneric)
-		vnfm.l.Debugf("Received from ALLOCATE: %s", message.VNFR)
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"vnfr":      message.VNFR,
+		}).Debug("received a VNFR from ALLOCATE")
 
 		return message.VNFR, nil
 	}
@@ -74,9 +126,14 @@ func (vnfm *vnfm) allocateResources(
 	}
 }
 
-func (vnfm *vnfm) handle(message messages.NFVMessage) error {
+func (wk *worker) handle(message messages.NFVMessage) error {
 
-	vnfm.l.Debugf("vnfm: Received Message: '%s'", message.Action())
+	wk.l.WithFields(log.Fields{
+		"tag":          "worker-vnfm",
+		"worker-id":    wk.id,
+		"action":       message.Action(),
+		"content-type": reflect.TypeOf(message.Content()).Name(),
+	}).Debug("handling incoming message")
 
 	content := message.Content()
 
@@ -86,88 +143,119 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 	switch message.Action() {
 	case catalogue.ActionScaleIn:
 		scalingMessage := content.(*messages.OrScaling)
-		err = vnfm.handleScaleIn(scalingMessage)
+		err = wk.handleScaleIn(scalingMessage)
 
 	case catalogue.ActionScaleOut:
 		scalingMessage := content.(*messages.OrScaling)
-		reply, err = vnfm.handleScaleOut(scalingMessage)
+		reply, err = wk.handleScaleOut(scalingMessage)
 
 	// not implemented
 	case catalogue.ActionScaling:
 
 	case catalogue.ActionError:
 		errorMessage := content.(*messages.OrError)
-		err = vnfm.handleError(errorMessage)
+		err = wk.handleError(errorMessage)
 
 	case catalogue.ActionModify:
 		genericMessage := content.(*messages.OrGeneric)
-		reply, err = vnfm.handleModify(genericMessage)
+		reply, err = wk.handleModify(genericMessage)
 
 	case catalogue.ActionReleaseResources:
 		genericMessage := content.(*messages.OrGeneric)
-		reply, err = vnfm.handleReleaseResources(genericMessage)
+		reply, err = wk.handleReleaseResources(genericMessage)
 
 	case catalogue.ActionInstantiate:
 		instantiateMessage := content.(*messages.OrInstantiate)
-		reply, err = vnfm.handleInstantiate(instantiateMessage)
+		reply, err = wk.handleInstantiate(instantiateMessage)
 
 	// not implemented
 	case catalogue.ActionReleaseResourcesFinish:
 
 	case catalogue.ActionUpdate:
 		updateMessage := content.(*messages.OrUpdate)
-		reply, err = vnfm.handleUpdate(updateMessage)
+		reply, err = wk.handleUpdate(updateMessage)
 
 	case catalogue.ActionHeal:
 		healMessage := content.(*messages.OrHealVNFRequest)
-		reply, err = vnfm.handleHeal(healMessage)
+		reply, err = wk.handleHeal(healMessage)
 
 	case catalogue.ActionInstantiateFinish:
 
 	case catalogue.ActionConfigure:
 		genericMessage := content.(*messages.OrGeneric)
-		reply, err = vnfm.handleConfigure(genericMessage)
+		reply, err = wk.handleConfigure(genericMessage)
 
 	case catalogue.ActionStart:
 		startStopMessage := content.(*messages.OrStartStop)
-		reply, err = vnfm.handleStart(startStopMessage)
+		reply, err = wk.handleStart(startStopMessage)
 
 	case catalogue.ActionStop:
 		startStopMessage := content.(*messages.OrStartStop)
-		reply, err = vnfm.handleStop(startStopMessage)
+		reply, err = wk.handleStop(startStopMessage)
 
 	case catalogue.ActionResume:
 		genericMessage := content.(*messages.OrGeneric)
-		reply, err = vnfm.handleResume(genericMessage)
+		reply, err = wk.handleResume(genericMessage)
 
 	default:
-		vnfm.l.Warnf("received unsupported action '%s'", message.Action())
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"action":    message.Action(),
+		}).Warn("received unsupported action")
 
 	}
 
 	if err != nil {
-		vnfm.l.Errorln(err.Error())
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"action":    message.Action(),
+			"err":       err,
+		}).Error("error in handle")
 
 		errorMsg, err := messages.New(&messages.VNFMError{
 			VNFR:  err.vnfr,
 			NSRID: err.nsrID,
 		})
 		if err != nil {
-			vnfm.l.Panicf("BUG: shouldn't happen: %v", err)
+			wk.l.WithFields(log.Fields{
+				"tag":       "worker-vnfm",
+				"worker-id": wk.id,
+				"err":       err,
+			}).Panic("BUG: shouldn't happen")
 		}
 
-		if err := vnfm.cnl.NFVOSend(errorMsg); err != nil {
-			vnfm.l.Errorf("cannot send error message to the NFVO: %v", err)
+		if err := wk.cnl.NFVOSend(errorMsg); err != nil {
+			wk.l.WithFields(log.Fields{
+				"tag":       "worker-vnfm",
+				"worker-id": wk.id,
+				"err":       err,
+			}).Error("cannot send error message to the NFVO")
 		}
 	} else {
 		if reply != nil {
 			if reply.From() != messages.VNFM {
-				vnfm.l.Panicln("BUG: cannot send to the NFVO a message not intended to be received by it")
+				wk.l.WithFields(log.Fields{
+					"tag":           "worker-vnfm",
+					"worker-id":     wk.id,
+					"msg-from-type": reply.From,
+				}).Panic("BUG: cannot send to the NFVO a message not intended to be received by it")
 			}
-			vnfm.l.Debugf("sending action: '%s' and a content '%T' to NFVO", reply.Action(), reply.Content())
 
-			if err := vnfm.cnl.NFVOSend(reply); err != nil {
-				vnfm.l.Errorf("cannot send a reply to the NFVO: %v", err)
+			wk.l.WithFields(log.Fields{
+				"tag":                "worker-vnfm",
+				"worker-id":          wk.id,
+				"reply-action":       reply.Action(),
+				"reply-content-type": reflect.TypeOf(reply.Content()).Name,
+			}).Debug("sending reply to NFVO")
+
+			if err := wk.cnl.NFVOSend(reply); err != nil {
+				wk.l.WithFields(log.Fields{
+					"tag":       "worker-vnfm",
+					"worker-id": wk.id,
+					"err":       err,
+				}).Error("cannot send a reply to the NFVO")
 			}
 		}
 	}
@@ -175,36 +263,44 @@ func (vnfm *vnfm) handle(message messages.NFVMessage) error {
 	return err
 }
 
-func (vnfm *vnfm) handleConfigure(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleConfigure(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	nfvMessage, err := messages.New(catalogue.ActionConfigure, &messages.VNFMGeneric{
 		VNFR: genericMessage.VNFR,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouldn't happen: %v", err)
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"err":       err,
+		}).Panic("BUG: shouldn't happen")
 	}
 
 	return nfvMessage, nil
 }
 
-func (vnfm *vnfm) handleError(errorMessage *messages.OrError) *vnfmError {
+func (wk *worker) handleError(errorMessage *messages.OrError) *vnfmError {
 	vnfr := errorMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
-	vnfm.l.Errorf("received an error from the NFVO: %s", errorMessage.Message)
+	wk.l.WithFields(log.Fields{
+		"tag":            "worker-vnfm",
+		"worker-id":      wk.id,
+		"nfvo-error-msg": errorMessage.Message,
+	}).Errorf("received an error from the NFVO")
 
-	if err := vnfm.hnd.HandleError(errorMessage.VNFR); err != nil {
+	if err := wk.hnd.HandleError(errorMessage.VNFR); err != nil {
 		return &vnfmError{err.Error(), vnfr, nsrID}
 	}
 
 	return nil
 }
 
-func (vnfm *vnfm) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.NFVMessage, *vnfmError) {
 	vnfr := healMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	vnfcInstance := healMessage.VNFCInstance
 
-	vnfrObtained, err := vnfm.hnd.Heal(vnfr, vnfcInstance, healMessage.Cause)
+	vnfrObtained, err := wk.hnd.Heal(vnfr, vnfcInstance, healMessage.Cause)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -214,17 +310,30 @@ func (vnfm *vnfm) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.N
 		VNFCInstance: vnfcInstance,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouln't happen: %v", err)
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"err":       err,
+		}).Panic("BUG: shouldn't happen")
 	}
 
 	return nfvMessage, nil
 }
 
-func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) (messages.NFVMessage, *vnfmError) {
 	extension := instantiateMessage.Extension
 
-	vnfm.l.Debugf("received extensions: %v", extension)
-	vnfm.l.Debugf("received keys: %v", instantiateMessage.Keys)
+	wk.l.WithFields(log.Fields{
+		"tag":        "worker-vnfm",
+		"worker-id":  wk.id,
+		"extensions": extension,
+	}).Debug("received extensions", extension)
+
+	wk.l.WithFields(log.Fields{
+		"tag":       "worker-vnfm",
+		"worker-id": wk.id,
+		"keys":      instantiateMessage.Keys,
+	}).Debug("received keys")
 
 	vimInstances := instantiateMessage.VIMInstances
 
@@ -239,10 +348,14 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		VNFR: vnfr,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: should not happen: %v", err)
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"err":       err,
+		}).Panic("BUG: shouldn't happen")
 	}
 
-	resp, err := vnfm.cnl.NFVOExchange(msg)
+	resp, err := wk.cnl.NFVOExchange(msg)
 
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, vnfr.ParentNsID}
@@ -260,10 +373,14 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 	recvVNFR := respContent.VNFR
 	vimInstanceChosen := respContent.VDUVIM
 
-	vnfm.l.Debugf("VERSION IS: %d", recvVNFR.HbVersion)
+	wk.l.WithFields(log.Fields{
+		"tag":             "worker-vnfm",
+		"worker-id":       wk.id,
+		"vnfr-hb_version": recvVNFR.HbVersion,
+	}).Debug("received VNFR")
 
-	if vnfm.conf.Allocate {
-		allocatedVNFR, err := vnfm.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
+	if wk.conf.Allocate {
+		allocatedVNFR, err := wk.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
 		if err != nil {
 			return nil, err
 		}
@@ -277,12 +394,12 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		pkg := instantiateMessage.VNFPackage
 
 		if pkg.ScriptsLink != "" {
-			resultVNFR, err = vnfm.hnd.Instantiate(recvVNFR, pkg.ScriptsLink, vimInstances)
+			resultVNFR, err = wk.hnd.Instantiate(recvVNFR, pkg.ScriptsLink, vimInstances)
 		} else {
-			resultVNFR, err = vnfm.hnd.Instantiate(recvVNFR, pkg.Scripts, vimInstances)
+			resultVNFR, err = wk.hnd.Instantiate(recvVNFR, pkg.Scripts, vimInstances)
 		}
 	} else {
-		resultVNFR, err = vnfm.hnd.Instantiate(recvVNFR, nil, vimInstances)
+		resultVNFR, err = wk.hnd.Instantiate(recvVNFR, nil, vimInstances)
 	}
 
 	if err != nil {
@@ -303,11 +420,11 @@ func (vnfm *vnfm) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 	return nfvMessage, nil
 }
 
-func (vnfm *vnfm) handleModify(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleModify(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	vnfr := genericMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
-	resultVNFR, err := vnfm.hnd.Modify(vnfr, genericMessage.VNFRDependency)
+	resultVNFR, err := wk.hnd.Modify(vnfr, genericMessage.VNFRDependency)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -322,11 +439,11 @@ func (vnfm *vnfm) handleModify(genericMessage *messages.OrGeneric) (messages.NFV
 	return nfvMessage, nil
 }
 
-func (vnfm *vnfm) handleReleaseResources(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleReleaseResources(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	vnfr := genericMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
-	resultVNFR, err := vnfm.hnd.Terminate(vnfr)
+	resultVNFR, err := wk.hnd.Terminate(vnfr)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -341,13 +458,13 @@ func (vnfm *vnfm) handleReleaseResources(genericMessage *messages.OrGeneric) (me
 	return nfvMessage, nil
 }
 
-func (vnfm *vnfm) handleResume(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleResume(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
 	vnfr := genericMessage.VNFR
 	vnfrDependency := genericMessage.VNFRDependency
 	nsrID := vnfr.ParentNsID
 
-	if actionForResume := vnfm.hnd.ActionForResume(vnfr, nil); actionForResume != catalogue.NoActionSpecified {
-		resumedVNFR, err := vnfm.hnd.Resume(vnfr, nil, vnfrDependency)
+	if actionForResume := wk.hnd.ActionForResume(vnfr, nil); actionForResume != catalogue.NoActionSpecified {
+		resumedVNFR, err := wk.hnd.Resume(vnfr, nil, vnfrDependency)
 		if err != nil {
 			return nil, &vnfmError{err.Error(), vnfr, nsrID}
 		}
@@ -356,11 +473,20 @@ func (vnfm *vnfm) handleResume(genericMessage *messages.OrGeneric) (messages.NFV
 			VNFR: resumedVNFR,
 		})
 		if err != nil {
-			vnfm.l.Panicf("BUG: shouln't happen: %v", err)
+			wk.l.WithFields(log.Fields{
+				"tag":       "worker-vnfm",
+				"worker-id": wk.id,
+				"err":       err,
+			}).Panic("BUG: shouldn't happen")
 		}
 
-		vnfm.l.Debugf("Resuming vnfr '%d' with dependency target: '%s' for action: '%s'",
-			vnfr.ID, vnfrDependency.Target, actionForResume)
+		wk.l.WithFields(log.Fields{
+			"tag":                    "worker-vnfm",
+			"worker-id":              wk.id,
+			"vnfr-id":                vnfr.ID,
+			"vnfr_dependency-target": vnfrDependency.Target,
+			"resume-action":          actionForResume,
+		}).Debug("Resuming VNFR")
 
 		return nfvMessage, nil
 	}
@@ -368,33 +494,42 @@ func (vnfm *vnfm) handleResume(genericMessage *messages.OrGeneric) (messages.NFV
 	return nil, nil
 }
 
-func (vnfm *vnfm) handleScaleIn(scalingMessage *messages.OrScaling) *vnfmError {
+func (wk *worker) handleScaleIn(scalingMessage *messages.OrScaling) *vnfmError {
 	vnfr := scalingMessage.VNFR
 	nsrID := vnfr.ParentNsID
 
 	vnfcInstanceToRemove := scalingMessage.VNFCInstance
 
-	if _, err := vnfm.hnd.Scale(catalogue.ActionScaleIn, vnfr, vnfcInstanceToRemove, nil, nil); err != nil {
+	if _, err := wk.hnd.Scale(catalogue.ActionScaleIn, vnfr, vnfcInstanceToRemove, nil, nil); err != nil {
 		return &vnfmError{err.Error(), vnfr, nsrID}
 	}
 
 	return nil
 }
 
-func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.NFVMessage, *vnfmError) {
 	vnfr := scalingMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	component := scalingMessage.Component
 
-	vnfm.l.Debugf("HB_VERSION == %d", vnfr.HbVersion)
-	vnfm.l.Infof("Adding VNFComponent: %v", component)
-	vnfm.l.Debugf("The mode is: %s", scalingMessage.Mode)
+	wk.l.WithFields(log.Fields{
+		"tag":             "worker-vnfm",
+		"worker-id":       wk.id,
+		"vnfr-hb_version": vnfr.HbVersion,
+		"scaling_mode":    scalingMessage.Mode,
+	}).Debug("received VNFR")
+
+	wk.l.WithFields(log.Fields{
+		"tag":       "worker-vnfm",
+		"worker-id": wk.id,
+		"vnfc":      component,
+	}).Info("Adding VNFComponent")
 
 	var newVNFCInstance *catalogue.VNFCInstance
-	if vnfm.conf.Allocate {
+	if wk.conf.Allocate {
 		newMsg, err := messages.New(&messages.VNFMScaling{
 			VNFR:     vnfr,
-			UserData: vnfm.hnd.UserData(),
+			UserData: wk.hnd.UserData(),
 		})
 
 		if err != nil {
@@ -406,10 +541,14 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		switch content := newMsg.Content().(type) {
 		case messages.OrGeneric:
 			replyVNFR = content.VNFR
-			vnfm.l.Debugf("HB_VERSION == %d", replyVNFR.HbVersion)
+			wk.l.WithFields(log.Fields{
+				"tag":                   "worker-vnfm",
+				"worker-id":             wk.id,
+				"reply-vnfr-hb_version": replyVNFR.HbVersion,
+			}).Debug("got reply VNFR")
 
 		case messages.OrError:
-			if err := vnfm.hnd.HandleError(content.VNFR); err != nil {
+			if err := wk.hnd.HandleError(content.VNFR); err != nil {
 				return nil, &vnfmError{err.Error(), content.VNFR, nsrID}
 			}
 
@@ -423,7 +562,11 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 			return nil, &vnfmError{"no new VNFCInstance found. This should not happen.", replyVNFR, nsrID}
 		}
 
-		vnfm.l.Debugf("VNFComponentInstance FOUND : %v", newVNFCInstance.VNFComponent)
+		wk.l.WithFields(log.Fields{
+			"tag":        "worker-vnfm",
+			"worker-id":  wk.id,
+			"found-vnfc": newVNFCInstance.VNFComponent,
+		}).Debug("VNFComponentInstance found")
 
 		if strings.EqualFold(scalingMessage.Mode, "STANDBY") {
 			newVNFCInstance.State = "STANDBY"
@@ -431,7 +574,10 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 
 		vnfr = replyVNFR
 	} else {
-		vnfm.l.Warnln("vnfm.allocate is not set. No new VNFCInstance has been instantiated.")
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+		}).Warn("wk.allocate is not set. No new VNFCInstance has been instantiated.")
 	}
 
 	var scripts interface{}
@@ -446,7 +592,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		scripts = scalingMessage.VNFPackage.Scripts
 	}
 
-	resultVNFR, err := vnfm.hnd.Scale(catalogue.ActionScaleOut, vnfr, newVNFCInstance, scripts, scalingMessage.Dependency)
+	resultVNFR, err := wk.hnd.Scale(catalogue.ActionScaleOut, vnfr, newVNFCInstance, scripts, scalingMessage.Dependency)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -463,7 +609,7 @@ func (vnfm *vnfm) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 	return nfvMessage, nil
 }
 
-func (vnfm *vnfm) handleStart(startStopMessage *messages.OrStartStop) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleStart(startStopMessage *messages.OrStartStop) (messages.NFVMessage, *vnfmError) {
 	vnfr := startStopMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	vnfcInstance := startStopMessage.VNFCInstance
@@ -472,9 +618,9 @@ func (vnfm *vnfm) handleStart(startStopMessage *messages.OrStartStop) (messages.
 
 	var err error
 	if vnfcInstance == nil { // Start the VNF Record
-		startStop.VNFR, err = vnfm.hnd.Start(vnfr)
+		startStop.VNFR, err = wk.hnd.Start(vnfr)
 	} else { // Start the VNFC Instance
-		startStop.VNFR, err = vnfm.hnd.StartVNFCInstance(vnfr, vnfcInstance)
+		startStop.VNFR, err = wk.hnd.StartVNFCInstance(vnfr, vnfcInstance)
 	}
 
 	if err != nil {
@@ -483,13 +629,17 @@ func (vnfm *vnfm) handleStart(startStopMessage *messages.OrStartStop) (messages.
 
 	nfvMessage, err := messages.New(catalogue.ActionStart, startStop)
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouln't happen: %v", err)
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"err":       err,
+		}).Panic("BUG: shouldn't happen")
 	}
 
 	return nfvMessage, nil
 }
 
-func (vnfm *vnfm) handleStop(startStopMessage *messages.OrStartStop) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleStop(startStopMessage *messages.OrStartStop) (messages.NFVMessage, *vnfmError) {
 	vnfr := startStopMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	vnfcInstance := startStopMessage.VNFCInstance
@@ -498,9 +648,9 @@ func (vnfm *vnfm) handleStop(startStopMessage *messages.OrStartStop) (messages.N
 
 	var err error
 	if vnfcInstance == nil { // Start the VNF Record
-		startStop.VNFR, err = vnfm.hnd.Stop(vnfr)
+		startStop.VNFR, err = wk.hnd.Stop(vnfr)
 	} else { // Start the VNFC Instance
-		startStop.VNFR, err = vnfm.hnd.StopVNFCInstance(vnfr, vnfcInstance)
+		startStop.VNFR, err = wk.hnd.StopVNFCInstance(vnfr, vnfcInstance)
 	}
 
 	if err != nil {
@@ -509,18 +659,22 @@ func (vnfm *vnfm) handleStop(startStopMessage *messages.OrStartStop) (messages.N
 
 	nfvMessage, err := messages.New(catalogue.ActionStop, startStop)
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouln't happen: %v", err)
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"err":       err,
+		}).Panic("BUG: shouldn't happen")
 	}
 
 	return nfvMessage, nil
 }
 
-func (vnfm *vnfm) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMessage, *vnfmError) {
+func (wk *worker) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMessage, *vnfmError) {
 	vnfr := updateMessage.VNFR
 	nsrID := vnfr.ParentNsID
 	script := updateMessage.Script
 
-	replyVNFR, err := vnfm.hnd.UpdateSoftware(script, vnfr)
+	replyVNFR, err := wk.hnd.UpdateSoftware(script, vnfr)
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
@@ -529,7 +683,11 @@ func (vnfm *vnfm) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMe
 		VNFR: replyVNFR,
 	})
 	if err != nil {
-		vnfm.l.Panicf("BUG: shouldn't happen: %v", err)
+		wk.l.WithFields(log.Fields{
+			"tag":       "worker-vnfm",
+			"worker-id": wk.id,
+			"err":       err,
+		}).Panic("BUG: shouldn't happen")
 	}
 
 	return nfvMessage, nil

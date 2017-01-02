@@ -139,19 +139,6 @@ func (vnfm *vnfm) spawnWorkers() {
 	const NumWorkers = 5
 
 	for i := 0; i < NumWorkers; i++ {
-		go vnfm.worker(i)
+		go (&worker{vnfm, i}).spawn()
 	}
-}
-
-func (vnfm *vnfm) worker(id int) {
-	vnfm.l.Infof("VNFM worker %d: starting", id)
-
-	// msgChan should be closed by the driver when exiting.
-	for msg := range vnfm.msgChan {
-		if err := vnfm.handle(msg); err != nil {
-			vnfm.l.Errorf("in VNFM worker %d: %v", id, err)
-		}
-	}
-
-	vnfm.l.Infof("VNFM worker %d: exiting", id)
 }

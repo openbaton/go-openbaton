@@ -7,6 +7,7 @@ import (
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/streadway/amqp"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -49,18 +50,27 @@ func (acnl *amqpChannel) spawn() error {
 			select {
 			case <-acnl.quitChan:
 				if err := acnl.conn.Close(); err != nil {
-					acnl.l.Errorf("closing AMQP Connection failed: %v", err)
+					acnl.l.WithFields(log.Fields{
+						"tag": "channel-amqp",
+						"err": err,
+					}).Error("closing Connection failed")
 
 					acnl.closeQueues()
 
 					if err := acnl.unregister(); err != nil {
-						acnl.l.Errorf("unregister failed: %v", err)
+						acnl.l.WithFields(log.Fields{
+							"tag": "channel-amqp",
+							"err": err,
+						}).Error("unregister failed")
 					}
 
 					return
 				}
 
-				acnl.l.Infoln("initiating clean AMQP shutdown")
+				acnl.l.WithFields(log.Fields{
+					"tag": "channel-amqp",
+				}).Info("initiating clean shutdown")
+				
 				// Close will cause the reception of nil on errChan.
 
 			case err = <-errChan:
@@ -77,7 +87,9 @@ func (acnl *amqpChannel) spawn() error {
 				// The connection crashed for some reason. Try to bring it up again.
 				for {
 					if errChan, err = acnl.setup(); err != nil {
-						acnl.l.Errorln("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
+						acnl.l.WithFields(log.Fields{
+							"tag": "channel-amqp",
+						}).Error("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
 						time.Sleep(30 * time.Second)
 					} else {
 						acnl.setStatus(channel.Running)
@@ -98,7 +110,9 @@ func (acnl *amqpChannel) spawn() error {
 // consumer each time the connection is reestablished.
 func (acnl *amqpChannel) spawnReceiver() {
 	go func() {
-		acnl.l.Infoln("receiver: spawned")
+		acnl.l.WithFields(log.Fields{
+			"tag": "receiver-amqp",
+		}).Infoln("starting")
 
 		// list of channels to which incoming messages will be broadcasted.
 		notifyChans := []chan<- messages.NFVMessage{}
@@ -113,19 +127,28 @@ func (acnl *amqpChannel) spawnReceiver() {
 				if deliveryChan == nil {
 					break RecvLoop
 				}
-				acnl.l.Debugln("receiver: new delivery channel received")
+
+				acnl.l.WithFields(log.Fields{
+					"tag": "receiver-amqp",
+				}).Debug("new delivery channel received")
 				// chan updated
 
 			// receives and adds a chan to the list of notifyChans
 			case notifyChan := <-acnl.subChan:
-				acnl.l.Debugln("receiver: new notify channel received")
+				acnl.l.WithFields(log.Fields{
+					"tag": "receiver-amqp",
+				}).Debug("new notify channel received")
+				
 				notifyChans = append(notifyChans, notifyChan)
 
 			case delivery, ok := <-deliveryChan:
 				if ok {
 					msg, err := messages.Unmarshal(delivery.Body)
 					if err != nil {
-						acnl.l.Errorf("while receiving message: %v", err)
+						acnl.l.WithFields(log.Fields{
+							"tag": "receiver-amqp",
+							"err": err,
+						}).Error("message unmarshaling error")
 						continue RecvLoop
 					}
 
@@ -161,7 +184,9 @@ func (acnl *amqpChannel) spawnReceiver() {
 			close(cnl)
 		}
 
-		acnl.l.Infoln("receiver: exiting")
+		acnl.l.WithFields(log.Fields{
+			"tag": "receiver-amqp",
+		}).Infoln("exiting")
 	}()
 }
 func (acnl *amqpChannel) spawnWorkers() {
@@ -171,7 +196,10 @@ func (acnl *amqpChannel) spawnWorkers() {
 }
 
 func (acnl *amqpChannel) worker(id int) {
-	acnl.l.Infof("AMQP worker %d: starting", id)
+	acnl.l.WithFields(log.Fields{
+		"tag": "worker-amqp",
+		"worker-id": id,
+	}).Info("AMQP worker starting")
 
 	status := channel.Stopped
 
@@ -202,11 +230,18 @@ WorkerLoop:
 				exc.replyChan <- response{resp, err}
 			} else { //send only
 				if err := acnl.publish(exc.queue, exc.msg); err != nil {
-					acnl.l.Errorf("while publishing from worker #%d: %v", id, err)
+					acnl.l.WithFields(log.Fields{
+						"tag": "worker-amqp",
+						"worker-id": id,
+						"err": err,
+					}).Error("publish failed")
 				}
 			}
 		}
 	}
 
-	acnl.l.Infof("AMQP worker %d: stopping", id)
+	acnl.l.WithFields(log.Fields{
+		"tag": "worker-amqp",
+		"worker-id": id,
+	}).Info("AMQP worker stopping")
 }
