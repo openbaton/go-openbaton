@@ -27,7 +27,7 @@ type worker struct {
 
 func (wk *worker) spawn() {
 	wk.l.WithFields(log.Fields{
-		"tag":       "worker-vnfm",
+		"tag":       "worker-vnfm-handle",
 		"worker-id": wk.id,
 	}).Info("VNFM worker starting")
 
@@ -35,7 +35,7 @@ func (wk *worker) spawn() {
 	for msg := range wk.msgChan {
 		if err := wk.handle(msg); err != nil {
 			wk.l.WithFields(log.Fields{
-				"tag":       "worker-vnfm",
+				"tag":       "worker-vnfm-handle",
 				"worker-id": wk.id,
 				"err":       err,
 			}).Error("Handling error")
@@ -43,7 +43,7 @@ func (wk *worker) spawn() {
 	}
 
 	wk.l.WithFields(log.Fields{
-		"tag":       "worker-vnfm",
+		"tag":       "worker-vnfm-handle",
 		"worker-id": wk.id,
 	}).Info("VNFM worker exiting")
 }
@@ -56,7 +56,7 @@ func (wk *worker) allocateResources(
 	userData := wk.hnd.UserData()
 
 	wk.l.WithFields(log.Fields{
-		"tag":       "worker-vnfm",
+		"tag":       "worker-vnfm-handle",
 		"worker-id": wk.id,
 		"user-data": userData,
 	}).Debug("will send to NFVO UserData")
@@ -69,7 +69,7 @@ func (wk *worker) allocateResources(
 	})
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Panicf("BUG")
@@ -78,7 +78,7 @@ func (wk *worker) allocateResources(
 	nfvoResp, err := wk.cnl.NFVOExchange(msg)
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Error("exchange error")
@@ -95,7 +95,7 @@ func (wk *worker) allocateResources(
 			errorMessage := nfvoResp.Content().(*messages.OrError)
 
 			wk.l.WithFields(log.Fields{
-				"tag":          "worker-vnfm",
+				"tag":          "worker-vnfm-handle",
 				"worker-id":    wk.id,
 				"nfvo-err-msg": errorMessage.Message,
 			}).Errorln("received error message from the NFVO")
@@ -111,7 +111,7 @@ func (wk *worker) allocateResources(
 
 		message := nfvoResp.Content().(*messages.OrGeneric)
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"vnfr":      message.VNFR,
 		}).Debug("received a VNFR from ALLOCATE")
@@ -129,7 +129,7 @@ func (wk *worker) allocateResources(
 func (wk *worker) handle(message messages.NFVMessage) error {
 
 	wk.l.WithFields(log.Fields{
-		"tag":          "worker-vnfm",
+		"tag":          "worker-vnfm-handle",
 		"worker-id":    wk.id,
 		"action":       message.Action(),
 		"content-type": reflect.TypeOf(message.Content()).Name(),
@@ -199,7 +199,7 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 
 	default:
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"action":    message.Action(),
 		}).Warn("received unsupported action")
@@ -208,7 +208,7 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"action":    message.Action(),
 			"err":       err,
@@ -220,7 +220,7 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 		})
 		if err != nil {
 			wk.l.WithFields(log.Fields{
-				"tag":       "worker-vnfm",
+				"tag":       "worker-vnfm-handle",
 				"worker-id": wk.id,
 				"err":       err,
 			}).Panic("BUG: shouldn't happen")
@@ -228,7 +228,7 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 
 		if err := wk.cnl.NFVOSend(errorMsg); err != nil {
 			wk.l.WithFields(log.Fields{
-				"tag":       "worker-vnfm",
+				"tag":       "worker-vnfm-handle",
 				"worker-id": wk.id,
 				"err":       err,
 			}).Error("cannot send error message to the NFVO")
@@ -237,14 +237,14 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 		if reply != nil {
 			if reply.From() != messages.VNFM {
 				wk.l.WithFields(log.Fields{
-					"tag":           "worker-vnfm",
+					"tag":           "worker-vnfm-handle",
 					"worker-id":     wk.id,
 					"msg-from-type": reply.From,
 				}).Panic("BUG: cannot send to the NFVO a message not intended to be received by it")
 			}
 
 			wk.l.WithFields(log.Fields{
-				"tag":                "worker-vnfm",
+				"tag":                "worker-vnfm-handle",
 				"worker-id":          wk.id,
 				"reply-action":       reply.Action(),
 				"reply-content-type": reflect.TypeOf(reply.Content()).Name,
@@ -252,7 +252,7 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 
 			if err := wk.cnl.NFVOSend(reply); err != nil {
 				wk.l.WithFields(log.Fields{
-					"tag":       "worker-vnfm",
+					"tag":       "worker-vnfm-handle",
 					"worker-id": wk.id,
 					"err":       err,
 				}).Error("cannot send a reply to the NFVO")
@@ -269,7 +269,7 @@ func (wk *worker) handleConfigure(genericMessage *messages.OrGeneric) (messages.
 	})
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Panic("BUG: shouldn't happen")
@@ -283,7 +283,7 @@ func (wk *worker) handleError(errorMessage *messages.OrError) *vnfmError {
 	nsrID := vnfr.ParentNsID
 
 	wk.l.WithFields(log.Fields{
-		"tag":            "worker-vnfm",
+		"tag":            "worker-vnfm-handle",
 		"worker-id":      wk.id,
 		"nfvo-error-msg": errorMessage.Message,
 	}).Errorf("received an error from the NFVO")
@@ -311,7 +311,7 @@ func (wk *worker) handleHeal(healMessage *messages.OrHealVNFRequest) (messages.N
 	})
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Panic("BUG: shouldn't happen")
@@ -324,13 +324,13 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 	extension := instantiateMessage.Extension
 
 	wk.l.WithFields(log.Fields{
-		"tag":        "worker-vnfm",
+		"tag":        "worker-vnfm-handle",
 		"worker-id":  wk.id,
 		"extensions": extension,
 	}).Debug("received extensions", extension)
 
 	wk.l.WithFields(log.Fields{
-		"tag":       "worker-vnfm",
+		"tag":       "worker-vnfm-handle",
 		"worker-id": wk.id,
 		"keys":      instantiateMessage.Keys,
 	}).Debug("received keys")
@@ -349,7 +349,7 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 	})
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Panic("BUG: shouldn't happen")
@@ -374,7 +374,7 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 	vimInstanceChosen := respContent.VDUVIM
 
 	wk.l.WithFields(log.Fields{
-		"tag":             "worker-vnfm",
+		"tag":             "worker-vnfm-handle",
 		"worker-id":       wk.id,
 		"vnfr-hb_version": recvVNFR.HbVersion,
 	}).Debug("received VNFR")
@@ -474,14 +474,14 @@ func (wk *worker) handleResume(genericMessage *messages.OrGeneric) (messages.NFV
 		})
 		if err != nil {
 			wk.l.WithFields(log.Fields{
-				"tag":       "worker-vnfm",
+				"tag":       "worker-vnfm-handle",
 				"worker-id": wk.id,
 				"err":       err,
 			}).Panic("BUG: shouldn't happen")
 		}
 
 		wk.l.WithFields(log.Fields{
-			"tag":                    "worker-vnfm",
+			"tag":                    "worker-vnfm-handle",
 			"worker-id":              wk.id,
 			"vnfr-id":                vnfr.ID,
 			"vnfr_dependency-target": vnfrDependency.Target,
@@ -513,14 +513,14 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 	component := scalingMessage.Component
 
 	wk.l.WithFields(log.Fields{
-		"tag":             "worker-vnfm",
+		"tag":             "worker-vnfm-handle",
 		"worker-id":       wk.id,
 		"vnfr-hb_version": vnfr.HbVersion,
 		"scaling_mode":    scalingMessage.Mode,
 	}).Debug("received VNFR")
 
 	wk.l.WithFields(log.Fields{
-		"tag":       "worker-vnfm",
+		"tag":       "worker-vnfm-handle",
 		"worker-id": wk.id,
 		"vnfc":      component,
 	}).Info("Adding VNFComponent")
@@ -542,7 +542,7 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		case messages.OrGeneric:
 			replyVNFR = content.VNFR
 			wk.l.WithFields(log.Fields{
-				"tag":                   "worker-vnfm",
+				"tag":                   "worker-vnfm-handle",
 				"worker-id":             wk.id,
 				"reply-vnfr-hb_version": replyVNFR.HbVersion,
 			}).Debug("got reply VNFR")
@@ -563,7 +563,7 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		}
 
 		wk.l.WithFields(log.Fields{
-			"tag":        "worker-vnfm",
+			"tag":        "worker-vnfm-handle",
 			"worker-id":  wk.id,
 			"found-vnfc": newVNFCInstance.VNFComponent,
 		}).Debug("VNFComponentInstance found")
@@ -575,7 +575,7 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		vnfr = replyVNFR
 	} else {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 		}).Warn("wk.allocate is not set. No new VNFCInstance has been instantiated.")
 	}
@@ -630,7 +630,7 @@ func (wk *worker) handleStart(startStopMessage *messages.OrStartStop) (messages.
 	nfvMessage, err := messages.New(catalogue.ActionStart, startStop)
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Panic("BUG: shouldn't happen")
@@ -660,7 +660,7 @@ func (wk *worker) handleStop(startStopMessage *messages.OrStartStop) (messages.N
 	nfvMessage, err := messages.New(catalogue.ActionStop, startStop)
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Panic("BUG: shouldn't happen")
@@ -684,7 +684,7 @@ func (wk *worker) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMe
 	})
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm",
+			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Panic("BUG: shouldn't happen")

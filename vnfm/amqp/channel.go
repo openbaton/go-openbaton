@@ -60,11 +60,11 @@ type amqpChannel struct {
 	subChan      chan chan messages.NFVMessage
 }
 
-func newChannel(config *config.Config, log *log.Logger) (*amqpChannel, error) {
+func newChannel(config *config.Config, l *log.Logger) (*amqpChannel, error) {
 	props := config.Properties
 
 	acnl := &amqpChannel{
-		l:                    log,
+		l:                    l,
 		quitChan:             make(chan struct{}),
 		receiverDeliveryChan: make(chan (<-chan amqp.Delivery), 1),
 		status:               channel.Stopped,
@@ -91,7 +91,9 @@ func newChannel(config *config.Config, log *log.Logger) (*amqpChannel, error) {
 	workers, jobQueueSize := 5, 20
 
 	if sect, ok := props.Section("amqp"); ok {
-		acnl.l.Infoln("found AMQP section in config")
+		acnl.l.WithFields(log.Fields{
+			"tag": "channel-amqp-config",
+		}).Info("found AMQP section in config")
 
 		host, _ = sect.ValueString("host", host)
 		username, _ = sect.ValueString("username", username)
@@ -156,7 +158,9 @@ func (acnl *amqpChannel) register() error {
 }
 
 func (acnl *amqpChannel) setup() (<-chan *amqp.Error, error) {
-	acnl.l.Infof("dialing AMQP with uri %s", acnl.cfg.connstr)
+	acnl.l.WithFields(log.Fields{
+		"tag": "channel-amqp-setup",
+	}).Info("dialing AMQP")
 
 	conn, err := amqp.DialConfig(acnl.cfg.connstr, acnl.cfg.cfg)
 	if err != nil {
@@ -269,16 +273,32 @@ func (acnl *amqpChannel) unregister() error {
 	}
 
 	for i := 0; i < Attempts; i++ {
-		if i > 0 {
-			acnl.l.Warnf("endpoint unregister request failed to send. Reinitializing the connection (tentative #%d)", i)
-			if _, err = acnl.setup(); err != nil {
-				continue
-			}
+		acnl.l.WithFields(log.Fields{
+			"tag": "channel-amqp-unregister",
+			"try": i,
+		}).Warn("attempting to initialize the connection")
+		if _, err = acnl.setup(); err != nil {
+			acnl.l.WithFields(log.Fields{
+				"tag": "channel-amqp-unregister",
+				"try": i,
+				"err": err,
+			}).Warn("setup failed")
+			continue
 		}
 
 		if err = unregFn(); err == nil {
-			acnl.l.Infof("endpoint unregister request successfully sent at tentative %d", i)
+			acnl.l.WithFields(log.Fields{
+				"tag": "channel-amqp-unregister",
+				"try": i,
+				"success": true,
+			}).Info("endpoint unregister request successfully sent")
 			return nil
+		} else {
+			acnl.l.WithFields(log.Fields{
+				"tag": "channel-amqp-unregister",
+				"try": i,
+				"success": false,
+			}).Info("endpoint unregister failed to send")
 		}
 	}
 
