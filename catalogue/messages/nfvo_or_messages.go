@@ -1,4 +1,4 @@
-﻿package messages
+package messages
 
 import (
 	"github.com/mcilloni/go-openbaton/catalogue"
@@ -74,7 +74,7 @@ type OrInstantiate struct {
 	VNFInstanceName string                                      `json:"vnfInstanceName,omitempty"`
 	VLRs            []*catalogue.VirtualLinkRecord              `json:"vlrs,omitempty"`
 	Extension       map[string]string                           `json:"extension,omitempty"`
-	VIMInstances    map[catalogue.ID][]*catalogue.VIMInstance         `json:"vimInstances,omitempty"`
+	VIMInstances    map[catalogue.ID][]*catalogue.VIMInstance   `json:"vimInstances,omitempty"`
 	VNFPackage      *catalogue.VNFPackage                       `json:"vnfPackage,omitempty"`
 	Keys            []*catalogue.Key                            `json:"keys,omitempty"`
 }

@@ -1,4 +1,4 @@
-﻿package messages
+package messages
 
 import "github.com/mcilloni/go-openbaton/catalogue"
 import "fmt"
@@ -27,7 +27,6 @@ func New(params ...interface{}) (NFVMessage, error) {
 
 		action = content.DefaultAction()
 
-
 	case 2:
 		if castAction, ok := params[0].(catalogue.Action); ok {
 			action = castAction
@@ -40,7 +39,6 @@ func New(params ...interface{}) (NFVMessage, error) {
 		} else {
 			return nil, fmt.Errorf("got %T, expected a valid message body type", params[1])
 		}
-
 
 	default:
 		return nil, fmt.Errorf("wrong number of parameters for NewMessage(): %d", len(params))

@@ -97,14 +97,14 @@ func (vnfm *vnfm) Serve() (err error) {
 
 		if r != nil {
 			vnfm.l.WithFields(log.Fields{
-				"tag": "vnfm-serve-on_exit",
+				"tag":         "vnfm-serve-on_exit",
 				"stack-trace": string(debug.Stack()),
 			}).Panic(r)
 		}
 	}()
 
 	if vnfm.msgChan, err = vnfm.cnl.NotifyReceived(); err != nil {
-		return 
+		return
 	}
 
 	vnfm.spawnWorkers()
@@ -112,7 +112,7 @@ func (vnfm *vnfm) Serve() (err error) {
 	// wait for Stop()
 	<-vnfm.quitChan
 
-	return 
+	return
 }
 
 func (vnfm *vnfm) SetLogger(log *log.Logger) {

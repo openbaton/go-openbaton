@@ -155,7 +155,7 @@ func (acnl *amqpChannel) register() error {
 	}
 
 	acnl.l.WithFields(log.Fields{
-		"tag": "channel-amqp-register",
+		"tag":      "channel-amqp-register",
 		"endpoint": string(msg),
 	}).Info("sending a registering request to the NFVO")
 
@@ -274,20 +274,20 @@ func (acnl *amqpChannel) unregister() error {
 	}
 
 	acnl.l.WithFields(log.Fields{
-		"tag": "channel-amqp-unregister",
+		"tag":          "channel-amqp-unregister",
 		"max-attempts": Attempts,
-		"endpoint": string(msg),
+		"endpoint":     string(msg),
 	}).Debug("sending an unregistering request")
 
 	for i := 0; i < Attempts; i++ {
 		// Try to use the current connection the first time.
-		// Recreate it otherwise 
+		// Recreate it otherwise
 		if i > 0 {
 			acnl.l.WithFields(log.Fields{
 				"tag": "channel-amqp-unregister",
 				"try": i,
 			}).Warn("attempting to re-initialize the connection")
-			
+
 			if _, err = acnl.setup(); err != nil {
 				acnl.l.WithFields(log.Fields{
 					"tag": "channel-amqp-unregister",

@@ -1,4 +1,4 @@
-﻿package channel
+package channel
 
 import (
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
@@ -25,7 +25,7 @@ type Channel interface {
 	Close() error
 
 	Exchange(dest string, msg []byte) ([]byte, error)
-	
+
 	NFVOExchange(msg messages.NFVMessage) (messages.NFVMessage, error)
 	NFVOSend(msg messages.NFVMessage) error
 
