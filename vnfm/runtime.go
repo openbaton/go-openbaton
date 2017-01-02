@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
@@ -60,7 +61,7 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 		implName: implName,
 		conf:     config,
 		l:        logger,
-		quitChan: make(chan struct{}),
+		quitChan: make(chan error, 1), // do not block on send
 	}, nil
 }
 
@@ -71,7 +72,7 @@ type vnfm struct {
 	implName string
 	l        *log.Logger
 	msgChan  <-chan messages.NFVMessage
-	quitChan chan struct{}
+	quitChan chan error
 }
 
 func (vnfm *vnfm) Logger() *log.Logger {
@@ -91,12 +92,14 @@ func (vnfm *vnfm) Serve() (err error) {
 			vnfm.l.Out.(*os.File).Close()
 		}
 
-		err = vnfm.cnl.Close()
+		// answering the channel signals Stop() that we're quitting
+		vnfm.quitChan <- vnfm.cnl.Close()
 
 		if r != nil {
 			vnfm.l.WithFields(log.Fields{
 				"tag": "vnfm-serve-on_exit",
-			}).Panicln(r)
+				"stack-trace": string(debug.Stack()),
+			}).Panic(r)
 		}
 	}()
 
@@ -106,16 +109,8 @@ func (vnfm *vnfm) Serve() (err error) {
 
 	vnfm.spawnWorkers()
 
-MainLoop:
-	for {
-		select {
-		case <-vnfm.quitChan:
-			break MainLoop
-
-		default:
-
-		}
-	}
+	// wait for Stop()
+	<-vnfm.quitChan
 
 	return 
 }
@@ -126,15 +121,15 @@ func (vnfm *vnfm) SetLogger(log *log.Logger) {
 
 func (vnfm *vnfm) Stop() error {
 	select {
-	case vnfm.quitChan <- struct{}{}:
+	case vnfm.quitChan <- nil:
 
 	case <-time.After(time.Second):
 		return errors.New("the VNFM is not listening")
 	}
 
 	select {
-	case <-vnfm.quitChan:
-		return nil
+	case err := <-vnfm.quitChan:
+		return err
 	case <-time.After(1 * time.Minute):
 		return errors.New("the VNFM refused to quit")
 	}

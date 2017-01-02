@@ -49,6 +49,8 @@ type amqpChannel struct {
 	conn *amqp.Connection
 	cnl  *amqp.Channel
 
+	endpoint *catalogue.Endpoint
+
 	receiverDeliveryChan chan (<-chan amqp.Delivery)
 
 	l            *log.Logger
@@ -133,11 +135,7 @@ func newChannel(config *config.Config, l *log.Logger) (*amqpChannel, error) {
 	acnl.numOfWorkers = workers
 	acnl.statusChan = make(chan channel.Status, workers)
 
-	return acnl, acnl.spawn()
-}
-
-func (acnl *amqpChannel) endpoint() *catalogue.Endpoint {
-	return &catalogue.Endpoint{
+	acnl.endpoint = &catalogue.Endpoint{
 		Active:       true,
 		Description:  acnl.cfg.vnfmDescr,
 		Enabled:      true,
@@ -146,13 +144,20 @@ func (acnl *amqpChannel) endpoint() *catalogue.Endpoint {
 		ID:           catalogue.GenerateID(),
 		Type:         acnl.cfg.vnfmType,
 	}
+
+	return acnl, acnl.spawn()
 }
 
 func (acnl *amqpChannel) register() error {
-	msg, err := json.Marshal(acnl.endpoint())
+	msg, err := json.Marshal(acnl.endpoint)
 	if err != nil {
 		return err
 	}
+
+	acnl.l.WithFields(log.Fields{
+		"tag": "channel-amqp-register",
+		"endpoint": string(msg),
+	}).Info("sending a registering request to the NFVO")
 
 	return acnl.publish(QueueVNFMRegister, msg)
 }
@@ -263,43 +268,50 @@ func (acnl *amqpChannel) setupQueues(cnl *amqp.Channel) error {
 func (acnl *amqpChannel) unregister() error {
 	const Attempts = 2
 
-	msg, err := json.Marshal(acnl.endpoint())
+	msg, err := json.Marshal(acnl.endpoint)
 	if err != nil {
 		return err
 	}
 
-	unregFn := func() error {
-		return acnl.publish(QueueVNFMUnregister, msg)
-	}
+	acnl.l.WithFields(log.Fields{
+		"tag": "channel-amqp-unregister",
+		"max-attempts": Attempts,
+		"endpoint": string(msg),
+	}).Debug("sending an unregistering request")
 
 	for i := 0; i < Attempts; i++ {
-		acnl.l.WithFields(log.Fields{
-			"tag": "channel-amqp-unregister",
-			"try": i,
-		}).Warn("attempting to initialize the connection")
-		if _, err = acnl.setup(); err != nil {
+		// Try to use the current connection the first time.
+		// Recreate it otherwise 
+		if i > 0 {
 			acnl.l.WithFields(log.Fields{
 				"tag": "channel-amqp-unregister",
 				"try": i,
-				"err": err,
-			}).Warn("setup failed")
-			continue
+			}).Warn("attempting to re-initialize the connection")
+			
+			if _, err = acnl.setup(); err != nil {
+				acnl.l.WithFields(log.Fields{
+					"tag": "channel-amqp-unregister",
+					"try": i,
+					"err": err,
+				}).Warn("setup failed")
+				continue
+			}
 		}
 
-		if err = unregFn(); err == nil {
+		if err = acnl.publish(QueueVNFMUnregister, msg); err == nil {
 			acnl.l.WithFields(log.Fields{
-				"tag": "channel-amqp-unregister",
-				"try": i,
+				"tag":     "channel-amqp-unregister",
+				"try":     i,
 				"success": true,
 			}).Info("endpoint unregister request successfully sent")
 			return nil
-		} else {
-			acnl.l.WithFields(log.Fields{
-				"tag": "channel-amqp-unregister",
-				"try": i,
-				"success": false,
-			}).Info("endpoint unregister failed to send")
 		}
+
+		acnl.l.WithFields(log.Fields{
+			"tag":     "channel-amqp-unregister",
+			"try":     i,
+			"success": false,
+		}).Info("endpoint unregister failed to send")
 	}
 
 	return err

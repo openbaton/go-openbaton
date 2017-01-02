@@ -6,8 +6,8 @@ import (
 
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/channel"
-	"github.com/streadway/amqp"
 	log "github.com/sirupsen/logrus"
+	"github.com/streadway/amqp"
 )
 
 var (
@@ -49,38 +49,42 @@ func (acnl *amqpChannel) spawn() error {
 		for {
 			select {
 			case <-acnl.quitChan:
-				if err := acnl.conn.Close(); err != nil {
+				if err = acnl.unregister(); err != nil {
+					acnl.l.WithFields(log.Fields{
+						"tag": "channel-amqp",
+						"err": err,
+					}).Error("unregister failed")
+				}
+
+				if err = acnl.conn.Close(); err != nil {
 					acnl.l.WithFields(log.Fields{
 						"tag": "channel-amqp",
 						"err": err,
 					}).Error("closing Connection failed")
 
 					acnl.closeQueues()
-
-					if err := acnl.unregister(); err != nil {
-						acnl.l.WithFields(log.Fields{
-							"tag": "channel-amqp",
-							"err": err,
-						}).Error("unregister failed")
-					}
-
 					return
 				}
 
 				acnl.l.WithFields(log.Fields{
 					"tag": "channel-amqp",
 				}).Info("initiating clean shutdown")
-				
+
 				// Close will cause the reception of nil on errChan.
 
-			case err = <-errChan:
+			case amqpErr := <-errChan:
 				// The connection closed cleanly after invoking Close().
-				if err == nil {
+				if amqpErr == nil {
 					// notify the receiving end and listeners
 					acnl.closeQueues()
 
 					return
 				}
+
+				acnl.l.WithFields(log.Fields{
+					"tag": "channel-amqp",
+					"err": amqpErr,
+				}).Error("received AMQP error for current connection")
 
 				acnl.setStatus(channel.Reconnecting)
 
@@ -138,7 +142,7 @@ func (acnl *amqpChannel) spawnReceiver() {
 				acnl.l.WithFields(log.Fields{
 					"tag": "receiver-amqp",
 				}).Debug("new notify channel received")
-				
+
 				notifyChans = append(notifyChans, notifyChan)
 
 			case delivery, ok := <-deliveryChan:
@@ -197,7 +201,7 @@ func (acnl *amqpChannel) spawnWorkers() {
 
 func (acnl *amqpChannel) worker(id int) {
 	acnl.l.WithFields(log.Fields{
-		"tag": "worker-amqp",
+		"tag":       "worker-amqp",
 		"worker-id": id,
 	}).Info("AMQP worker starting")
 
@@ -231,9 +235,9 @@ WorkerLoop:
 			} else { //send only
 				if err := acnl.publish(exc.queue, exc.msg); err != nil {
 					acnl.l.WithFields(log.Fields{
-						"tag": "worker-amqp",
+						"tag":       "worker-amqp",
 						"worker-id": id,
-						"err": err,
+						"err":       err,
 					}).Error("publish failed")
 				}
 			}
@@ -241,7 +245,7 @@ WorkerLoop:
 	}
 
 	acnl.l.WithFields(log.Fields{
-		"tag": "worker-amqp",
+		"tag":       "worker-amqp",
 		"worker-id": id,
 	}).Info("AMQP worker stopping")
 }
