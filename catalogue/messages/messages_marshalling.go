@@ -17,8 +17,8 @@ func Marshal(msg NFVMessage) ([]byte, error) {
 	return json.MarshalIndent(msg, "", "  ")
 }
 
-func Unmarshal(msgBytes []byte) (NFVMessage, error) {
-	msg := message{}
+func Unmarshal(msgBytes []byte, from SenderType) (NFVMessage, error) {
+	msg := message{from: from}
 	err := json.Unmarshal(msgBytes, &msg)
 
 	return &msg, err

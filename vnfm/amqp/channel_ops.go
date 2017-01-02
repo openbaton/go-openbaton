@@ -42,7 +42,7 @@ func (acnl *amqpChannel) NFVOExchange(msg messages.NFVMessage) (messages.NFVMess
 		return nil, err
 	}
 
-	return messages.Unmarshal(retBytes)
+	return messages.Unmarshal(retBytes, messages.NFVO)
 }
 
 func (acnl *amqpChannel) NFVOSend(msg messages.NFVMessage) error {

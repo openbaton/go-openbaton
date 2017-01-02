@@ -147,7 +147,7 @@ func (acnl *amqpChannel) spawnReceiver() {
 
 			case delivery, ok := <-deliveryChan:
 				if ok {
-					msg, err := messages.Unmarshal(delivery.Body)
+					msg, err := messages.Unmarshal(delivery.Body, messages.NFVO)
 					if err != nil {
 						acnl.l.WithFields(log.Fields{
 							"tag": "receiver-amqp",

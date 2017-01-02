@@ -67,6 +67,7 @@ type body interface {
 type message struct {
 	action  catalogue.Action
 	content body
+	from	SenderType
 }
 
 func (msg *message) Action() catalogue.Action {
@@ -78,5 +79,5 @@ func (msg *message) Content() interface{} {
 }
 
 func (msg *message) From() SenderType {
-	return msg.content.From()
+	return msg.from
 }
