@@ -78,10 +78,9 @@ func (vnfm *vnfm) Logger() *log.Logger {
 	return vnfm.l
 }
 
-func (vnfm *vnfm) Serve() error {
-	var err error
+func (vnfm *vnfm) Serve() (err error) {
 	if vnfm.cnl, err = impls[vnfm.implName].Init(vnfm.conf, vnfm.l); err != nil {
-		return err
+		return
 	}
 
 	defer func() {
@@ -92,17 +91,17 @@ func (vnfm *vnfm) Serve() error {
 			vnfm.l.Out.(*os.File).Close()
 		}
 
-		if err := vnfm.cnl.Close(); err != nil {
-			vnfm.l.Errorln(err)
-		}
+		err = vnfm.cnl.Close()
 
 		if r != nil {
-			vnfm.l.Panicln(r)
+			vnfm.l.WithFields(log.Fields{
+				"tag": "vnfm-serve-on_exit",
+			}).Panicln(r)
 		}
 	}()
 
 	if vnfm.msgChan, err = vnfm.cnl.NotifyReceived(); err != nil {
-		return err
+		return 
 	}
 
 	vnfm.spawnWorkers()
@@ -118,7 +117,7 @@ MainLoop:
 		}
 	}
 
-	return nil
+	return 
 }
 
 func (vnfm *vnfm) SetLogger(log *log.Logger) {
