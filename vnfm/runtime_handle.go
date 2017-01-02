@@ -29,7 +29,7 @@ func (wk *worker) spawn() {
 	wk.l.WithFields(log.Fields{
 		"tag":       "worker-vnfm-handle",
 		"worker-id": wk.id,
-	}).Info("VNFM worker starting")
+	}).Debug("VNFM worker starting")
 
 	// msgChan should be closed by the driver when exiting.
 	for msg := range wk.msgChan {
@@ -45,7 +45,7 @@ func (wk *worker) spawn() {
 	wk.l.WithFields(log.Fields{
 		"tag":       "worker-vnfm-handle",
 		"worker-id": wk.id,
-	}).Info("VNFM worker exiting")
+	}).Debug("VNFM worker exiting")
 }
 
 func (wk *worker) allocateResources(

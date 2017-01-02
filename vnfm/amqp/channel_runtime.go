@@ -203,7 +203,7 @@ func (acnl *amqpChannel) worker(id int) {
 	acnl.l.WithFields(log.Fields{
 		"tag":       "worker-amqp",
 		"worker-id": id,
-	}).Info("AMQP worker starting")
+	}).Debug("AMQP worker starting")
 
 	status := channel.Stopped
 
@@ -247,5 +247,5 @@ WorkerLoop:
 	acnl.l.WithFields(log.Fields{
 		"tag":       "worker-amqp",
 		"worker-id": id,
-	}).Info("AMQP worker stopping")
+	}).Debug("AMQP worker stopping")
 }
