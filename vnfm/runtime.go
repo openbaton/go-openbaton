@@ -38,6 +38,12 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 	}
 
 	logger := log.New()
+
+	logger.Formatter = &log.TextFormatter{
+		ForceColors:   config.LogColors,
+		DisableColors: !config.LogColors,
+	}
+
 	logger.Level = config.LogLevel
 
 	if config.LogFile != "" {

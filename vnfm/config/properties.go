@@ -11,7 +11,7 @@ func (p Properties) Section(key string) (section Properties, ok bool) {
 		switch ret := val.(type) {
 		case Properties:
 			return ret, true
-			
+
 		case map[string]interface{}:
 			return Properties(ret), true
 		}
