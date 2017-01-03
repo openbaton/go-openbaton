@@ -116,7 +116,7 @@ func (acnl *amqpChannel) spawnReceiver() {
 	go func() {
 		acnl.l.WithFields(log.Fields{
 			"tag": "receiver-amqp",
-		}).Infoln("starting")
+		}).Infoln("AMQP receiver starting")
 
 		// list of channels to which incoming messages will be broadcasted.
 		notifyChans := []chan<- messages.NFVMessage{}
@@ -156,6 +156,11 @@ func (acnl *amqpChannel) spawnReceiver() {
 						continue RecvLoop
 					}
 
+					acnl.l.WithFields(log.Fields{
+						"tag": "receiver-amqp",
+						"msg": msg,
+					}).Debug("received message")
+
 					last := 0
 					for _, c := range notifyChans {
 						select {
@@ -190,7 +195,7 @@ func (acnl *amqpChannel) spawnReceiver() {
 
 		acnl.l.WithFields(log.Fields{
 			"tag": "receiver-amqp",
-		}).Infoln("exiting")
+		}).Infoln("AMQP receiver exiting")
 	}()
 }
 func (acnl *amqpChannel) spawnWorkers() {

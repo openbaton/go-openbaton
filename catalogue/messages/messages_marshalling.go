@@ -30,7 +30,7 @@ func (msg *message) MarshalJSON() ([]byte, error) {
 	// To achieve this, it's necessary to generate a temporary map
 	// in which inject the necessary fields into before any serialization
 	// of the message can occour.
-	s := structs.New(msg.Content)
+	s := structs.New(msg.Content())
 
 	// This line below tells structs to use the value contained in the "json" tags as keys
 	// of the generated map.

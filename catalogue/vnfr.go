@@ -62,6 +62,7 @@ func NewVNFR(
 
 		for _, confParam := range vnfd.Configurations.ConfigurationParameters {
 			configurations.Append(&ConfigurationParameter{
+				ID:      GenerateID(),
 				ConfKey: confParam.ConfKey,
 				Value:   confParam.Value,
 			})
@@ -87,6 +88,7 @@ func NewVNFR(
 		copy(lceStrings, lifecycleEvent.LifecycleEvents)
 
 		lifecycleEvents = append(lifecycleEvents, &LifecycleEvent{
+			ID:              GenerateID(),
 			Event:           lifecycleEvent.Event,
 			LifecycleEvents: lceStrings,
 		})
@@ -105,12 +107,14 @@ func NewVNFR(
 	if vnfd.Provides != nil {
 		for _, key := range vnfd.Provides {
 			provides.Append(&ConfigurationParameter{
+				ID:      GenerateID(),
 				ConfKey: key,
 			})
 		}
 	}
 
 	requires := &Configuration{
+		ID:   GenerateID(),
 		Name: "requires",
 		ConfigurationParameters: []*ConfigurationParameter{},
 	}
@@ -118,7 +122,10 @@ func NewVNFR(
 	if vnfd.Requires != nil {
 		for _, requiresParam := range vnfd.Requires {
 			for _, key := range requiresParam.Parameters {
-				requires.Append(&ConfigurationParameter{ConfKey: key})
+				requires.Append(&ConfigurationParameter{
+					ID:      GenerateID(),
+					ConfKey: key,
+				})
 			}
 		}
 	}
@@ -197,6 +204,7 @@ func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDesc
 		}
 
 		newAsp.Actions = append(newAsp.Actions, &ScalingAction{
+			ID:     GenerateID(),
 			Target: target,
 			Type:   action.Type,
 			Value:  action.Value,
@@ -206,6 +214,7 @@ func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDesc
 	newAsp.Alarms = make([]*ScalingAlarm, len(asp.Alarms))
 	for _, alarm := range asp.Alarms {
 		newAsp.Alarms = append(newAsp.Alarms, &ScalingAlarm{
+			ID:                 GenerateID(),
 			ComparisonOperator: alarm.ComparisonOperator,
 			Metric:             alarm.Metric,
 			Statistic:          alarm.Statistic,
@@ -238,6 +247,7 @@ func cloneInternalVirtualLink(oldIVL *InternalVirtualLink, vlrs []*VirtualLinkRe
 
 	return &InternalVirtualLink{
 		VirtualLink: VirtualLink{
+			ID:               GenerateID(),
 			Name:             name,
 			ConnectivityType: oldIVL.ConnectivityType,
 			ExtID:            extID,
@@ -278,6 +288,7 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 		for _, connectionPoint := range component.ConnectionPoints {
 			connectionPoints = append(connectionPoints, &VNFDConnectionPoint{
 				ConnectionPoint: ConnectionPoint{
+					ID:   GenerateID(),
 					Type: connectionPoint.Type,
 				},
 
@@ -287,6 +298,7 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 		}
 
 		newVDU.VNFCs = append(newVDU.VNFCs, &VNFComponent{
+			ID:               GenerateID(),
 			ConnectionPoints: connectionPoints,
 		})
 	}
@@ -300,6 +312,7 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 		copy(lifecycleEvents, lifecycleEvent.LifecycleEvents)
 
 		newVDU.LifecycleEvents = append(newVDU.LifecycleEvents, &LifecycleEvent{
+			ID:              GenerateID(),
 			Event:           lifecycleEvent.Event,
 			LifecycleEvents: lifecycleEvents,
 		})
@@ -322,8 +335,10 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 	newVDU.VIMInstanceNames = make([]string, len(parentVDU.VIMInstanceNames))
 	copy(newVDU.VIMInstanceNames, parentVDU.VIMInstanceNames)
 
-	newHighAvailability := *parentVDU.HighAvailability
-	newVDU.HighAvailability = &newHighAvailability
+	if parentVDU.HighAvailability != nil {
+		newHighAvailability := *parentVDU.HighAvailability
+		newVDU.HighAvailability = &newHighAvailability
+	}
 
 	return &newVDU
 }

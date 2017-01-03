@@ -7,6 +7,7 @@ import (
 	"github.com/mcilloni/go-openbaton/catalogue"
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/channel"
+	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -105,24 +106,35 @@ func (acnl *amqpChannel) rpc(queue string, msg []byte) ([]byte, error) {
 	}
 
 	corrID := string(catalogue.GenerateID())
+	publishing := amqp.Publishing{
+		ContentType:   "text/plain",
+		CorrelationId: corrID,
+		ReplyTo:       replyQueue,
+		Body:          msg,
+	}
+
+	acnl.l.WithFields(log.Fields{
+		"tag": "channel-amqp-rpc",
+		"publ": publishing,
+	}).Debug("sending RPC publishing")
 
 	err = acnl.cnl.Publish(
 		acnl.cfg.exchange.name,
 		queue,
 		false,
 		false,
-		amqp.Publishing{
-			ContentType:   "text/plain",
-			CorrelationId: corrID,
-			ReplyTo:       replyQueue,
-			Body:          msg,
-		},
+		publishing,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	for delivery := range deliveries {
+		acnl.l.WithFields(log.Fields{
+			"tag": "channel-amqp-rpc",
+			"delivery": delivery,
+		}).Debug("received delivery")
+
 		if delivery.CorrelationId == corrID {
 			return delivery.Body, nil
 		}
