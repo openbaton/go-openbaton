@@ -70,9 +70,9 @@ func NewVNFR(
 	}
 
 	connectionPoints := make([]*ConnectionPoint, len(vnfd.ConnectionPoints))
-	for _, connectionPoint := range vnfd.ConnectionPoints {
-		newConnectionPoint := *connectionPoint
-		connectionPoints = append(connectionPoints, &newConnectionPoint)
+	for i, connectionPoint := range vnfd.ConnectionPoints {
+		connectionPoints[i] = new(ConnectionPoint)
+		*connectionPoints[i] = *connectionPoint
 	}
 
 	var endpoint string
@@ -83,15 +83,15 @@ func NewVNFR(
 	}
 
 	lifecycleEvents := make([]*LifecycleEvent, len(vnfd.LifecycleEvents))
-	for _, lifecycleEvent := range vnfd.LifecycleEvents {
+	for i, lifecycleEvent := range vnfd.LifecycleEvents {
 		lceStrings := make([]string, len(lifecycleEvent.LifecycleEvents))
 		copy(lceStrings, lifecycleEvent.LifecycleEvents)
 
-		lifecycleEvents = append(lifecycleEvents, &LifecycleEvent{
+		lifecycleEvents[i] = &LifecycleEvent{
 			ID:              GenerateID(),
 			Event:           lifecycleEvent.Event,
 			LifecycleEvents: lceStrings,
-		})
+		}
 	}
 
 	monitoringParameters := make([]string, len(vnfd.MonitoringParameters))
@@ -131,7 +131,7 @@ func NewVNFR(
 	}
 
 	vdus := make([]*VirtualDeploymentUnit, len(vnfd.VDUs))
-	for _, vdu := range vnfd.VDUs {
+	for i, vdu := range vnfd.VDUs {
 		for _, vi := range vimInstances[vdu.ID] {
 			for _, name := range vdu.VIMInstanceNames {
 				if name == vi.Name {
@@ -142,12 +142,12 @@ func NewVNFR(
 			}
 		}
 
-		vdus = append(vdus, makeVDUFromParent(vdu))
+		vdus[i] = makeVDUFromParent(vdu)
 	}
 
 	links := make([]*InternalVirtualLink, len(vnfd.VirtualLinks))
-	for _, oldIVL := range vnfd.VirtualLinks {
-		links = append(links, cloneInternalVirtualLink(oldIVL, vlrs))
+	for i, oldIVL := range vnfd.VirtualLinks {
+		links[i] = cloneInternalVirtualLink(oldIVL, vlrs)
 	}
 
 	return &VirtualNetworkFunctionRecord{
@@ -194,36 +194,37 @@ func (vnfr *VirtualNetworkFunctionRecord) FindComponentInstance(component *VNFCo
 
 func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDescriptor) *AutoScalePolicy {
 	// copy all in bulk, and then deep clone the pointers
-	newAsp := *asp
+	newAsp := new(AutoScalePolicy)
+	*newAsp = *asp
 
 	newAsp.Actions = make([]*ScalingAction, len(asp.Actions))
-	for _, action := range asp.Actions {
+	for i, action := range asp.Actions {
 		target := action.Target
 		if target == "" {
 			target = vnfd.Type
 		}
 
-		newAsp.Actions = append(newAsp.Actions, &ScalingAction{
+		newAsp.Actions[i] = &ScalingAction{
 			ID:     GenerateID(),
 			Target: target,
 			Type:   action.Type,
 			Value:  action.Value,
-		})
+		}
 	}
 
 	newAsp.Alarms = make([]*ScalingAlarm, len(asp.Alarms))
-	for _, alarm := range asp.Alarms {
-		newAsp.Alarms = append(newAsp.Alarms, &ScalingAlarm{
+	for i, alarm := range asp.Alarms {
+		newAsp.Alarms[i] = &ScalingAlarm{
 			ID:                 GenerateID(),
 			ComparisonOperator: alarm.ComparisonOperator,
 			Metric:             alarm.Metric,
 			Statistic:          alarm.Statistic,
 			Threshold:          alarm.Threshold,
 			Weight:             alarm.Weight,
-		})
+		}
 	}
 
-	return &newAsp
+	return newAsp
 }
 
 func cloneInternalVirtualLink(oldIVL *InternalVirtualLink, vlrs []*VirtualLinkRecord) *InternalVirtualLink {
@@ -262,20 +263,22 @@ func cloneInternalVirtualLink(oldIVL *InternalVirtualLink, vlrs []*VirtualLinkRe
 }
 
 func cloneVRFaultManagementPolicy(oldVRFMP *VRFaultManagementPolicy) *VRFaultManagementPolicy {
-	newVRFMP := *oldVRFMP
+	newVRFMP := new(VRFaultManagementPolicy)
+	*newVRFMP = *oldVRFMP
 
 	newVRFMP.Criteria = make([]*Criteria, len(oldVRFMP.Criteria))
-	for _, criteria := range oldVRFMP.Criteria {
-		newCriteria := *criteria
-		newVRFMP.Criteria = append(newVRFMP.Criteria, &newCriteria)
+	for i, criteria := range oldVRFMP.Criteria {
+		newVRFMP.Criteria[i] = new(Criteria)
+		*newVRFMP.Criteria[i] = *criteria
 	}
 
-	return &newVRFMP
+	return newVRFMP
 }
 
 func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit {
 	// copy all of the struct at once, and then deep clone the pointer/list parts
-	newVDU := *parentVDU
+	newVDU := new(VirtualDeploymentUnit)
+	*newVDU = *parentVDU
 
 	// reset the ID of the new VDU
 	newVDU.ID = GenerateID()
@@ -283,10 +286,10 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 
 	newVDU.VNFCs = make([]*VNFComponent, len(parentVDU.VNFCs))
 
-	for _, component := range parentVDU.VNFCs {
+	for i, component := range parentVDU.VNFCs {
 		connectionPoints := make([]*VNFDConnectionPoint, len(parentVDU.VNFCs))
-		for _, connectionPoint := range component.ConnectionPoints {
-			connectionPoints = append(connectionPoints, &VNFDConnectionPoint{
+		for j, connectionPoint := range component.ConnectionPoints {
+			connectionPoints[j] = &VNFDConnectionPoint{
 				ConnectionPoint: ConnectionPoint{
 					ID:   GenerateID(),
 					Type: connectionPoint.Type,
@@ -294,28 +297,28 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 
 				FloatingIP:           connectionPoint.FloatingIP,
 				VirtualLinkReference: connectionPoint.VirtualLinkReference,
-			})
+			}
 		}
 
-		newVDU.VNFCs = append(newVDU.VNFCs, &VNFComponent{
+		newVDU.VNFCs[i] = &VNFComponent{
 			ID:               GenerateID(),
 			ConnectionPoints: connectionPoints,
-		})
+		}
 	}
 
 	newVDU.VNFCInstances = make([]*VNFCInstance, len(parentVDU.VNFCInstances))
 
 	newVDU.LifecycleEvents = make([]*LifecycleEvent, len(parentVDU.LifecycleEvents))
 
-	for _, lifecycleEvent := range parentVDU.LifecycleEvents {
+	for i, lifecycleEvent := range parentVDU.LifecycleEvents {
 		lifecycleEvents := make([]string, len(lifecycleEvent.LifecycleEvents))
 		copy(lifecycleEvents, lifecycleEvent.LifecycleEvents)
 
-		newVDU.LifecycleEvents = append(newVDU.LifecycleEvents, &LifecycleEvent{
+		newVDU.LifecycleEvents[i] = &LifecycleEvent{
 			ID:              GenerateID(),
 			Event:           lifecycleEvent.Event,
 			LifecycleEvents: lifecycleEvents,
-		})
+		}
 	}
 
 	newVDU.MonitoringParameters = make([]string, len(parentVDU.MonitoringParameters))
@@ -324,8 +327,8 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 	newVDU.FaultManagementPolicies = make([]*VRFaultManagementPolicy, len(parentVDU.FaultManagementPolicies))
 
 	if parentVDU.FaultManagementPolicies != nil {
-		for _, vrfmp := range parentVDU.FaultManagementPolicies {
-			newVDU.FaultManagementPolicies = append(newVDU.FaultManagementPolicies, cloneVRFaultManagementPolicy(vrfmp))
+		for i, vrfmp := range parentVDU.FaultManagementPolicies {
+			newVDU.FaultManagementPolicies[i] = cloneVRFaultManagementPolicy(vrfmp)
 		}
 	}
 
@@ -336,9 +339,9 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 	copy(newVDU.VIMInstanceNames, parentVDU.VIMInstanceNames)
 
 	if parentVDU.HighAvailability != nil {
-		newHighAvailability := *parentVDU.HighAvailability
-		newVDU.HighAvailability = &newHighAvailability
+		newVDU.HighAvailability = new(HighAvailability)
+		*newVDU.HighAvailability = *parentVDU.HighAvailability
 	}
 
-	return &newVDU
+	return newVDU
 }

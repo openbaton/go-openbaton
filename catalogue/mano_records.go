@@ -63,32 +63,32 @@ type Policy struct {
 	Version int `json:"version"`
 }
 
-type Status int
+type Status string
 
 const (
 	// Error
-	StatusError Status = iota
+	StatusError = Status("ERROR")
 
 	// Null
-	StatusNull
+	StatusNull = Status("NULL")
 
 	//Instantiated - Not Configured
-	StatusInitialized
+	StatusInitialized = Status("INITIALIZED")
 
 	// Inactive - Configured
-	StatusInactive
+	StatusInactive = Status("INACTIVE")
 
 	// Scaling
-	StatusScaling
+	StatusScaling = Status("SCALING")
 
 	// Active - Configured
-	StatusActive
+	StatusActive = Status("ACTIVE")
 
 	// Terminated
-	StatusTerminated
+	StatusTerminated = Status("TERMINATED")
 
 	// Resuming
-	StatusResuming
+	StatusResuming = Status("RESUMING")
 )
 
 type VirtualLinkRecord struct {
