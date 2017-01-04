@@ -69,10 +69,16 @@ func (wk *worker) allocateResources(
 	vimInstances map[string]*catalogue.VIMInstance,
 	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
 
+	wk.l.WithFields(log.Fields{
+		"tag":             "worker-vnfm-handle",
+		"worker-id":       wk.id,
+		"vnfr-name": vnfr.Name,
+	}).Debug("allocating resources for the VNFR")
+
 	userData := wk.hnd.UserData()
 
 	wk.l.WithFields(log.Fields{
-		"tag":       "worker-vnfm-handle",
+		"tag":       "worker-vnfm-handle-allocate_resources",
 		"worker-id": wk.id,
 		"user-data": userData,
 	}).Debug("will send to NFVO UserData")
@@ -85,7 +91,7 @@ func (wk *worker) allocateResources(
 	})
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm-handle",
+			"tag":       "worker-vnfm-handle-allocate_resources",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Panicf("BUG")
@@ -94,13 +100,13 @@ func (wk *worker) allocateResources(
 	nfvoResp, err := wk.cnl.NFVOExchange(msg)
 	if err != nil {
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm-handle",
+			"tag":       "worker-vnfm-handle-allocate_resources",
 			"worker-id": wk.id,
 			"err":       err,
 		}).Error("exchange error")
 
 		return nil, &vnfmError{
-			msg:   "Not able to allocate Resources",
+			msg:   "Unable to allocate Resources",
 			nsrID: vnfr.ParentNsID,
 			vnfr:  vnfr,
 		}
@@ -111,7 +117,7 @@ func (wk *worker) allocateResources(
 			errorMessage := nfvoResp.Content().(*messages.OrError)
 
 			wk.l.WithFields(log.Fields{
-				"tag":          "worker-vnfm-handle",
+				"tag":          "worker-vnfm-handle-allocate_resources",
 				"worker-id":    wk.id,
 				"nfvo-err-msg": errorMessage.Message,
 			}).Errorln("received error message from the NFVO")
@@ -119,7 +125,7 @@ func (wk *worker) allocateResources(
 			errVNFR := errorMessage.VNFR
 
 			return nil, &vnfmError{
-				msg:   fmt.Sprintf("Not able to allocate Resources because: %s", errorMessage.Message),
+				msg:   fmt.Sprintf("Unable to allocate Resources. Reason: %s", errorMessage.Message),
 				vnfr:  errVNFR,
 				nsrID: vnfr.ParentNsID,
 			}
@@ -127,16 +133,16 @@ func (wk *worker) allocateResources(
 
 		message := nfvoResp.Content().(*messages.OrGeneric)
 		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm-handle",
+			"tag":       "worker-vnfm-handle-allocate_resources",
 			"worker-id": wk.id,
-			"vnfr":      message.VNFR,
+			"vnfr-name":      message.VNFR.Name,
 		}).Debug("received a VNFR from ALLOCATE")
 
 		return message.VNFR, nil
 	}
 
 	return nil, &vnfmError{
-		msg:   "received an empty message from NFVO",
+		msg:   "received an empty message from the NFVO",
 		nsrID: vnfr.ParentNsID,
 		vnfr:  vnfr,
 	}
