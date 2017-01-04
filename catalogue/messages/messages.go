@@ -67,7 +67,7 @@ type body interface {
 type message struct {
 	action  catalogue.Action
 	content body
-	from	SenderType
+	from    SenderType
 }
 
 func (msg *message) Action() catalogue.Action {

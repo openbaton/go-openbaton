@@ -3,6 +3,7 @@ package amqp
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/mcilloni/go-openbaton/catalogue"
@@ -60,6 +61,8 @@ type amqpChannel struct {
 	status       channel.Status
 	statusChan   chan channel.Status
 	subChan      chan chan messages.NFVMessage
+
+	wg sync.WaitGroup
 }
 
 func newChannel(config *config.Config, l *log.Logger) (*amqpChannel, error) {

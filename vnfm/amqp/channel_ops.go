@@ -108,10 +108,9 @@ func (acnl *amqpChannel) rpc(queue string, msg []byte) ([]byte, error) {
 	corrID := string(catalogue.GenerateID())
 
 	acnl.l.WithFields(log.Fields{
-		"tag": "channel-amqp-rpc",
-		"corr-id": corrID,
+		"tag":            "channel-amqp-rpc",
+		"corr-id":        corrID,
 		"reply-to-queue": replyQueue,
-		"msg": string(msg),
 	}).Debug("sending RPC publishing")
 
 	err = acnl.cnl.Publish(
@@ -133,7 +132,6 @@ func (acnl *amqpChannel) rpc(queue string, msg []byte) ([]byte, error) {
 	for delivery := range deliveries {
 		acnl.l.WithFields(log.Fields{
 			"tag": "channel-amqp-rpc",
-			"msg": string(delivery.Body),
 		}).Debug("received delivery")
 
 		if delivery.CorrelationId == corrID {

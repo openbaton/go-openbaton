@@ -57,7 +57,7 @@ func New(props Properties) (*Config, error) {
 		return nil, errors.New("malformed config - missing '[vnfm]' section")
 	}
 
-	allocate, _ := vnfm.ValueBool("allocate", true)
+	allocate, _ := vnfm.ValueBool("allocate", false)
 
 	vnfmType, set := vnfm.ValueString("type", "")
 	if !set {

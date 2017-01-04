@@ -22,6 +22,9 @@ func (acnl *amqpChannel) closeQueues() {
 	close(acnl.subChan)
 	close(acnl.quitChan)
 	close(acnl.receiverDeliveryChan)
+
+	// wait for all workers to quit
+	acnl.wg.Wait()
 }
 
 func (acnl *amqpChannel) setStatus(newStatus channel.Status) {
@@ -113,6 +116,8 @@ func (acnl *amqpChannel) spawn() error {
 // The receiver main channel is updated by setup() with a new
 // consumer each time the connection is reestablished.
 func (acnl *amqpChannel) spawnReceiver() {
+	acnl.wg.Add(1)
+
 	go func() {
 		acnl.l.WithFields(log.Fields{
 			"tag": "receiver-amqp",
@@ -139,11 +144,13 @@ func (acnl *amqpChannel) spawnReceiver() {
 
 			// receives and adds a chan to the list of notifyChans
 			case notifyChan := <-acnl.subChan:
-				acnl.l.WithFields(log.Fields{
-					"tag": "receiver-amqp",
-				}).Debug("new notify channel received")
+				if notifyChan != nil {
+					acnl.l.WithFields(log.Fields{
+						"tag": "receiver-amqp",
+					}).Debug("new notify channel received")
 
-				notifyChans = append(notifyChans, notifyChan)
+					notifyChans = append(notifyChans, notifyChan)
+				}
 
 			case delivery, ok := <-deliveryChan:
 				if ok {
@@ -172,17 +179,33 @@ func (acnl *amqpChannel) spawnReceiver() {
 
 						// nobody is listening at the other end of the channel.
 						case <-time.After(1 * time.Second):
+							acnl.l.WithFields(log.Fields{
+								"tag": "receiver-amqp",
+							}).Debug("closing unresponsive notify channel")
+							
 							close(c)
 						}
 					}
 
 					// notifyChans trimmed of dead chans
-					notifyChans = notifyChans[last:]
+					notifyChans = notifyChans[:last]
+
+					acnl.l.WithFields(log.Fields{
+						"tag": "receiver-amqp",
+						"msg": msg,
+						"num-of-chans": last,
+					}).Debug("message dispatched")
+
 				} else {
 					// make deliveryChan nil if someone closes it:
 					// a closed channel always immediately returns a zero value, thus never
 					// allowing the select to block.
 					// A nil channel always blocks.
+
+					acnl.l.WithFields(log.Fields{
+						"tag": "receiver-amqp",
+					}).Debug("delivery chan closed")
+					
 					deliveryChan = nil
 				}
 			}
@@ -196,9 +219,12 @@ func (acnl *amqpChannel) spawnReceiver() {
 		acnl.l.WithFields(log.Fields{
 			"tag": "receiver-amqp",
 		}).Infoln("AMQP receiver exiting")
+
+		acnl.wg.Done()
 	}()
 }
 func (acnl *amqpChannel) spawnWorkers() {
+	acnl.wg.Add(acnl.numOfWorkers)
 	for i := 0; i < acnl.numOfWorkers; i++ {
 		go acnl.worker(i)
 	}
@@ -253,4 +279,6 @@ WorkerLoop:
 		"tag":       "worker-amqp",
 		"worker-id": id,
 	}).Debug("AMQP worker stopping")
+
+	acnl.wg.Done()
 }

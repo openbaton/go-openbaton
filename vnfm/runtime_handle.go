@@ -33,12 +33,26 @@ func (wk *worker) spawn() {
 
 	// msgChan should be closed by the driver when exiting.
 	for msg := range wk.msgChan {
+		wk.l.WithFields(log.Fields{
+			"tag":          "worker-vnfm-handle",
+			"worker-id":    wk.id,
+			"action":       msg.Action(),
+			"content-type": reflect.TypeOf(msg.Content()).Name(),
+		}).Debug("accepting new message")
+
 		if err := wk.handle(msg); err != nil {
 			wk.l.WithFields(log.Fields{
 				"tag":       "worker-vnfm-handle",
 				"worker-id": wk.id,
 				"err":       err,
 			}).Error("Handling error")
+		} else {
+			wk.l.WithFields(log.Fields{
+				"tag":          "worker-vnfm-handle",
+				"worker-id":    wk.id,
+				"action":       msg.Action(),
+				"content-type": reflect.TypeOf(msg.Content()).Name(),
+			}).Debug("message successfully handled")
 		}
 	}
 
@@ -46,6 +60,8 @@ func (wk *worker) spawn() {
 		"tag":       "worker-vnfm-handle",
 		"worker-id": wk.id,
 	}).Debug("VNFM worker exiting")
+
+	wk.wg.Done()
 }
 
 func (wk *worker) allocateResources(
@@ -127,20 +143,35 @@ func (wk *worker) allocateResources(
 }
 
 func (wk *worker) handle(message messages.NFVMessage) error {
-
-	wk.l.WithFields(log.Fields{
-		"tag":          "worker-vnfm-handle",
-		"worker-id":    wk.id,
-		"action":       message.Action(),
-		"content-type": reflect.TypeOf(message.Content()).Name(),
-	}).Debug("handling incoming message")
-
 	content := message.Content()
 
 	var reply messages.NFVMessage
 	var err *vnfmError
 
 	switch message.Action() {
+
+	case catalogue.ActionConfigure:
+		genericMessage := content.(*messages.OrGeneric)
+		reply, err = wk.handleConfigure(genericMessage)
+
+	case catalogue.ActionError:
+		errorMessage := content.(*messages.OrError)
+		err = wk.handleError(errorMessage)
+
+	case catalogue.ActionHeal:
+		healMessage := content.(*messages.OrHealVNFRequest)
+		reply, err = wk.handleHeal(healMessage)
+
+	case catalogue.ActionInstantiate:
+		instantiateMessage := content.(*messages.OrInstantiate)
+		reply, err = wk.handleInstantiate(instantiateMessage)
+
+	case catalogue.ActionInstantiateFinish:
+
+	case catalogue.ActionModify:
+		genericMessage := content.(*messages.OrGeneric)
+		reply, err = wk.handleModify(genericMessage)
+
 	case catalogue.ActionScaleIn:
 		scalingMessage := content.(*messages.OrScaling)
 		err = wk.handleScaleIn(scalingMessage)
@@ -152,39 +183,6 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 	// not implemented
 	case catalogue.ActionScaling:
 
-	case catalogue.ActionError:
-		errorMessage := content.(*messages.OrError)
-		err = wk.handleError(errorMessage)
-
-	case catalogue.ActionModify:
-		genericMessage := content.(*messages.OrGeneric)
-		reply, err = wk.handleModify(genericMessage)
-
-	case catalogue.ActionReleaseResources:
-		genericMessage := content.(*messages.OrGeneric)
-		reply, err = wk.handleReleaseResources(genericMessage)
-
-	case catalogue.ActionInstantiate:
-		instantiateMessage := content.(*messages.OrInstantiate)
-		reply, err = wk.handleInstantiate(instantiateMessage)
-
-	// not implemented
-	case catalogue.ActionReleaseResourcesFinish:
-
-	case catalogue.ActionUpdate:
-		updateMessage := content.(*messages.OrUpdate)
-		reply, err = wk.handleUpdate(updateMessage)
-
-	case catalogue.ActionHeal:
-		healMessage := content.(*messages.OrHealVNFRequest)
-		reply, err = wk.handleHeal(healMessage)
-
-	case catalogue.ActionInstantiateFinish:
-
-	case catalogue.ActionConfigure:
-		genericMessage := content.(*messages.OrGeneric)
-		reply, err = wk.handleConfigure(genericMessage)
-
 	case catalogue.ActionStart:
 		startStopMessage := content.(*messages.OrStartStop)
 		reply, err = wk.handleStart(startStopMessage)
@@ -193,9 +191,20 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 		startStopMessage := content.(*messages.OrStartStop)
 		reply, err = wk.handleStop(startStopMessage)
 
+	// not implemented
+	case catalogue.ActionReleaseResourcesFinish:
+
+	case catalogue.ActionReleaseResources:
+		genericMessage := content.(*messages.OrGeneric)
+		reply, err = wk.handleReleaseResources(genericMessage)
+
 	case catalogue.ActionResume:
 		genericMessage := content.(*messages.OrGeneric)
 		reply, err = wk.handleResume(genericMessage)
+
+	case catalogue.ActionUpdate:
+		updateMessage := content.(*messages.OrUpdate)
+		reply, err = wk.handleUpdate(updateMessage)
 
 	default:
 		wk.l.WithFields(log.Fields{
@@ -207,18 +216,12 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 	}
 
 	if err != nil {
-		wk.l.WithFields(log.Fields{
-			"tag":       "worker-vnfm-handle",
-			"worker-id": wk.id,
-			"action":    message.Action(),
-			"err":       err,
-		}).Error("error in handle")
-
-		errorMsg, err := messages.New(&messages.VNFMError{
+		// send the error to the NFVO
+		errorMsg, newMsgErr := messages.New(&messages.VNFMError{
 			VNFR:  err.vnfr,
 			NSRID: err.nsrID,
 		})
-		if err != nil {
+		if newMsgErr != nil {
 			wk.l.WithFields(log.Fields{
 				"tag":       "worker-vnfm-handle",
 				"worker-id": wk.id,
@@ -226,41 +229,35 @@ func (wk *worker) handle(message messages.NFVMessage) error {
 			}).Panic("BUG: shouldn't happen")
 		}
 
-		if err := wk.cnl.NFVOSend(errorMsg); err != nil {
-			wk.l.WithFields(log.Fields{
-				"tag":       "worker-vnfm-handle",
-				"worker-id": wk.id,
-				"err":       err,
-			}).Error("cannot send error message to the NFVO")
+		if sendErr := wk.cnl.NFVOSend(errorMsg); sendErr != nil {
+			return fmt.Errorf("cannot send error message '%v' to the NFVO: %v", err, sendErr)
 		}
-	} else {
-		if reply != nil {
-			if reply.From() != messages.VNFM {
-				wk.l.WithFields(log.Fields{
-					"tag":           "worker-vnfm-handle",
-					"worker-id":     wk.id,
-					"msg-from-type": reply.From,
-				}).Panic("BUG: cannot send to the NFVO a message not intended to be received by it")
-			}
 
+		return err
+	}
+
+	if reply != nil {
+		if reply.From() != messages.VNFM {
 			wk.l.WithFields(log.Fields{
-				"tag":                "worker-vnfm-handle",
-				"worker-id":          wk.id,
-				"reply-action":       reply.Action(),
-				"reply-content-type": reflect.TypeOf(reply.Content()).Name,
-			}).Debug("sending reply to NFVO")
+				"tag":           "worker-vnfm-handle",
+				"worker-id":     wk.id,
+				"msg-from-type": reply.From(),
+			}).Panic("BUG: cannot send to the NFVO a message not intended to be received by it")
+		}
 
-			if err := wk.cnl.NFVOSend(reply); err != nil {
-				wk.l.WithFields(log.Fields{
-					"tag":       "worker-vnfm-handle",
-					"worker-id": wk.id,
-					"err":       err,
-				}).Error("cannot send a reply to the NFVO")
-			}
+		wk.l.WithFields(log.Fields{
+			"tag":                "worker-vnfm-handle",
+			"worker-id":          wk.id,
+			"reply-action":       reply.Action(),
+			"reply-content-type": reflect.TypeOf(reply.Content()).Name,
+		}).Debug("sending reply to NFVO")
+
+		if err := wk.cnl.NFVOSend(reply); err != nil {
+			return fmt.Errorf("cannot send reply '%v' to the NFVO: %v", reply, err)
 		}
 	}
 
-	return err
+	return nil
 }
 
 func (wk *worker) handleConfigure(genericMessage *messages.OrGeneric) (messages.NFVMessage, *vnfmError) {
@@ -327,7 +324,7 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		"tag":        "worker-vnfm-handle",
 		"worker-id":  wk.id,
 		"extensions": extension,
-	}).Debug("received extensions", extension)
+	}).Debug("received extensions")
 
 	wk.l.WithFields(log.Fields{
 		"tag":       "worker-vnfm-handle",
@@ -379,7 +376,7 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 		"vnfr-hb_version": recvVNFR.HbVersion,
 	}).Debug("received VNFR")
 
-	if wk.conf.Allocate {
+	if !wk.conf.Allocate {
 		allocatedVNFR, err := wk.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
 		if err != nil {
 			return nil, err

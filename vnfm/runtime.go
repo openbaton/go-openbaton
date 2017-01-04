@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
+	"sync"
 	"time"
 
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
@@ -73,6 +74,7 @@ type vnfm struct {
 	l        *log.Logger
 	msgChan  <-chan messages.NFVMessage
 	quitChan chan error
+	wg       sync.WaitGroup
 }
 
 func (vnfm *vnfm) Logger() *log.Logger {
@@ -93,7 +95,15 @@ func (vnfm *vnfm) Serve() (err error) {
 		}
 
 		// answering the channel signals Stop() that we're quitting
-		vnfm.quitChan <- vnfm.cnl.Close()
+		err := vnfm.cnl.Close() 
+		 
+		if err == nil {
+			// if the channel closed politely, the workers will be quitting by now;
+			// otherwise, they will be killed when main exits.
+			vnfm.wg.Wait()
+	  	}
+
+		vnfm.quitChan <- err
 
 		if r != nil {
 			vnfm.l.WithFields(log.Fields{
@@ -137,6 +147,8 @@ func (vnfm *vnfm) Stop() error {
 
 func (vnfm *vnfm) spawnWorkers() {
 	const NumWorkers = 5
+
+	vnfm.wg.Add(NumWorkers)
 
 	for i := 0; i < NumWorkers; i++ {
 		go (&worker{vnfm, i}).spawn()
