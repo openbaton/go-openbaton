@@ -8,14 +8,14 @@ type InternalVirtualLink struct {
 }
 
 type NetworkForwardingPath struct {
-	ID         ID                `json:"id"`
+	ID         ID                `json:"id,omitempty"`
 	Version    int               `json:"version"`
 	Policy     *Policy           `json:"policy,omitempty"`
 	Connection map[string]string `json:"connection,omitempty"`
 }
 
 type NFVEntityDescriptor struct {
-	ID                        ID                              `json:"id"`
+	ID                        ID                              `json:"id,omitempty"`
 	HbVersion                 int                             `json:"hb_version,omitempty"`
 	Name                      string                          `json:"name"`
 	ProjectID                 string                          `json:"projectId"`
@@ -31,14 +31,14 @@ type NFVEntityDescriptor struct {
 
 // VDUDepencency as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VDUDependency struct {
-	ID      ID                     `json:"id"`
+	ID      ID                     `json:"id,omitempty"`
 	Version int                    `json:"version"`
 	Source  *VirtualDeploymentUnit `json:"source,omitempty"`
 	Target  *VirtualDeploymentUnit `json:"target,omitempty"`
 }
 
 type VirtualDeploymentUnit struct {
-	ID                              ID                         `json:"id"`
+	ID                              ID                         `json:"id,omitempty"`
 	Version                         int                        `json:"version"`
 	ProjectID                       string                     `json:"projectId"`
 	Name                            string                     `json:"name"`
@@ -95,7 +95,7 @@ type VirtualNetworkFunctionDescriptor struct {
 
 // A VNFComponent as defined by ETSI GS NFV-MAN 001 V1.1.1
 type VNFComponent struct {
-	ID               ID                     `json:"id"`
+	ID               ID                     `json:"id,omitempty"`
 	Version          int                    `json:"version"`
 	ConnectionPoints []*VNFDConnectionPoint `json:"connection_component"`
 }
@@ -111,7 +111,7 @@ type VNFDConnectionPoint struct {
 
 // VNFForwardingGraphDescriptor as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphDescriptor struct {
-	ID                     ID                       `json:"id"`
+	ID                     ID                       `json:"id,omitempty"`
 	HbVersion              int                      `json:"hb_version"`
 	Vendor                 string                   `json:"vendor"`
 	Version                string                   `json:"version"`

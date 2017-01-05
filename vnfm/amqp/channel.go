@@ -144,7 +144,6 @@ func newChannel(config *config.Config, l *log.Logger) (*amqpChannel, error) {
 		Enabled:      true,
 		Endpoint:     acnl.cfg.vnfmEndpoint,
 		EndpointType: "RABBIT",
-		ID:           catalogue.GenerateID(),
 		Type:         acnl.cfg.vnfmType,
 	}
 

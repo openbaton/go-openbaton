@@ -14,7 +14,7 @@ type Component interface{}
 
 // NetworkServiceRecord as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type NetworkServiceRecord struct {
-	ID                       ID                               `json:"id"`
+	ID                       ID                               `json:"id,omitempty"`
 	AutoScalePolicy          []*AutoScalePolicy               `json:"auto_scale_policy"`
 	ConnectionPoint          []*ConnectionPoint               `json:"connection_point"`
 	MonitoringParameter      []string                         `json:"monitoring_parameterid"`
@@ -44,7 +44,7 @@ type NetworkServiceRecord struct {
 
 // PhysicalNetworkFunctionRecord based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type PhysicalNetworkFunctionRecord struct {
-	ID                   ID                          `json:"id"`
+	ID                   ID                          `json:"id,omitempty"`
 	Vendor               string                      `json:"vendor"`
 	Version              string                      `json:"version"`
 	Description          string                      `json:"description"`
@@ -59,7 +59,7 @@ type PhysicalNetworkFunctionRecord struct {
 }
 
 type Policy struct {
-	ID      ID  `json:"id"`
+	ID      ID  `json:"id,omitempty"`
 	Version int `json:"version"`
 }
 
@@ -123,7 +123,7 @@ type VNFCInstance struct {
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphRecord struct {
-	ID                    ID                              `json:"id"`
+	ID                    ID                              `json:"id,omitempty"`
 	DescriptorReference   *VNFForwardingGraphDescriptor   `json:"descriptor_reference"`
 	ParentNS              *NetworkServiceRecord           `json:"parent_ns"`
 	DependentVirtualLink  []*VirtualLinkRecord            `json:"dependent_virtual_link"`
@@ -143,7 +143,7 @@ type VNFForwardingGraphRecord struct {
 }
 
 type VNFRecordDependency struct {
-	ID             ID                                   `json:"id"`
+	ID             ID                                   `json:"id,omitempty"`
 	Version        int                                  `json:"version"`
 	Target         string                               `json:"target"`
 	Parameters     map[string]*DependencyParameters     `json:"parameters"`

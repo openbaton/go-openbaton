@@ -6,7 +6,7 @@ import (
 
 // A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
 type VirtualNetworkFunctionRecord struct {
-	ID                            ID                       `json:"id"`
+	ID                            ID                       `json:"id,omitempty"`
 	HbVersion                     int                      `json:"hb_version"`
 	AutoScalePolicies             []*AutoScalePolicy       `json:"auto_scale_policy"`
 	ConnectionPoints              []*ConnectionPoint       `json:"connection_point"`
@@ -62,7 +62,6 @@ func NewVNFR(
 
 		for _, confParam := range vnfd.Configurations.ConfigurationParameters {
 			configurations.Append(&ConfigurationParameter{
-				ID:      GenerateID(),
 				ConfKey: confParam.ConfKey,
 				Value:   confParam.Value,
 			})
@@ -88,7 +87,6 @@ func NewVNFR(
 		copy(lceStrings, lifecycleEvent.LifecycleEvents)
 
 		lifecycleEvents[i] = &LifecycleEvent{
-			ID:              GenerateID(),
 			Event:           lifecycleEvent.Event,
 			LifecycleEvents: lceStrings,
 		}
@@ -107,14 +105,12 @@ func NewVNFR(
 	if vnfd.Provides != nil {
 		for _, key := range vnfd.Provides {
 			provides.Append(&ConfigurationParameter{
-				ID:      GenerateID(),
 				ConfKey: key,
 			})
 		}
 	}
 
 	requires := &Configuration{
-		ID:   GenerateID(),
 		Name: "requires",
 		ConfigurationParameters: []*ConfigurationParameter{},
 	}
@@ -123,7 +119,6 @@ func NewVNFR(
 		for _, requiresParam := range vnfd.Requires {
 			for _, key := range requiresParam.Parameters {
 				requires.Append(&ConfigurationParameter{
-					ID:      GenerateID(),
 					ConfKey: key,
 				})
 			}
@@ -151,7 +146,6 @@ func NewVNFR(
 	}
 
 	return &VirtualNetworkFunctionRecord{
-		ID:   GenerateID(),
 		Name: vnfd.Name,
 
 		AutoScalePolicies:     autoScalePolicies,
@@ -192,6 +186,10 @@ func (vnfr *VirtualNetworkFunctionRecord) FindComponentInstance(component *VNFCo
 	return nil
 }
 
+func (vnfr *VirtualNetworkFunctionRecord) String() string {
+	
+}
+
 func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDescriptor) *AutoScalePolicy {
 	// copy all in bulk, and then deep clone the pointers
 	newAsp := new(AutoScalePolicy)
@@ -205,7 +203,6 @@ func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDesc
 		}
 
 		newAsp.Actions[i] = &ScalingAction{
-			ID:     GenerateID(),
 			Target: target,
 			Type:   action.Type,
 			Value:  action.Value,
@@ -215,7 +212,6 @@ func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDesc
 	newAsp.Alarms = make([]*ScalingAlarm, len(asp.Alarms))
 	for i, alarm := range asp.Alarms {
 		newAsp.Alarms[i] = &ScalingAlarm{
-			ID:                 GenerateID(),
 			ComparisonOperator: alarm.ComparisonOperator,
 			Metric:             alarm.Metric,
 			Statistic:          alarm.Statistic,
@@ -248,7 +244,6 @@ func cloneInternalVirtualLink(oldIVL *InternalVirtualLink, vlrs []*VirtualLinkRe
 
 	return &InternalVirtualLink{
 		VirtualLink: VirtualLink{
-			ID:               GenerateID(),
 			Name:             name,
 			ConnectivityType: oldIVL.ConnectivityType,
 			ExtID:            extID,
@@ -281,7 +276,6 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 	*newVDU = *parentVDU
 
 	// reset the ID of the new VDU
-	newVDU.ID = GenerateID()
 	newVDU.ParentVDU = parentVDU.ID
 
 	newVDU.VNFCs = make([]*VNFComponent, len(parentVDU.VNFCs))
@@ -291,7 +285,6 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 		for j, connectionPoint := range component.ConnectionPoints {
 			connectionPoints[j] = &VNFDConnectionPoint{
 				ConnectionPoint: ConnectionPoint{
-					ID:   GenerateID(),
 					Type: connectionPoint.Type,
 				},
 
@@ -301,7 +294,6 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 		}
 
 		newVDU.VNFCs[i] = &VNFComponent{
-			ID:               GenerateID(),
 			ConnectionPoints: connectionPoints,
 		}
 	}
@@ -315,7 +307,6 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 		copy(lifecycleEvents, lifecycleEvent.LifecycleEvents)
 
 		newVDU.LifecycleEvents[i] = &LifecycleEvent{
-			ID:              GenerateID(),
 			Event:           lifecycleEvent.Event,
 			LifecycleEvents: lifecycleEvents,
 		}

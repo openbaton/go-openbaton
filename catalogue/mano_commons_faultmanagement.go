@@ -1,7 +1,7 @@
 package catalogue
 
 type Criteria struct {
-	ID                 ID           `json:"id"`
+	ID                 ID           `json:"id,omitempty"`
 	Version            int          `json:"version"`
 	Name               string       `json:"name"`
 	ParameterRef       string       `json:"parameter_ref"`
@@ -23,7 +23,7 @@ const (
 )
 
 type FaultManagementPolicy struct {
-	ID       ID                `json:"id"`
+	ID       ID                `json:"id,omitempty"`
 	Name     string            `json:"name"`
 	VNFAlarm bool              `json:"VNFAlarm"`
 	Period   int               `json:"period"`
