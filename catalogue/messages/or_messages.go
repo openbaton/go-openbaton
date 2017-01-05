@@ -4,14 +4,12 @@ import (
 	"github.com/mcilloni/go-openbaton/catalogue"
 )
 
-//go:generate stringer -type=orMessage
 type orMessage struct{}
 
 func (orMessage) From() SenderType {
 	return NFVO
 }
 
-//go:generate stringer -type=OrAllocateResources
 type OrAllocateResources struct {
 	orMessage
 
@@ -22,7 +20,6 @@ func (OrAllocateResources) DefaultAction() catalogue.Action {
 	return catalogue.ActionAllocateResources
 }
 
-//go:generate stringer -type=OrError
 type OrError struct {
 	orMessage
 
@@ -34,7 +31,6 @@ func (OrError) DefaultAction() catalogue.Action {
 	return catalogue.ActionError
 }
 
-//go:generate stringer -type=OrGeneric
 type OrGeneric struct {
 	orMessage
 
@@ -46,7 +42,6 @@ func (OrGeneric) DefaultAction() catalogue.Action {
 	return catalogue.NoActionSpecified
 }
 
-//go:generate stringer -type=OrGrantLifecycleOperation
 type OrGrantLifecycleOperation struct {
 	orMessage
 
@@ -59,7 +54,6 @@ func (OrGrantLifecycleOperation) DefaultAction() catalogue.Action {
 	return catalogue.ActionGrantOperation
 }
 
-//go:generate stringer -type=OrHealVNFRequest
 type OrHealVNFRequest struct {
 	orMessage
 
@@ -72,7 +66,6 @@ func (OrHealVNFRequest) DefaultAction() catalogue.Action {
 	return catalogue.ActionHeal
 }
 
-//go:generate stringer -type=OrInstantiate
 type OrInstantiate struct {
 	orMessage
 
@@ -90,7 +83,6 @@ func (OrInstantiate) DefaultAction() catalogue.Action {
 	return catalogue.ActionInstantiate
 }
 
-//go:generate stringer -type=OrScaling
 type OrScaling struct {
 	orMessage
 
@@ -108,7 +100,6 @@ func (OrScaling) DefaultAction() catalogue.Action {
 	return catalogue.ActionScaling
 }
 
-//go:generate stringer -type=OrStartStop
 type OrStartStop struct {
 	orMessage
 
@@ -121,7 +112,6 @@ func (OrStartStop) DefaultAction() catalogue.Action {
 	return catalogue.ActionStart
 }
 
-//go:generate stringer -type=OrUpdate
 type OrUpdate struct {
 	orMessage
 
@@ -132,3 +122,4 @@ type OrUpdate struct {
 func (OrUpdate) DefaultAction() catalogue.Action {
 	return catalogue.ActionUpdate
 }
+

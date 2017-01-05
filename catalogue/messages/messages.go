@@ -1,9 +1,8 @@
-package messages
+﻿package messages
 
 import "github.com/mcilloni/go-openbaton/catalogue"
 import "fmt"
 
-//go:generate stringer -type=NFVMessage
 type NFVMessage interface {
 	Action() catalogue.Action
 	Content() interface{}
@@ -53,7 +52,6 @@ func New(params ...interface{}) (NFVMessage, error) {
 
 // SenderType represents the type of the sender of the
 // given message
-//go:generate stringer -type=SenderType
 type SenderType int
 
 const (
@@ -61,13 +59,11 @@ const (
 	NFVO
 )
 
-//go:generate stringer -type=body
 type body interface {
 	DefaultAction() catalogue.Action
 	From() SenderType
 }
 
-//go:generate stringer -type=message
 type message struct {
 	action  catalogue.Action
 	content body
@@ -85,3 +81,4 @@ func (msg *message) Content() interface{} {
 func (msg *message) From() SenderType {
 	return msg.from
 }
+

@@ -1,6 +1,5 @@
-package catalogue
+﻿package catalogue
 
-//go:generate stringer -type=AutoScalePolicy
 type AutoScalePolicy struct {
 	ID                 string           `json:"id,omitempty"`
 	Version            int              `json:"version"`
@@ -15,7 +14,6 @@ type AutoScalePolicy struct {
 	Actions            []*ScalingAction `json:"actions,omitempty"`
 }
 
-//go:generate stringer -type=ConnectionPoint
 type ConnectionPoint struct {
 	ID      string `json:"id,omitempty"`
 	Version int    `json:"version"`
@@ -23,7 +21,6 @@ type ConnectionPoint struct {
 }
 
 // ConstituentVDU as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=ConstituentVDU
 type ConstituentVDU struct {
 	ID                string `json:"id,omitempty"`
 	Version           int    `json:"version"`
@@ -33,7 +30,6 @@ type ConstituentVDU struct {
 }
 
 // ConstituentVNF as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=ConstituentVNF
 type ConstituentVNF struct {
 	ID                    string          `json:"id,omitempty"`
 	VnfReference          string          `json:"vnf_reference"`
@@ -46,7 +42,6 @@ type ConstituentVNF struct {
 }
 
 // DeploymentFlavour as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=DeploymentFlavour
 type DeploymentFlavour struct {
 	ID         string `json:"id,omitempty"`
 	Version    int    `json:"version"`
@@ -57,7 +52,6 @@ type DeploymentFlavour struct {
 	VCPUs      int    `json:"vcpus"`
 }
 
-//go:generate stringer -type=Event
 type Event string
 
 const (
@@ -84,7 +78,6 @@ const (
 	EventReset           = Event("RESET")
 )
 
-//go:generate stringer -type=HighAvailability
 type HighAvailability struct {
 	ID               string          `json:"id,omitempty"`
 	Version          int             `json:"version"`
@@ -93,7 +86,6 @@ type HighAvailability struct {
 	RedundancyScheme string          `json:"redundancyScheme"`
 }
 
-//go:generate stringer -type=Ip
 type Ip struct {
 	ID      string `json:"id,omitempty"`
 	Version int    `json:"version"`
@@ -102,7 +94,6 @@ type Ip struct {
 }
 
 // LifecycleEvent as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=LifecycleEvent
 type LifecycleEvent struct {
 	ID              string   `json:"id,omitempty"`
 	Version         int      `json:"version"`
@@ -111,7 +102,6 @@ type LifecycleEvent struct {
 }
 
 // NetworkServiceDeploymentFlavour as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=NetworkServiceDeploymentFlavour
 type NetworkServiceDeploymentFlavour struct {
 	Vendor                string                      `json:"vendor"`
 	Version               string                      `json:"version"`
@@ -128,7 +118,6 @@ type NetworkServiceDeploymentFlavour struct {
 	Connection            []string                    `json:"connection"`
 }
 
-//go:generate stringer -type=RedundancyModel
 type RedundancyModel string
 
 const (
@@ -136,7 +125,6 @@ const (
 	RedundancyStandby = RedundancyModel("STANDBY")
 )
 
-//go:generate stringer -type=ResiliencyLevel
 type ResiliencyLevel string
 
 const (
@@ -144,7 +132,6 @@ const (
 	ResiliencyActiveStandbyStateful  = ResiliencyLevel("ACTIVE_STANDBY_STATEFUL")
 )
 
-//go:generate stringer -type=ScalingAction
 type ScalingAction struct {
 	ID      string            `json:"id,omitempty"`
 	Version int               `json:"version"`
@@ -153,7 +140,6 @@ type ScalingAction struct {
 	Target  string            `json:"target,omitempty"`
 }
 
-//go:generate stringer -type=ScalingActionType
 type ScalingActionType string
 
 const (
@@ -165,7 +151,6 @@ const (
 	ScaleInToFlavour  = ScalingActionType("SCALE_IN_TO_FLAVOUR")
 )
 
-//go:generate stringer -type=ScalingAlarm
 type ScalingAlarm struct {
 	ID                 string  `json:"id,omitempty"`
 	Version            int     `json:"version"`
@@ -176,7 +161,6 @@ type ScalingAlarm struct {
 	Weight             float64 `json:"weight"`
 }
 
-//go:generate stringer -type=ScalingMode
 type ScalingMode string
 
 const (
@@ -185,7 +169,6 @@ const (
 	ScaleModePredictive = ScalingMode("PREDICTIVE")
 )
 
-//go:generate stringer -type=ScalingType
 type ScalingType string
 
 const (
@@ -194,7 +177,6 @@ const (
 	ScaleTypeWeighted = ScalingType("WEIGHTED")
 )
 
-//go:generate stringer -type=Security
 type Security struct {
 	ID      string `json:"id,omitempty"`
 	Version int    `json:"version"`
@@ -206,7 +188,6 @@ type Security struct {
 // The VLD connection parameters are expected to have similar attributes to those used on the ports
 // on VNFs in ETSI GS NFV-SWA 001 [i.8]. Therefore a set of VLs in a Network Service can be mapped
 // to a Network Connectivity Topology (NCT) as defined in ETSI GS NFV-SWA 001 [i.8].
-//go:generate stringer -type=VirtualLink
 type VirtualLink struct {
 	ID               string   `json:"id,omitempty"`
 	HbVersion        int      `json:"hb_version"`
@@ -219,9 +200,9 @@ type VirtualLink struct {
 	Name             string   `json:"name"`
 }
 
-//go:generate stringer -type=VNFDeploymentFlavour
 type VNFDeploymentFlavour struct {
 	DeploymentFlavour
 	DfConstraint   []string          `json:"df_constraint"`
 	ConstituentVDU []*ConstituentVDU `json:"constituent_vdu"`
 }
+

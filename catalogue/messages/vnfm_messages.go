@@ -1,15 +1,13 @@
-package messages
+﻿package messages
 
 import "github.com/mcilloni/go-openbaton/catalogue"
 
-//go:generate stringer -type=vnfmMessage
 type vnfmMessage struct{}
 
 func (vnfmMessage) From() SenderType {
 	return VNFM
 }
 
-//go:generate stringer -type=VNFMAllocateResources
 type VNFMAllocateResources struct {
 	vnfmMessage
 
@@ -23,7 +21,6 @@ func (VNFMAllocateResources) DefaultAction() catalogue.Action {
 	return catalogue.ActionAllocateResources
 }
 
-//go:generate stringer -type=VNFMError
 type VNFMError struct {
 	vnfmMessage
 
@@ -36,7 +33,6 @@ func (VNFMError) DefaultAction() catalogue.Action {
 	return catalogue.ActionError
 }
 
-//go:generate stringer -type=VNFMGeneric
 type VNFMGeneric struct {
 	vnfmMessage
 
@@ -48,7 +44,6 @@ func (VNFMGeneric) DefaultAction() catalogue.Action {
 	return catalogue.NoActionSpecified
 }
 
-//go:generate stringer -type=VNFMGrantLifecycleOperation
 type VNFMGrantLifecycleOperation struct {
 	vnfmMessage
 
@@ -61,7 +56,6 @@ func (VNFMGrantLifecycleOperation) DefaultAction() catalogue.Action {
 	return catalogue.ActionGrantOperation
 }
 
-//go:generate stringer -type=VNFMHealed
 type VNFMHealed struct {
 	vnfmMessage
 
@@ -74,7 +68,6 @@ func (VNFMHealed) DefaultAction() catalogue.Action {
 	return catalogue.ActionHeal
 }
 
-//go:generate stringer -type=VNFMInstantiate
 type VNFMInstantiate struct {
 	vnfmMessage
 
@@ -85,7 +78,6 @@ func (VNFMInstantiate) DefaultAction() catalogue.Action {
 	return catalogue.ActionInstantiate
 }
 
-//go:generate stringer -type=VNFMScaled
 type VNFMScaled struct {
 	vnfmMessage
 
@@ -97,7 +89,6 @@ func (VNFMScaled) DefaultAction() catalogue.Action {
 	return catalogue.ActionScaled
 }
 
-//go:generate stringer -type=VNFMScaling
 type VNFMScaling struct {
 	vnfmMessage
 
@@ -109,7 +100,6 @@ func (VNFMScaling) DefaultAction() catalogue.Action {
 	return catalogue.ActionScaling
 }
 
-//go:generate stringer -type=VNFMStartStop
 type VNFMStartStop struct {
 	vnfmMessage
 
@@ -121,3 +111,4 @@ type VNFMStartStop struct {
 func (VNFMStartStop) DefaultAction() catalogue.Action {
 	return catalogue.ActionStart
 }
+

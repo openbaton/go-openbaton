@@ -1,6 +1,5 @@
-package catalogue
+﻿package catalogue
 
-//go:generate stringer -type=Key
 type Key struct {
 	ID          string `json:"id,omitempty"`
 	Name        string `json:"name"`
@@ -8,3 +7,4 @@ type Key struct {
 	PublicKey   string `json:"publicKey"`
 	Fingerprint string `json:"fingerprint"`
 }
+

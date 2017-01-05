@@ -1,4 +1,4 @@
-package messages
+﻿package messages
 
 import (
 	"encoding/json"
@@ -179,3 +179,4 @@ func sanitizeAction(action catalogue.Action) catalogue.Action {
 
 	return action
 }
+

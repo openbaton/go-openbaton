@@ -1,6 +1,5 @@
-package catalogue
+﻿package catalogue
 
-//go:generate stringer -type=LinkStatus
 type LinkStatus string
 
 const (
@@ -11,11 +10,9 @@ const (
 )
 
 // Component represents a generic component.
-//go:generate stringer -type=Component
 type Component interface{}
 
 // NetworkServiceRecord as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=NetworkServiceRecord
 type NetworkServiceRecord struct {
 	ID                       string                           `json:"id,omitempty"`
 	AutoScalePolicy          []*AutoScalePolicy               `json:"auto_scale_policy"`
@@ -46,7 +43,6 @@ type NetworkServiceRecord struct {
 }
 
 // PhysicalNetworkFunctionRecord based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=PhysicalNetworkFunctionRecord
 type PhysicalNetworkFunctionRecord struct {
 	ID                   string                      `json:"id,omitempty"`
 	Vendor               string                      `json:"vendor"`
@@ -62,13 +58,11 @@ type PhysicalNetworkFunctionRecord struct {
 	PNFAddress           []string                    `json:"pnf_address"`
 }
 
-//go:generate stringer -type=Policy
 type Policy struct {
 	ID      string `json:"id,omitempty"`
 	Version int    `json:"version"`
 }
 
-//go:generate stringer -type=Status
 type Status string
 
 const (
@@ -97,7 +91,6 @@ const (
 	StatusResuming = Status("RESUMING")
 )
 
-//go:generate stringer -type=VirtualLinkRecord
 type VirtualLinkRecord struct {
 	VirtualLink
 
@@ -116,7 +109,6 @@ type VirtualLinkRecord struct {
 	Connection            []string                    `json:"connection"`
 }
 
-//go:generate stringer -type=VNFCInstance
 type VNFCInstance struct {
 	VNFComponent
 
@@ -130,7 +122,6 @@ type VNFCInstance struct {
 }
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=VNFForwardingGraphRecord
 type VNFForwardingGraphRecord struct {
 	ID                    string                          `json:"id,omitempty"`
 	DescriptorReference   *VNFForwardingGraphDescriptor   `json:"descriptor_reference"`
@@ -151,7 +142,6 @@ type VNFForwardingGraphRecord struct {
 	NumberOfVirtualLinks  int                             `json:"number_of_virtual_links"`
 }
 
-//go:generate stringer -type=VNFRecordDependency
 type VNFRecordDependency struct {
 	ID             string                               `json:"id,omitempty"`
 	Version        int                                  `json:"version"`
@@ -160,3 +150,4 @@ type VNFRecordDependency struct {
 	VNFCParameters map[string]*VNFCDependencyParameters `json:"vnfcParameters"`
 	IDType         map[string]string                    `json:"idType"`
 }
+

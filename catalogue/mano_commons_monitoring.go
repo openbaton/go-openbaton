@@ -1,6 +1,5 @@
-package catalogue
+﻿package catalogue
 
-//go:generate stringer -type=PerceivedSeverity
 type PerceivedSeverity string
 
 const (
@@ -10,3 +9,4 @@ const (
 	SeverityMajor         = PerceivedSeverity("MAJOR")
 	SeverityCritical      = PerceivedSeverity("CRITICAL")
 )
+

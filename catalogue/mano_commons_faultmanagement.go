@@ -1,6 +1,5 @@
-package catalogue
+﻿package catalogue
 
-//go:generate stringer -type=Criteria
 type Criteria struct {
 	ID                 string       `json:"id,omitempty"`
 	Version            int          `json:"version"`
@@ -12,7 +11,6 @@ type Criteria struct {
 	Threshold          string       `json:"threshold"`
 }
 
-//go:generate stringer -type=FaultManagementAction
 type FaultManagementAction string
 
 const (
@@ -24,7 +22,6 @@ const (
 	FaultSwitchToActive       = FaultManagementAction("SWITCH_TO_ACTIVE")
 )
 
-//go:generate stringer -type=FaultManagementPolicy
 type FaultManagementPolicy struct {
 	ID       string            `json:"id,omitempty"`
 	Name     string            `json:"name"`
@@ -35,7 +32,6 @@ type FaultManagementPolicy struct {
 	Version  int               `json:"version"`
 }
 
-//go:generate stringer -type=VNFCSelector
 type VNFCSelector string
 
 const (
@@ -43,9 +39,9 @@ const (
 	SelectorAll        = VNFCSelector("all")
 )
 
-//go:generate stringer -type=VRFaultManagementPolicy
 type VRFaultManagementPolicy struct {
 	FaultManagementPolicy
 
 	Action FaultManagementAction `json:"action"`
 }
+

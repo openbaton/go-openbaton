@@ -1,11 +1,11 @@
-package catalogue
+﻿package catalogue
 
 import (
 	"fmt"
+	"encoding/json"
 )
 
 // A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
-//go:generate stringer -type=VirtualNetworkFunctionRecord
 type VirtualNetworkFunctionRecord struct {
 	ID                            string                   `json:"id,omitempty"`
 	HbVersion                     int                      `json:"hb_version"`
@@ -187,6 +187,15 @@ func (vnfr *VirtualNetworkFunctionRecord) FindComponentInstance(component *VNFCo
 	return nil
 }
 
+func (vnfr *VirtualNetworkFunctionRecord) String() string {
+	b,e := json.MarshalIndent(vnfr, "", " ")
+	if e != nil {
+		return fmt.Sprint(*vnfr)
+	} 
+	
+	return string(b)
+}
+
 func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDescriptor) *AutoScalePolicy {
 	// copy all in bulk, and then deep clone the pointers
 	newAsp := new(AutoScalePolicy)
@@ -333,3 +342,4 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 
 	return newVDU
 }
+

@@ -1,14 +1,12 @@
-package catalogue
+﻿package catalogue
 
 // An extended Virtual Link based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=InternalVirtualLink
 type InternalVirtualLink struct {
 	VirtualLink
 
 	ConnectionPointsReferences []string `json:"connection_points_references"`
 }
 
-//go:generate stringer -type=NetworkForwardingPath
 type NetworkForwardingPath struct {
 	ID         string            `json:"id,omitempty"`
 	Version    int               `json:"version"`
@@ -16,7 +14,6 @@ type NetworkForwardingPath struct {
 	Connection map[string]string `json:"connection,omitempty"`
 }
 
-//go:generate stringer -type=NFVEntityDescriptor
 type NFVEntityDescriptor struct {
 	ID                        string                          `json:"id,omitempty"`
 	HbVersion                 int                             `json:"hb_version,omitempty"`
@@ -33,7 +30,6 @@ type NFVEntityDescriptor struct {
 }
 
 // VDUDepencency as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=VDUDependency
 type VDUDependency struct {
 	ID      string                 `json:"id,omitempty"`
 	Version int                    `json:"version"`
@@ -41,7 +37,6 @@ type VDUDependency struct {
 	Target  *VirtualDeploymentUnit `json:"target,omitempty"`
 }
 
-//go:generate stringer -type=VirtualDeploymentUnit
 type VirtualDeploymentUnit struct {
 	ID                              string                     `json:"id,omitempty"`
 	Version                         int                        `json:"version"`
@@ -65,7 +60,6 @@ type VirtualDeploymentUnit struct {
 }
 
 // VirtualLinkDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=VirtualLinkDescriptor
 type VirtualLinkDescriptor struct {
 	VirtualLink
 	ProjectID         string    `json:"projectId"`
@@ -78,7 +72,6 @@ type VirtualLinkDescriptor struct {
 }
 
 // VirtualNetworkFunctionDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=VirtualNetworkFunctionDescriptor
 type VirtualNetworkFunctionDescriptor struct {
 	NFVEntityDescriptor
 
@@ -91,17 +84,16 @@ type VirtualNetworkFunctionDescriptor struct {
 	ManifestFile         string                         `json:"manifest_file"`
 	ManifestFileSecurity []*Security                    `json:"manifest_file_security"`
 	Type                 string                         `json:"type"`
-	Endpoint             string                         `json:"-"`
+	Endpoint             string                         `json:"endpoint"`
 	VNFPackageLocation   string                         `json:"vnfPackageLocation"`
 	Requires             map[string]*RequiresParameters `json:"requires,omitempty"`
 	Provides             []string                       `json:"provides,omitempty"`
-	CyclicDependency     bool                           `json:"-"`
+	CyclicDependency     bool                           `json:"cyclicDependency"`
 	ConnectionPoints     []*ConnectionPoint             `json:"connection_point"`
 	VNFDConnectionPoints []*VNFDConnectionPoint         `json:"VNFDConnection_point"`
 }
 
 // A VNFComponent as defined by ETSI GS NFV-MAN 001 V1.1.1
-//go:generate stringer -type=VNFComponent
 type VNFComponent struct {
 	ID               string                 `json:"id,omitempty"`
 	Version          int                    `json:"version"`
@@ -110,7 +102,6 @@ type VNFComponent struct {
 
 // Virtual Network Function Descriptor Connection Point as defined by
 // ETSI GS NFV-MAN 001 V1.1.1
-//go:generate stringer -type=VNFDConnectionPoint
 type VNFDConnectionPoint struct {
 	ConnectionPoint
 
@@ -119,7 +110,6 @@ type VNFDConnectionPoint struct {
 }
 
 // VNFForwardingGraphDescriptor as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
-//go:generate stringer -type=VNFForwardingGraphDescriptor
 type VNFForwardingGraphDescriptor struct {
 	ID                     string                   `json:"id,omitempty"`
 	HbVersion              int                      `json:"hb_version"`
@@ -134,3 +124,4 @@ type VNFForwardingGraphDescriptor struct {
 	ConstituentVnfs        []*ConstituentVNF        `json:"constituent_vnfs"`
 	VnffgdSecurity         *Security                `json:"vnffgd_security,omitempty"`
 }
+
