@@ -105,7 +105,7 @@ func (acnl *amqpChannel) rpc(queue string, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	corrID := string(catalogue.GenerateID())
+	corrID := catalogue.GenerateID()
 
 	acnl.l.WithFields(log.Fields{
 		"tag":            "channel-amqp-rpc",

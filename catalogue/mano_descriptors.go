@@ -1,21 +1,24 @@
 package catalogue
 
 // An extended Virtual Link based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+//go:generate stringer -type=InternalVirtualLink
 type InternalVirtualLink struct {
 	VirtualLink
 
 	ConnectionPointsReferences []string `json:"connection_points_references"`
 }
 
+//go:generate stringer -type=NetworkForwardingPath
 type NetworkForwardingPath struct {
-	ID         ID                `json:"id,omitempty"`
+	ID         string            `json:"id,omitempty"`
 	Version    int               `json:"version"`
 	Policy     *Policy           `json:"policy,omitempty"`
 	Connection map[string]string `json:"connection,omitempty"`
 }
 
+//go:generate stringer -type=NFVEntityDescriptor
 type NFVEntityDescriptor struct {
-	ID                        ID                              `json:"id,omitempty"`
+	ID                        string                          `json:"id,omitempty"`
 	HbVersion                 int                             `json:"hb_version,omitempty"`
 	Name                      string                          `json:"name"`
 	ProjectID                 string                          `json:"projectId"`
@@ -30,20 +33,22 @@ type NFVEntityDescriptor struct {
 }
 
 // VDUDepencency as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+//go:generate stringer -type=VDUDependency
 type VDUDependency struct {
-	ID      ID                     `json:"id,omitempty"`
+	ID      string                 `json:"id,omitempty"`
 	Version int                    `json:"version"`
 	Source  *VirtualDeploymentUnit `json:"source,omitempty"`
 	Target  *VirtualDeploymentUnit `json:"target,omitempty"`
 }
 
+//go:generate stringer -type=VirtualDeploymentUnit
 type VirtualDeploymentUnit struct {
-	ID                              ID                         `json:"id,omitempty"`
+	ID                              string                     `json:"id,omitempty"`
 	Version                         int                        `json:"version"`
 	ProjectID                       string                     `json:"projectId"`
 	Name                            string                     `json:"name"`
 	VMImages                        []string                   `json:"vm_image"`
-	ParentVDU                       ID                         `json:"parent_vdu"`
+	ParentVDU                       string                     `json:"parent_vdu"`
 	ComputationRequirement          string                     `json:"computation_requirement"`
 	VirtualMemoryResourceElement    string                     `json:"virtual_memory_resource_element"`
 	VirtualNetworkBandwidthResource string                     `json:"virtual_network_bandwidth_resource"`
@@ -60,6 +65,7 @@ type VirtualDeploymentUnit struct {
 }
 
 // VirtualLinkDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+//go:generate stringer -type=VirtualLinkDescriptor
 type VirtualLinkDescriptor struct {
 	VirtualLink
 	ProjectID         string    `json:"projectId"`
@@ -72,6 +78,7 @@ type VirtualLinkDescriptor struct {
 }
 
 // VirtualNetworkFunctionDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+//go:generate stringer -type=VirtualNetworkFunctionDescriptor
 type VirtualNetworkFunctionDescriptor struct {
 	NFVEntityDescriptor
 
@@ -94,14 +101,16 @@ type VirtualNetworkFunctionDescriptor struct {
 }
 
 // A VNFComponent as defined by ETSI GS NFV-MAN 001 V1.1.1
+//go:generate stringer -type=VNFComponent
 type VNFComponent struct {
-	ID               ID                     `json:"id,omitempty"`
+	ID               string                 `json:"id,omitempty"`
 	Version          int                    `json:"version"`
 	ConnectionPoints []*VNFDConnectionPoint `json:"connection_component"`
 }
 
 // Virtual Network Function Descriptor Connection Point as defined by
 // ETSI GS NFV-MAN 001 V1.1.1
+//go:generate stringer -type=VNFDConnectionPoint
 type VNFDConnectionPoint struct {
 	ConnectionPoint
 
@@ -110,8 +119,9 @@ type VNFDConnectionPoint struct {
 }
 
 // VNFForwardingGraphDescriptor as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
+//go:generate stringer -type=VNFForwardingGraphDescriptor
 type VNFForwardingGraphDescriptor struct {
-	ID                     ID                       `json:"id,omitempty"`
+	ID                     string                   `json:"id,omitempty"`
 	HbVersion              int                      `json:"hb_version"`
 	Vendor                 string                   `json:"vendor"`
 	Version                string                   `json:"version"`

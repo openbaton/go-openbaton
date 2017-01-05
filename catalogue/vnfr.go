@@ -5,8 +5,9 @@ import (
 )
 
 // A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
+//go:generate stringer -type=VirtualNetworkFunctionRecord
 type VirtualNetworkFunctionRecord struct {
-	ID                            ID                       `json:"id,omitempty"`
+	ID                            string                   `json:"id,omitempty"`
 	HbVersion                     int                      `json:"hb_version"`
 	AutoScalePolicies             []*AutoScalePolicy       `json:"auto_scale_policy"`
 	ConnectionPoints              []*ConnectionPoint       `json:"connection_point"`
@@ -22,7 +23,7 @@ type VirtualNetworkFunctionRecord struct {
 	Version                       string                   `json:"version"`
 	VirtualLinks                  []*InternalVirtualLink   `json:"virtual_link"`
 	ParentNsID                    string                   `json:"parent_ns_id"`
-	DescriptorReference           ID                       `json:"descriptor_reference"`
+	DescriptorReference           string                   `json:"descriptor_reference"`
 	VNFMID                        string                   `json:"vnfm_id"`
 	ConnectedExternalVirtualLinks []*VirtualLinkRecord     `json:"connected_external_virtual_link"`
 	VNFAddresses                  []string                 `json:"vnf_address"`
@@ -45,7 +46,7 @@ func NewVNFR(
 	flavourKey string,
 	vlrs []*VirtualLinkRecord,
 	extension map[string]string,
-	vimInstances map[ID][]*VIMInstance) (*VirtualNetworkFunctionRecord, error) {
+	vimInstances map[string][]*VIMInstance) (*VirtualNetworkFunctionRecord, error) {
 
 	autoScalePolicies := make([]*AutoScalePolicy, len(vnfd.AutoScalePolicies))
 	for _, asp := range vnfd.AutoScalePolicies {
@@ -184,10 +185,6 @@ func (vnfr *VirtualNetworkFunctionRecord) FindComponentInstance(component *VNFCo
 	}
 
 	return nil
-}
-
-func (vnfr *VirtualNetworkFunctionRecord) String() string {
-	
 }
 
 func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDescriptor) *AutoScalePolicy {

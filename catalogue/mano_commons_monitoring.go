@@ -1,5 +1,6 @@
 package catalogue
 
+//go:generate stringer -type=PerceivedSeverity
 type PerceivedSeverity string
 
 const (

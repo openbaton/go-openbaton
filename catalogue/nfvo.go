@@ -1,5 +1,6 @@
 package catalogue
 
+//go:generate stringer -type=Action
 type Action string
 
 const (
@@ -26,16 +27,18 @@ const (
 	NoActionSpecified = Action("")
 )
 
+//go:generate stringer -type=ConfigurationParameter
 type ConfigurationParameter struct {
-	ID          ID     `json:"id,omitempty"`
+	ID          string `json:"id,omitempty"`
 	Version     int    `json:"version,omitempty"`
 	Description string `json:"description,omitempty"`
 	ConfKey     string `json:"confKey"`
 	Value       string `json:"value,omitempty"`
 }
 
+//go:generate stringer -type=Configuration
 type Configuration struct {
-	ID                      ID                        `json:"id,omitempty"`
+	ID                      string                    `json:"id,omitempty"`
 	Version                 int                       `json:"version"`
 	ProjectID               string                    `json:"projectId"`
 	ConfigurationParameters []*ConfigurationParameter `json:"configurationParameters"`
@@ -46,14 +49,16 @@ func (cfg *Configuration) Append(p *ConfigurationParameter) {
 	cfg.ConfigurationParameters = append(cfg.ConfigurationParameters, p)
 }
 
+//go:generate stringer -type=DependencyParameters
 type DependencyParameters struct {
-	ID         ID                `json:"id,omitempty"`
+	ID         string            `json:"id,omitempty"`
 	Version    int               `json:"version"`
 	Parameters map[string]string `json:"parameters"`
 }
 
+//go:generate stringer -type=Endpoint
 type Endpoint struct {
-	ID           ID     `json:"id,omitempty"`
+	ID           string `json:"id,omitempty"`
 	Version      int    `json:"version"`
 	Type         string `json:"type"`
 	EndpointType string `json:"endpointType"`
@@ -63,23 +68,26 @@ type Endpoint struct {
 	Active       bool   `json:"active"`
 }
 
+//go:generate stringer -type=HistoryLifecycleEvent
 type HistoryLifecycleEvent struct {
-	ID          ID     `json:"id,omitempty"`
+	ID          string `json:"id,omitempty"`
 	Event       string `json:"event"`
 	Description string `json:"description"`
 	ExecutedAt  string `json:"executedAt"`
 }
 
+//go:generate stringer -type=Location
 type Location struct {
-	ID        ID     `json:"id,omitempty"`
+	ID        string `json:"id,omitempty"`
 	Version   int    `json:"id,omitempty"`
 	Name      string `json:"id,omitempty"`
 	Latitude  string `json:"id,omitempty"`
 	Longitude string `json:"id,omitempty"`
 }
 
+//go:generate stringer -type=Network
 type Network struct {
-	ID       ID        `json:"id,omitempty"`
+	ID       string    `json:"id,omitempty"`
 	Version  int       `json:"version"`
 	Name     string    `json:"name"`
 	ExtID    string    `json:"extId"`
@@ -88,8 +96,9 @@ type Network struct {
 	Subnets  []*Subnet `json:"subnets"`
 }
 
+//go:generate stringer -type=NFVImage
 type NFVImage struct {
-	ID              ID     `json:"id,omitempty"`
+	ID              string `json:"id,omitempty"`
 	Version         int    `json:"version"`
 	ExtID           string `json:"extId"`
 	Name            string `json:"name"`
@@ -104,21 +113,24 @@ type NFVImage struct {
 	IsPublic        bool   `json:"isPublic"`
 }
 
+//go:generate stringer -type=RequiresParameters
 type RequiresParameters struct {
-	ID         ID       `json:"id,omitempty"`
+	ID         string   `json:"id,omitempty"`
 	Version    int      `json:"version"`
 	Parameters []string `json:"parameters"`
 }
 
+//go:generate stringer -type=Script
 type Script struct {
-	ID      ID     `json:"id,omitempty"`
+	ID      string `json:"id,omitempty"`
 	Version int    `json:"version"`
 	Name    string `json:"name"`
 	Payload []byte `json:"-"`
 }
 
+//go:generate stringer -type=Subnet
 type Subnet struct {
-	ID        ID     `json:"id,omitempty"`
+	ID        string `json:"id,omitempty"`
 	Version   int    `json:"version"`
 	Name      string `json:"name"`
 	ExtID     string `json:"extId"`
@@ -127,8 +139,9 @@ type Subnet struct {
 	GatewayIP string `json:"gatewayIp"`
 }
 
+//go:generate stringer -type=VIMInstance
 type VIMInstance struct {
-	ID             ID                   `json:"id,omitempty"`
+	ID             string               `json:"id,omitempty"`
 	Version        int                  `json:"version"`
 	Name           string               `json:"name"`
 	AuthURL        string               `json:"authUrl"`
@@ -148,7 +161,7 @@ type VIMInstance struct {
 
 func (vi *VIMInstance) HasFlavour(key string) bool {
 	for _, df := range vi.Flavours {
-		if df.FlavourKey == key || df.ExtID == ID(key) || df.ID == ID(key) {
+		if df.FlavourKey == key || df.ExtID == key || df.ID == key {
 			return true
 		}
 	}
@@ -156,15 +169,17 @@ func (vi *VIMInstance) HasFlavour(key string) bool {
 	return false
 }
 
+//go:generate stringer -type=VNFCDependencyParameters
 type VNFCDependencyParameters struct {
 	VNFCID     string                           `json:"vnfcId"`
-	ID         ID                               `json:"id,omitempty"`
+	ID         string                           `json:"id,omitempty"`
 	Version    int                              `json:"version"`
 	Parameters map[string]*DependencyParameters `json:"parameters"`
 }
 
+//go:generate stringer -type=VNFPackage
 type VNFPackage struct {
-	ID          ID        `json:"id,omitempty"`
+	ID          string    `json:"id,omitempty"`
 	Version     int       `json:"version"`
 	Name        string    `json:"name"`
 	NFVOVersion string    `json:"nfvo_version"`

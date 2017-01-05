@@ -1,4 +1,4 @@
-package catalogue
+﻿package catalogue
 
 import (
 	"reflect"
@@ -7,21 +7,14 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-type ID string
-
-var (
-	zeroID = ID("")
-	idType = reflect.TypeOf(zeroID)
-)
-
-func GenerateID() ID {
-	return ID(uuid.NewV4().String())
+func GenerateID() string {
+	return uuid.NewV4().String()
 }
 
-// EnsureID checks if v contains a field named "ID" of catalogue.ID type, and
+// EnsureID checks if v contains a field named "ID" of string type, and
 // (if empty) sets its contents to a new ID. It does nothing otherwise, so it can
 // be safely used on every type.
-func EnsureID(v interface{}) ID {
+func EnsureID(v interface{}) string {
 	filterFunc := func(name string) bool {
 		return strings.EqualFold(name, "id")
 	}
@@ -35,17 +28,17 @@ func EnsureID(v interface{}) ID {
 
 	if vType.Kind() == reflect.Struct {
 		if structField, ok := vType.FieldByNameFunc(filterFunc); ok {
-			if reflect.DeepEqual(structField.Type, idType) {
+			if structField.Type.Kind() == reflect.String {
 				fValue := vValue.FieldByNameFunc(filterFunc)
-				if reflect.DeepEqual(fValue.Interface(), zeroID) {
+				if fValue.Interface().(string) == "" {
 					newID := GenerateID()
 
-					fValue.SetString(string(newID))
+					fValue.SetString(newID)
 					return newID
 				}
 			}
 		}
 	}
 
-	return zeroID
+	return ""
 }
