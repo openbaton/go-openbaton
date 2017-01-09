@@ -1,4 +1,4 @@
-﻿package catalogue
+package catalogue
 
 type Key struct {
 	ID          string `json:"id,omitempty"`
@@ -7,4 +7,3 @@ type Key struct {
 	PublicKey   string `json:"publicKey"`
 	Fingerprint string `json:"fingerprint"`
 }
-

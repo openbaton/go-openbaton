@@ -1,4 +1,4 @@
-﻿package catalogue
+package catalogue
 
 type AutoScalePolicy struct {
 	ID                 string           `json:"id,omitempty"`
@@ -205,4 +205,3 @@ type VNFDeploymentFlavour struct {
 	DfConstraint   []string          `json:"df_constraint"`
 	ConstituentVDU []*ConstituentVDU `json:"constituent_vdu"`
 }
-

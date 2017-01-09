@@ -1,8 +1,8 @@
-﻿package catalogue
+package catalogue
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 )
 
 // A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
@@ -188,11 +188,11 @@ func (vnfr *VirtualNetworkFunctionRecord) FindComponentInstance(component *VNFCo
 }
 
 func (vnfr *VirtualNetworkFunctionRecord) String() string {
-	b,e := json.MarshalIndent(vnfr, "", " ")
+	b, e := json.MarshalIndent(vnfr, "", " ")
 	if e != nil {
 		return fmt.Sprint(*vnfr)
-	} 
-	
+	}
+
 	return string(b)
 }
 
@@ -342,4 +342,3 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 
 	return newVDU
 }
-

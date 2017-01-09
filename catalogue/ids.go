@@ -1,4 +1,4 @@
-﻿package catalogue
+package catalogue
 
 import (
 	"reflect"
@@ -42,4 +42,3 @@ func EnsureID(v interface{}) string {
 
 	return ""
 }
-

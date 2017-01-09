@@ -1,4 +1,4 @@
-﻿package catalogue
+package catalogue
 
 type Action string
 
@@ -104,6 +104,17 @@ type NFVImage struct {
 	IsPublic        bool   `json:"isPublic"`
 }
 
+type Quota struct {
+	ID          string `json:"id"`
+	Version     int    `json:"version"`
+	Tenant      string `json:"tenant"`
+	Cores       int    `json:"cores"`
+	FloatingIPs int    `json:"floatingIps"`
+	Instances   int    `json:"instances"`
+	KeyPairs    int    `json:"keyPairs"`
+	RAM         int    `json:"ram"`
+}
+
 type RequiresParameters struct {
 	ID         string   `json:"id,omitempty"`
 	Version    int      `json:"version"`
@@ -115,6 +126,24 @@ type Script struct {
 	Version int    `json:"version"`
 	Name    string `json:"name"`
 	Payload []byte `json:"-"`
+}
+
+type Server struct {
+	ID                 string              `json:"id,omitempty"`
+	Version            int                 `json:"version"`
+	Name               string              `json:"name"`
+	Image              NFVImage            `json:"image"`
+	Flavor             *DeploymentFlavour  `json:"flavor"`
+	Status             string              `json:"status"`
+	ExtendedStatus     string              `json:"extendedStatus"`
+	ExtID              string              `json:"extId"`
+	IPs                map[string][]string `json:"ips"`
+	FloatingIPs        map[string]string   `json:"floatingIps"`
+	Created            string              `json:"created,omitempty"` // Actually a date; implement a Marshaller if needed
+	Updated            string              `json:"updated,omitempty"` // see above
+	HostName           string              `json:"hostName"`
+	HypervisorHostName string              `json:"hypervisorHostName"`
+	InstanceName       string              `json:"instanceName"`
 }
 
 type Subnet struct {
@@ -175,4 +204,3 @@ type VNFPackage struct {
 	Scripts     []*Script `json:"scripts"`
 	ProjectID   string    `json:"projectId"`
 }
-

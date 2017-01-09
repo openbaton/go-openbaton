@@ -1,4 +1,4 @@
-﻿package catalogue
+package catalogue
 
 type LinkStatus string
 
@@ -150,4 +150,3 @@ type VNFRecordDependency struct {
 	VNFCParameters map[string]*VNFCDependencyParameters `json:"vnfcParameters"`
 	IDType         map[string]string                    `json:"idType"`
 }
-

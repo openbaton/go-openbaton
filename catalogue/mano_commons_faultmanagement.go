@@ -1,4 +1,4 @@
-﻿package catalogue
+package catalogue
 
 type Criteria struct {
 	ID                 string       `json:"id,omitempty"`
@@ -44,4 +44,3 @@ type VRFaultManagementPolicy struct {
 
 	Action FaultManagementAction `json:"action"`
 }
-

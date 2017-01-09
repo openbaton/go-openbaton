@@ -1,4 +1,4 @@
-﻿package catalogue
+package catalogue
 
 type PerceivedSeverity string
 
@@ -9,4 +9,3 @@ const (
 	SeverityMajor         = PerceivedSeverity("MAJOR")
 	SeverityCritical      = PerceivedSeverity("CRITICAL")
 )
-
