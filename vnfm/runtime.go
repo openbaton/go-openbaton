@@ -49,7 +49,7 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 	logger.Level = config.LogLevel
 
 	if config.LogFile != "" {
-		file, err := os.Open(config.LogFile)
+		file, err := os.OpenFile(config.LogFile, os.O_APPEND | os.O_WRONLY | os.O_CREATE, os.ModeAppend)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't open the log file %s: %s", config.LogFile, err.Error())
 		}

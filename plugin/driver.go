@@ -1,4 +1,4 @@
-package plugins
+package plugin
 
 import (
 	"github.com/mcilloni/go-openbaton/catalogue"
@@ -6,7 +6,7 @@ import (
 
 const interfaceVersion = "1.0"
 
-type Plugin interface {
+type Driver interface {
 	AddFlavor(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
 	// imageData can be both a string containing an URL OR a byte slice containing an image
