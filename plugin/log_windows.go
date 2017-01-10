@@ -17,7 +17,11 @@ type eventLogHook struct {
 }
 
 func (p *plug) deinitLogger() error {
-	return eventLogHook(p.e).Close()
+	if err := eventLogHook(p.e).Close(); err != nil {
+		return err
+	}
+
+	return p.closeLogFile()
 }
 
 // initLogger creates a logger with an EventLog hook (requires admin privileges)
@@ -43,7 +47,7 @@ func (p *plug) initLogger() error {
 	p.l = log.New()
 	p.l.Hooks.Add(lh)
 
-	return nil
+	return p.openLogFile("") // no default
 }
 
 // Close closes the logger and uninstalls the source

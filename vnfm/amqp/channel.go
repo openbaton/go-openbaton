@@ -10,6 +10,7 @@ import (
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
 	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/mcilloni/go-openbaton/vnfm/config"
+	"github.com/mcilloni/go-openbaton/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
@@ -122,7 +123,7 @@ func newChannel(config *config.Config, l *log.Logger) (*amqpChannel, error) {
 	}
 
 	// TODO: handle TLS
-	acnl.cfg.connstr = uriBuilder(username, password, host, vhost, port, false)
+	acnl.cfg.connstr = util.AmqpUriBuilder(username, password, host, vhost, port, false)
 
 	acnl.cfg.cfg = amqp.Config{
 		Heartbeat: time.Duration(heartbeat) * time.Second,

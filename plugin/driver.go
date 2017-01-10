@@ -7,10 +7,11 @@ import (
 const interfaceVersion = "1.0"
 
 type Driver interface {
-	AddFlavor(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
+	AddFlavour(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
-	// imageData can be both a string containing an URL OR a byte slice containing an image
-	AddImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage, imageData interface{}) (*catalogue.NFVImage, error)
+	AddImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage, imageFile []byte) (*catalogue.NFVImage, error)
+
+	AddImageFromURL(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage, imageURL string) (*catalogue.NFVImage, error)
 
 	CopyImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage, imageFile []byte) (*catalogue.NFVImage, error)
 
@@ -18,7 +19,7 @@ type Driver interface {
 
 	CreateSubnet(vimInstance *catalogue.VIMInstance, createdNetwork *catalogue.Network, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
 
-	DeleteFlavor(vimInstance *catalogue.VIMInstance, extID string) (bool, error)
+	DeleteFlavour(vimInstance *catalogue.VIMInstance, extID string) (bool, error)
 
 	DeleteImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage) (bool, error)
 
@@ -28,7 +29,7 @@ type Driver interface {
 
 	DeleteSubnet(vimInstance *catalogue.VIMInstance, existingSubnetExtID string) (bool, error)
 
-	GetNetworkById(vimInstance *catalogue.VIMInstance, id string) (*catalogue.Network, error)
+	GetNetworkByID(vimInstance *catalogue.VIMInstance, id string) (*catalogue.Network, error)
 
 	GetQuota(vimInstance *catalogue.VIMInstance) (*catalogue.Quota, error)
 
@@ -38,7 +39,7 @@ type Driver interface {
 
 	LaunchInstance(
 		vimInstance *catalogue.VIMInstance,
-		name, image, flavor, keypair string,
+		name, image, Flavour, keypair string,
 		network, secGroup []string,
 		userData string) (*catalogue.Server, error)
 
@@ -56,7 +57,7 @@ type Driver interface {
 		floatingIps map[string]string,
 		keys []*catalogue.Key) (*catalogue.Server, error)
 
-	ListFlavors(vimInstance *catalogue.VIMInstance) ([]*catalogue.DeploymentFlavour, error)
+	ListFlavours(vimInstance *catalogue.VIMInstance) ([]*catalogue.DeploymentFlavour, error)
 
 	ListImages(vimInstance *catalogue.VIMInstance) ([]*catalogue.NFVImage, error)
 
@@ -64,11 +65,22 @@ type Driver interface {
 
 	ListServer(vimInstance *catalogue.VIMInstance) ([]*catalogue.Server, error)
 
-	UpdateFlavor(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
+	UpdateFlavour(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
 	UpdateImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage) (*catalogue.NFVImage, error)
 
 	UpdateNetwork(vimInstance *catalogue.VIMInstance, network *catalogue.Network) (*catalogue.Network, error)
 
 	UpdateSubnet(vimInstance *catalogue.VIMInstance, createdNetwork *catalogue.Network, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
+}
+
+// DriverError is a special error type that also specifies a catalogue.Server
+// to be returned to the NFVO.
+type DriverError struct {
+	Message string            `json:"detailMessage"`
+	Server  *catalogue.Server `json:"server"`
+}
+
+func (e DriverError) Error() string {
+	return e.Message
 }
