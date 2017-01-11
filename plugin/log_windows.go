@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type logData eventLogHook
+type logData *eventLogHook
 
 // eventLogHook allows logrus to log to Windows EventLog
 type eventLogHook struct {
@@ -17,7 +17,7 @@ type eventLogHook struct {
 }
 
 func (p *plug) deinitLogger() error {
-	if err := eventLogHook(p.e).Close(); err != nil {
+	if err := (*eventLogHook)(p.e).Close(); err != nil {
 		return err
 	}
 
@@ -37,7 +37,7 @@ func (p *plug) initLogger() error {
 		return err
 	}
 
-	lh := eventLogHook{
+	lh := &eventLogHook{
 		elog: el,
 		src:  p.params.Name,
 	}
@@ -51,7 +51,7 @@ func (p *plug) initLogger() error {
 }
 
 // Close closes the logger and uninstalls the source
-func (h eventLogHook) Close() error {
+func (h *eventLogHook) Close() error {
 	if err := h.elog.Close(); err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (h eventLogHook) Close() error {
 }
 
 // Fire logs an entry to the EventLog.
-func (h eventLogHook) Fire(entry *log.Entry) error {
+func (h *eventLogHook) Fire(entry *log.Entry) error {
 	if h.elog == nil {
 		return nil
 	}
