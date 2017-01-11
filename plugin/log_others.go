@@ -3,8 +3,6 @@
 package plugin
 
 import (
-	"fmt"
-	"os"
 	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
