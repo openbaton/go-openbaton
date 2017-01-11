@@ -56,11 +56,17 @@ func (h eventLogHook) Close() error {
 		return err
 	}
 
+	h.elog = nil
+
 	return eventlog.Remove(h.src)
 }
 
 // Fire logs an entry to the EventLog.
 func (h eventLogHook) Fire(entry *log.Entry) error {
+	if h.elog == nil {
+		return nil
+	}
+
 	message, err := entry.String()
 	if err != nil {
 		return err
