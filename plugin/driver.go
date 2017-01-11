@@ -29,14 +29,6 @@ type Driver interface {
 
 	DeleteSubnet(vimInstance *catalogue.VIMInstance, existingSubnetExtID string) (bool, error)
 
-	GetNetworkByID(vimInstance *catalogue.VIMInstance, id string) (*catalogue.Network, error)
-
-	GetQuota(vimInstance *catalogue.VIMInstance) (*catalogue.Quota, error)
-
-	GetSubnetsExtIDs(vimInstance *catalogue.VIMInstance, networkExtID string) ([]string, error)
-
-	GetType(vimInstance *catalogue.VIMInstance) (string, error)
-
 	LaunchInstance(
 		vimInstance *catalogue.VIMInstance,
 		name, image, Flavour, keypair string,
@@ -64,6 +56,14 @@ type Driver interface {
 	ListNetworks(vimInstance *catalogue.VIMInstance) ([]*catalogue.Network, error)
 
 	ListServer(vimInstance *catalogue.VIMInstance) ([]*catalogue.Server, error)
+
+	NetworkByID(vimInstance *catalogue.VIMInstance, id string) (*catalogue.Network, error)
+
+	Quota(vimInstance *catalogue.VIMInstance) (*catalogue.Quota, error)
+
+	SubnetsExtIDs(vimInstance *catalogue.VIMInstance, networkExtID string) ([]string, error)
+
+	Type(vimInstance *catalogue.VIMInstance) (string, error)
 
 	UpdateFlavour(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 

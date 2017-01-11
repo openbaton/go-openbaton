@@ -142,16 +142,16 @@ func (dh driverHandler) matchFunc(fname string, args []json.RawMessage) (f inter
 		f = dh.DeleteSubnet
 
 	case "getNetworkById":
-		f = dh.GetNetworkByID
+		f = dh.NetworkByID
 
 	case "getQuota":
-		f = dh.GetQuota
+		f = dh.Quota
 
 	case "getSubnetsExtIds":
-		f = dh.GetSubnetsExtIDs
+		f = dh.SubnetsExtIDs
 
 	case "getType":
-		f = dh.GetType
+		f = dh.Type
 
 	case "launchInstance":
 		f = dh.LaunchInstance
