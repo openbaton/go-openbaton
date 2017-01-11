@@ -1,5 +1,11 @@
 package catalogue
 
+import (
+	"fmt"
+	"regexp"
+	"time"
+)
+
 type Action string
 
 const (
@@ -44,6 +50,30 @@ type Configuration struct {
 
 func (cfg *Configuration) Append(p *ConfigurationParameter) {
 	cfg.ConfigurationParameters = append(cfg.ConfigurationParameters, p)
+}
+
+type Date struct {
+	time.Time
+}
+
+func NewDate() *Date {
+	return &Date{time.Now()}
+}
+
+func (d *Date) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, d.Format("Jan 02, 2006 03:04:05 PM"))), nil
+}
+
+func (d *Date) UnmarshalJSON(in []byte) (err error) {
+	re := regexp.MustCompile(`"(.*)"`)
+
+	ts := re.FindStringSubmatch(string(in))
+	if len(ts) != 2 || ts[1] == "" {
+		return fmt.Errorf("cannot parse the JSON message %q as a Date", ts)
+	}
+
+	d.Time, err = time.Parse("Jan 02, 2006 03:04:05 PM", ts[1])
+	return
 }
 
 type DependencyParameters struct {
@@ -99,8 +129,8 @@ type NFVImage struct {
 	Public          bool   `json:"public"`
 	DiskFormat      string `json:"diskFormat"`
 	ContainerFormat string `json:"containerFormat"`
-	Created         string `json:"created"` // Actually a date; implement a Marshaller if needed
-	Updated         string `json:"updated"` // see above
+	Created         *Date  `json:"created"`
+	Updated         *Date  `json:"updated"`
 	IsPublic        bool   `json:"isPublic"`
 }
 
@@ -139,8 +169,8 @@ type Server struct {
 	ExtID              string              `json:"extId"`
 	IPs                map[string][]string `json:"ips"`
 	FloatingIPs        map[string]string   `json:"floatingIps"`
-	Created            string              `json:"created,omitempty"` // Actually a date; implement a Marshaller if needed
-	Updated            string              `json:"updated,omitempty"` // see above
+	Created            *Date               `json:"created,omitempty"`
+	Updated            *Date               `json:"updated,omitempty"`
 	HostName           string              `json:"hostName"`
 	HypervisorHostName string              `json:"hypervisorHostName"`
 	InstanceName       string              `json:"instanceName"`
