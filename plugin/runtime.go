@@ -106,59 +106,58 @@ func (p *plug) Serve() error {
 	p.spawnWorkers()
 	p.spawnReceiver()
 
-	go func() {
-		for {
-			select {
-			case <-p.quitChan:
-				if err = p.conn.Close(); err != nil {
+MainLoop:
+	for {
+		select {
+		case <-p.quitChan:
+			if err = p.conn.Close(); err != nil {
+				p.l.WithError(err).WithFields(log.Fields{
+					"tag": tag,
+				}).Error("closing Connection failed")
+
+				p.closeQueues()
+
+				// send the error to stop
+				p.quitChan <- err
+				return nil
+			}
+
+			p.l.WithFields(log.Fields{
+				"tag": tag,
+			}).Info("initiating clean shutdown")
+
+			// Close will cause the reception of nil on errChan.
+
+		case amqpErr := <-errChan:
+			// The connection closed cleanly after invoking Close().
+			if amqpErr == nil {
+				// notify the receiver and workers
+				p.closeQueues()
+
+				p.wg.Wait()
+
+				// send nil to Stop
+				close(p.quitChan)
+
+				break MainLoop
+			}
+
+			p.l.WithError(amqpErr).WithFields(log.Fields{
+				"tag": tag,
+			}).Error("received AMQP error for current connection")
+
+			// The connection crashed for some reason. Try to bring it up again.
+			for {
+				if errChan, err = p.setup(); err != nil {
 					p.l.WithError(err).WithFields(log.Fields{
 						"tag": tag,
-					}).Error("closing Connection failed")
-
-					p.closeQueues()
-
-					// send the error to stop
-					p.quitChan <- err
-					return
+					}).Error("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
+					time.Sleep(30 * time.Second)
 				}
-
-				p.l.WithFields(log.Fields{
-					"tag": tag,
-				}).Info("initiating clean shutdown")
-
-				// Close will cause the reception of nil on errChan.
-
-			case amqpErr := <-errChan:
-				// The connection closed cleanly after invoking Close().
-				if amqpErr == nil {
-					// notify the receiver and workers
-					p.closeQueues()
-
-					p.wg.Wait()
-
-					// send nil to Stop
-					close(p.quitChan)
-
-					return
-				}
-
-				p.l.WithError(amqpErr).WithFields(log.Fields{
-					"tag": tag,
-				}).Error("received AMQP error for current connection")
-
-				// The connection crashed for some reason. Try to bring it up again.
-				for {
-					if errChan, err = p.setup(); err != nil {
-						p.l.WithError(err).WithFields(log.Fields{
-							"tag": tag,
-						}).Error("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
-						time.Sleep(30 * time.Second)
-					}
-				}
-
 			}
+
 		}
-	}()
+	}
 
 	return nil
 }
