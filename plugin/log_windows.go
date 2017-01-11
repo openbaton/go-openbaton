@@ -3,6 +3,8 @@
 package plugin
 
 import (
+	"strings"
+
 	"golang.org/x/sys/windows/svc/eventlog"
 
 	log "github.com/sirupsen/logrus"
@@ -26,10 +28,23 @@ func (p *plug) deinitLogger() error {
 
 // initLogger creates a logger with an EventLog hook (requires admin privileges)
 func (p *plug) initLogger() error {
-	if err := eventlog.InstallAsEventCreate(p.params.Name,
-		eventlog.Error|eventlog.Warning|eventlog.Info); err != nil {
+	// try to install the event; if it fails because it already exists, try to 
+	// remove it and install again
+	for {
+		err := eventlog.InstallAsEventCreate(p.params.Name,
+			eventlog.Error|eventlog.Warning|eventlog.Info)
 
-		return err
+		if err == nil {
+			break
+		}
+		
+		if !strings.Contains(err.Error(), "registry key already exists") {
+			return err
+		}
+
+		if err := eventlog.Remove(p.params.Name); err != nil {
+			return err
+		}
 	}
 
 	el, err := eventlog.Open(p.params.Name)
