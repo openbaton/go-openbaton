@@ -13,7 +13,7 @@ func (p *plug) closeLog() (err error) {
 		p.l.Out = os.Stderr
 	}
 
-	return nil
+	return
 }
 
 // initLogger opens and sets a log file
