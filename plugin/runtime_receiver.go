@@ -46,6 +46,7 @@ RecvLoop:
 
 				req.ReplyTo = delivery.ReplyTo
 				req.CorrID = delivery.CorrelationId
+				req.DeliveryTag = delivery.DeliveryTag
 
 				p.l.WithFields(log.Fields{
 					"tag":        tag,

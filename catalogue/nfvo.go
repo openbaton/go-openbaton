@@ -125,12 +125,12 @@ type NFVImage struct {
 	Name            string `json:"name"`
 	MinRAM          int64  `json:"minRam"`
 	MinDiskSpace    int64  `json:"minDiskSpace"`
-	MinCPU          string `json:"minCPU"`
-	Public          bool   `json:"public"`
-	DiskFormat      string `json:"diskFormat"`
-	ContainerFormat string `json:"containerFormat"`
-	Created         *Date  `json:"created"`
-	Updated         *Date  `json:"updated"`
+	MinCPU          string `json:"minCPU,omitempty"`
+	Public          bool   `json:"public,omitempty"`
+	DiskFormat      string `json:"diskFormat,omitempty"`
+	ContainerFormat string `json:"containerFormat,omitempty"`
+	Created         *Date  `json:"created,omitempty"`
+	Updated         *Date  `json:"updated,omitempty"`
 	IsPublic        bool   `json:"isPublic"`
 }
 

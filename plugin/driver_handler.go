@@ -75,12 +75,12 @@ func (dh driverHandler) Handle(fname string, args []json.RawMessage) (interface{
 		return nil, plugError{"function returns an unsupported number of values"}
 	}
 
-	err, ok := errVal.Interface().(error)
-	if !ok {
-		return nil, plugError{"unsupported function - no error value"}
-	}
+	if errIface := errVal.Interface(); errIface != nil {
+		err, ok := errIface.(error)
+		if !ok {
+			return nil, plugError{"unsupported function - no error value"}
+		}
 
-	if err != nil {
 		return nil, err
 	}
 

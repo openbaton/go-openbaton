@@ -21,6 +21,9 @@ type request struct {
 
 	// CorrID to be used while sending the reply
 	CorrID string `json:"-"`
+
+	// DeliveryTag to acknowledge the delivery
+	DeliveryTag uint64 `json:"-"`
 }
 
 type response struct {

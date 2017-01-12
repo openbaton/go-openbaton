@@ -70,7 +70,7 @@ func (p *plug) worker(id int) {
 			resp.Answer = result
 		}
 
-		bResp, err := json.Marshal(resp)
+		bResp, err := json.MarshalIndent(resp, "", "  ")
 		if err != nil {
 			p.l.WithError(err).WithFields(log.Fields{
 				"tag":       tag,
@@ -108,6 +108,21 @@ func (p *plug) worker(id int) {
 			"reply-queue":  req.ReplyTo,
 			"reply-corrid": req.CorrID,
 		}).Info("response sent")
+
+		// IMPORTANT: Acknowledge the received delivery!
+		// The VimDriverCaller executor thread of the NFVO
+		// will perpetually sleep when trying to publish the 
+		// next request if this step is omitted.
+		if err := p.cnl.Ack(req.DeliveryTag, false); err != nil {
+			p.l.WithError(err).WithFields(log.Fields{
+				"tag":                tag,
+				"worker-id":          id,
+				"reply-queue":        req.ReplyTo,
+				"reply-corrid":       req.CorrID,
+				"reply-delivery_tag": req.DeliveryTag,
+			}).Error("failure while acknowledging the last delivery")
+			continue
+		}
 	}
 
 	p.l.WithFields(log.Fields{
