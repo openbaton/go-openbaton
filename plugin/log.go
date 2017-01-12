@@ -3,9 +3,11 @@ package plugin
 import (
 	"fmt"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
-func (p *plug) closeLogFile() error {
+func (p *plug) closeLog() error {
 	if p.l.Out != os.Stderr {
 		return p.l.Out.(*os.File).Close()
 	}
@@ -14,7 +16,7 @@ func (p *plug) closeLogFile() error {
 }
 
 // initLogger opens and sets a log file
-func (p *plug) openLogFile(defaultPath string) error {
+func (p *plug) openLog(defaultPath string) error {
 	path := p.params.LogFile
 	if path == "" {
 		if defaultPath == "" {
@@ -29,6 +31,8 @@ func (p *plug) openLogFile(defaultPath string) error {
 		return fmt.Errorf("couldn't open the log file %s: %s", path, err.Error())
 	}
 
+	p.l = log.New()
+	p.l.Level = p.params.LogLevel
 	p.l.Out = file
 
 	return nil

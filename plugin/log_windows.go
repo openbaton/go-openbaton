@@ -23,7 +23,7 @@ func (p *plug) deinitLogger() error {
 		return err
 	}
 
-	return p.closeLogFile()
+	return p.closeLog()
 }
 
 // initLogger creates a logger with an EventLog hook (requires admin privileges)
@@ -59,10 +59,14 @@ func (p *plug) initLogger() error {
 
 	p.e = logData(lh)
 
-	p.l = log.New()
+	// no default
+	if err := p.openLog(""); err != nil {
+		return err
+	} 
+	
 	p.l.Hooks.Add(lh)
 
-	return p.openLogFile("") // no default
+	return nil
 }
 
 // Close closes the logger and uninstalls the source
