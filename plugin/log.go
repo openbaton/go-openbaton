@@ -7,9 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (p *plug) closeLog() error {
+func (p *plug) closeLog() (err error) {
 	if p.l.Out != os.Stderr {
-		return p.l.Out.(*os.File).Close()
+		err = p.l.Out.(*os.File).Close()
+		p.l.Out = os.Stderr
 	}
 
 	return nil
