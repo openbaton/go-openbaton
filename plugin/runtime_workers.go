@@ -44,7 +44,7 @@ func (p *plug) worker(id int) {
 	p.l.WithFields(log.Fields{
 		"tag":       tag,
 		"worker-id": id,
-	}).Debug("spawning workers")
+	}).Debug("worker is starting")
 
 	for req := range p.reqChan {
 		result, err := p.rh.Handle(req.MethodName, req.Parameters)
@@ -101,6 +101,11 @@ func (p *plug) worker(id int) {
 			continue
 		}
 	}
+
+	p.l.WithFields(log.Fields{
+		"tag":       tag,
+		"worker-id": id,
+	}).Debug("worker is stopping")
 
 	p.wg.Done()
 }
