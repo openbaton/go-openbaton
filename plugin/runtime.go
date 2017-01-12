@@ -211,7 +211,7 @@ func (p *plug) closeQueues() {
 }
 
 func (p *plug) id() string {
-	return fmt.Sprintf("%s.%s.%s", p.Type(), p.params.Type, p.params.Name)
+	return fmt.Sprintf("%s.%s.%s", p.rh.QueueTag(), p.params.Type, p.params.Name)
 }
 
 func (p *plug) setup() (<-chan *amqp.Error, error) {
@@ -274,5 +274,6 @@ func (p *plug) setup() (<-chan *amqp.Error, error) {
 
 type reqHandler interface {
 	Handle(call string, args []json.RawMessage) (interface{}, error)
+	QueueTag() string
 	Type() string
 }

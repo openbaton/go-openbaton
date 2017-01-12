@@ -88,6 +88,10 @@ func (dh driverHandler) Handle(fname string, args []json.RawMessage) (resp inter
 	return
 }
 
+func (dh driverHandler) QueueTag() string {
+	return "vim-drivers"
+}
+
 func (dh driverHandler) Type() string {
 	return "vim-driver"
 }
