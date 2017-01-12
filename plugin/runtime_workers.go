@@ -100,6 +100,14 @@ func (p *plug) worker(id int) {
 			}).Error("failure while replying")
 			continue
 		}
+
+		p.l.WithFields(log.Fields{
+			"tag":          tag,
+			"worker-id":    id,
+			"resp-json":    string(bResp),
+			"reply-queue":  req.ReplyTo,
+			"reply-corrid": req.CorrID,
+		}).Info("response sent")
 	}
 
 	p.l.WithFields(log.Fields{

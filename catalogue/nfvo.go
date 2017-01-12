@@ -102,10 +102,10 @@ type HistoryLifecycleEvent struct {
 
 type Location struct {
 	ID        string `json:"id,omitempty"`
-	Version   int    `json:"id,omitempty"`
-	Name      string `json:"id,omitempty"`
-	Latitude  string `json:"id,omitempty"`
-	Longitude string `json:"id,omitempty"`
+	Version   int    `json:"version,omitempty"`
+	Name      string `json:"name,omitempty"`
+	Latitude  string `json:"latitude,omitempty"`
+	Longitude string `json:"longitude,omitempty"`
 }
 
 type Network struct {

@@ -41,7 +41,7 @@ func (p *plug) initLogger() error {
 		return nil
 	}
 
-	// try to install the event; if it fails because it already exists, try to 
+	// try to install the event; if it fails because it already exists, try to
 	// remove it and install again
 	for {
 		err := eventlog.InstallAsEventCreate(p.params.Name,
@@ -50,7 +50,7 @@ func (p *plug) initLogger() error {
 		if err == nil {
 			break
 		}
-		
+
 		if !strings.Contains(err.Error(), "registry key already exists") {
 			return err
 		}
@@ -71,7 +71,7 @@ func (p *plug) initLogger() error {
 	}
 
 	p.e = logData(lh)
-	
+
 	p.l.Hooks.Add(lh)
 
 	return nil

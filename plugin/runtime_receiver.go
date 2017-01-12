@@ -48,14 +48,16 @@ RecvLoop:
 				req.CorrID = delivery.CorrelationId
 
 				p.l.WithFields(log.Fields{
-					"tag": tag,
+					"tag":        tag,
+					"req-method": req.MethodName,
+					"req-body":   string(delivery.Body),
 				}).Debug("received message")
 
 				p.reqChan <- req
 
 				p.l.WithFields(log.Fields{
-					"tag": tag,
-					"req": req,
+					"tag":        tag,
+					"req-method": req.MethodName,
 				}).Debug("request dispatched")
 
 			} else {
