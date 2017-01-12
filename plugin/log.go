@@ -19,21 +19,20 @@ func (p *plug) closeLog() error {
 func (p *plug) openLog(defaultPath string) error {
 	path := p.params.LogFile
 	if path == "" {
-		if defaultPath == "" {
-			return nil
-		}
-
 		path = defaultPath
-	}
-
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
-	if err != nil {
-		return fmt.Errorf("couldn't open the log file %s: %s", path, err.Error())
 	}
 
 	p.l = log.New()
 	p.l.Level = p.params.LogLevel
-	p.l.Out = file
+
+	if defaultPath != "" {			
+		file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
+		if err != nil {
+			return fmt.Errorf("couldn't open the log file %s: %s", path, err.Error())
+		}
+
+		p.l.Out = file
+	}
 
 	return nil
 }
