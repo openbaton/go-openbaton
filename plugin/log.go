@@ -25,7 +25,7 @@ func (p *plug) openLog(defaultPath string) error {
 	p.l = log.New()
 	p.l.Level = p.params.LogLevel
 
-	if defaultPath != "" {			
+	if path != "" {			
 		file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
 		if err != nil {
 			return fmt.Errorf("couldn't open the log file %s: %s", path, err.Error())
