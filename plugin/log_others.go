@@ -14,7 +14,7 @@ func (p *plug) deinitLogger() error {
 
 // initLogger opens and sets a log file on Unix platforms
 func (p *plug) initLogger() error {
-	pathArray := []string{"/", "var", "log", p.params.Name + ".log"}
+	pathArray := []string{"/", "var", "log", "openbaton", p.params.Type + "-plugin.log"}
 	defaultPath := filepath.Join(pathArray...)
 
 	return p.openLog(defaultPath)
