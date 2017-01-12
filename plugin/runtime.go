@@ -193,7 +193,7 @@ func (p *plug) Stop() error {
 
 	p.l.WithFields(log.Fields{
 		"tag": tag,
-	}).Debug("plugin stopped")
+	}).Debug("plugin stopped cleanly")
 
 	return nil
 }
