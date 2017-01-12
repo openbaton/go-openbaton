@@ -19,8 +19,10 @@ type eventLogHook struct {
 }
 
 func (p *plug) deinitLogger() error {
-	if err := (*eventLogHook)(p.e).Close(); err != nil {
-		return err
+	if p.params.LogFile == "" {
+		if err := (*eventLogHook)(p.e).Close(); err != nil {
+			return err
+		}
 	}
 
 	return p.closeLog()
@@ -28,6 +30,17 @@ func (p *plug) deinitLogger() error {
 
 // initLogger creates a logger with an EventLog hook (requires admin privileges)
 func (p *plug) initLogger() error {
+	// no default
+	if err := p.openLog(""); err != nil {
+		return err
+	}
+
+	// do not enable the event logger if the logfile is present.
+
+	if p.params.LogFile != "" {
+		return nil
+	}
+
 	// try to install the event; if it fails because it already exists, try to 
 	// remove it and install again
 	for {
@@ -58,11 +71,6 @@ func (p *plug) initLogger() error {
 	}
 
 	p.e = logData(lh)
-
-	// no default
-	if err := p.openLog(""); err != nil {
-		return err
-	} 
 	
 	p.l.Hooks.Add(lh)
 
