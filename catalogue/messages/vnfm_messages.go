@@ -1,4 +1,4 @@
-﻿package messages
+package messages
 
 import "github.com/mcilloni/go-openbaton/catalogue"
 
@@ -111,4 +111,3 @@ type VNFMStartStop struct {
 func (VNFMStartStop) DefaultAction() catalogue.Action {
 	return catalogue.ActionStart
 }
-

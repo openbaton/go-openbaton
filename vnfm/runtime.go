@@ -57,7 +57,7 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 	logger.Level = config.LogLevel
 
 	if config.LogFile != "" {
-		file, err := os.OpenFile(config.LogFile, os.O_APPEND | os.O_WRONLY | os.O_CREATE, os.ModeAppend)
+		file, err := os.OpenFile(config.LogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModeAppend)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't open the log file %s: %s", config.LogFile, err.Error())
 		}
@@ -107,13 +107,13 @@ func (vnfm *vnfm) Serve() (err error) {
 		}
 
 		// answering the channel signals Stop() that we're quitting
-		err := vnfm.cnl.Close() 
-		 
+		err := vnfm.cnl.Close()
+
 		if err == nil {
 			// if the channel closed politely, the workers will be quitting by now;
 			// otherwise, they will be killed when main exits.
 			vnfm.wg.Wait()
-	  	}
+		}
 
 		vnfm.quitChan <- err
 

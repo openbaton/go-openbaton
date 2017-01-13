@@ -1,14 +1,14 @@
 package util
 
 import (
-    "bytes"
-    "runtime"
-    "strconv"
+	"bytes"
+	"runtime"
+	"strconv"
 )
 
 const (
-    // UnknownFunc is a string representing an unknown function.
-    UnknownFunc = "<unknown function>"
+	// UnknownFunc is a string representing an unknown function.
+	UnknownFunc = "<unknown function>"
 )
 
 func AmqpUriBuilder(username, password, host, vhost string, port int, tls bool) string {
@@ -48,14 +48,14 @@ func AmqpUriBuilder(username, password, host, vhost string, port int, tls bool) 
 }
 
 func FuncName() string {
-    pc, _, _, ok := runtime.Caller(1)
-    if !ok {
-        return UnknownFunc
-    }
+	pc, _, _, ok := runtime.Caller(1)
+	if !ok {
+		return UnknownFunc
+	}
 
-    if f := runtime.FuncForPC(pc); f != nil {
-        return f.Name()
-    }
+	if f := runtime.FuncForPC(pc); f != nil {
+		return f.Name()
+	}
 
-    return UnknownFunc
+	return UnknownFunc
 }

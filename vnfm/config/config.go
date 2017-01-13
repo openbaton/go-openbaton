@@ -1,3 +1,17 @@
+/*
+Package config parses a VNFM config as defined by a TOML file.
+This config file can specify both generical vnfm parameters (under the [vnfm] section) and driver-specific configurations;
+the package will only read the [vnfm] section into a Config structure, leaving all the other parameters available to be read from a Properties instance.
+
+The various drivers can then access their own config sections using this properties instance.
+
+A config can be read from a file using the LoadFile() function:
+
+	cfg, err := config.LoadFile("path/to/config.toml")
+	if err != nil {
+		panic("cannot load config, " + err.Error())
+	}
+*/
 package config
 
 import (

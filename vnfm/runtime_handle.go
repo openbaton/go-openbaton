@@ -31,8 +31,8 @@ func (wk *worker) allocateResources(
 	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
 
 	wk.l.WithFields(log.Fields{
-		"tag":             "worker-vnfm-handle",
-		"worker-id":       wk.id,
+		"tag":       "worker-vnfm-handle",
+		"worker-id": wk.id,
 		"vnfr-name": vnfr.Name,
 	}).Debug("allocating resources for the VNFR")
 
@@ -96,7 +96,7 @@ func (wk *worker) allocateResources(
 		wk.l.WithFields(log.Fields{
 			"tag":       "worker-vnfm-handle-allocate_resources",
 			"worker-id": wk.id,
-			"vnfr-name":      message.VNFR.Name,
+			"vnfr-name": message.VNFR.Name,
 		}).Debug("received a VNFR from ALLOCATE")
 
 		return message.VNFR, nil

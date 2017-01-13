@@ -1,4 +1,4 @@
-﻿package vnfm
+package vnfm
 
 import (
 	"github.com/mcilloni/go-openbaton/catalogue"

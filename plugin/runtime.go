@@ -20,27 +20,27 @@ type Params struct {
 	BrokerAddress string
 
 	// Port of the AMQP broker.
-	Port          int
+	Port int
 
 	// Username, Password for the AMQP broker.
-	Username, Password      string
+	Username, Password string
 
 	// LogFile contains the path to the log file.
 	// Use "" to use defaults, or "-" to use stderr.
-	LogFile       string
+	LogFile string
 
 	// Name is a parameter provided by the NFVO, usually "openbaton"
-	Name          string
+	Name string
 
 	// Type is a string that identifies the type of this plugin.
-	Type          string
+	Type string
 
 	// Workers determines how many workers the plugin will spawn.
 	// Set this number according to your needs.
-	Workers       int
+	Workers int
 
 	// LogLevel sets the minimum logging level for the internal instance of logrus.Logger.
-	LogLevel      log.Level
+	LogLevel log.Level
 }
 
 //  Plugin represents a plugin instance.
@@ -53,7 +53,7 @@ type Plugin interface {
 	// Check the log and the return value of Stop() for runtime and on-closing errors respectively.
 	Serve() error
 
-	// Stop() signals the event loop of the plugin to quit, and waits until either it shuts down or 
+	// Stop() signals the event loop of the plugin to quit, and waits until either it shuts down or
 	// it times out.
 	Stop() error
 

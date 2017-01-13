@@ -182,7 +182,7 @@ func (acnl *amqpChannel) spawnReceiver() {
 							acnl.l.WithFields(log.Fields{
 								"tag": "receiver-amqp",
 							}).Debug("closing unresponsive notify channel")
-							
+
 							close(c)
 						}
 					}
@@ -191,8 +191,8 @@ func (acnl *amqpChannel) spawnReceiver() {
 					notifyChans = notifyChans[:last]
 
 					acnl.l.WithFields(log.Fields{
-						"tag": "receiver-amqp",
-						"msg": msg,
+						"tag":          "receiver-amqp",
+						"msg":          msg,
 						"num-of-chans": last,
 					}).Debug("message dispatched")
 
@@ -205,7 +205,7 @@ func (acnl *amqpChannel) spawnReceiver() {
 					acnl.l.WithFields(log.Fields{
 						"tag": "receiver-amqp",
 					}).Debug("delivery chan closed")
-					
+
 					deliveryChan = nil
 				}
 			}

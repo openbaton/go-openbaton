@@ -1,4 +1,4 @@
-﻿package messages
+package messages
 
 import "github.com/mcilloni/go-openbaton/catalogue"
 import "fmt"
@@ -81,4 +81,3 @@ func (msg *message) Content() interface{} {
 func (msg *message) From() SenderType {
 	return msg.from
 }
-

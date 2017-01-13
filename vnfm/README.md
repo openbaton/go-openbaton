@@ -33,7 +33,7 @@ if err != nil {
 
 (Ensure that your handler implements the `vnfm.Handler` interface!)
 
-The new `vnfm.Handler` can then be started using its `Serve()` method, blocking the current goroutine.
+The new `vnfm.VNFM` can then be started using its `Serve()` method, blocking the current goroutine.
 Use `Stop()` to stop the service and quit.
 
 ```go

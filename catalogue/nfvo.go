@@ -1,3 +1,4 @@
+// Package catalogue contains a partial implementation of the OpenBaton catalogue.
 package catalogue
 
 import (

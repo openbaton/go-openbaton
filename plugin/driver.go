@@ -7,7 +7,7 @@ import (
 const interfaceVersion = "1.0"
 
 // Driver describes a VIMDriver.
-// Every driver implementation must adhere to this interface and implements its methods. 
+// Every driver implementation must adhere to this interface and implements its methods.
 type Driver interface {
 	AddFlavour(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
@@ -79,7 +79,7 @@ type Driver interface {
 // DriverError is a special error type that also specifies a catalogue.Server
 // to be returned to the NFVO.
 type DriverError struct {
-	Message string            `json:"detailMessage"`
+	Message           string `json:"detailMessage"`
 	*catalogue.Server `json:"server"`
 }
 

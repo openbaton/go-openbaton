@@ -1,3 +1,20 @@
+/*
+Package channel abstract the transport channel between an OpenBaton VNFM and the NFVO.
+
+See go-dummy-vnfm for a sample implementation of a VNFM using the AMQP driver.
+
+vnfm uses the vnfm/channel package to abstract the underlying transport channel.
+The required drivers must be registered before creating a new VNFM using vnfm.Register(); usually, this is done automatically by the driver package when first imported.
+
+	// import the driver
+	import _ "driver/package/xyz"
+
+	//  some code here
+
+	// "xyz" is the identifier of the desired driver.
+	svc, err := vnfm.New("xyz", handler, cfg)
+	// use the svc
+*/
 package channel
 
 import (
@@ -16,7 +33,7 @@ const (
 	// Reconnecting indicates that the channel is trying to reestablish the connection with the NFVO.
 	Reconnecting
 
-	// Stopped indicates that the channel is not active. 
+	// Stopped indicates that the channel is not active.
 	Stopped
 
 	// Quitting indicates that the channel is quitting.
@@ -40,7 +57,7 @@ type Channel interface {
 	// Exchange sends a message to an implementation defined destination, and then waits for a reply.
 	Exchange(dest string, msg []byte) ([]byte, error)
 
-	// NFVOExchange sends a message to the NFVO, and then waits for a reply. 
+	// NFVOExchange sends a message to the NFVO, and then waits for a reply.
 	// The outgoing message must have From() == messages.VNFR.
 	NFVOExchange(msg messages.NFVMessage) (messages.NFVMessage, error)
 
@@ -66,7 +83,7 @@ type NFVOResponse struct {
 	error
 }
 
-// NFVOExchangeAsync executes the NFVOExchange method of a given channel asyncronously, returning 
+// NFVOExchangeAsync executes the NFVOExchange method of a given channel asyncronously, returning
 // a channel on which the response will be delivered.
 func NFVOExchangeAsync(cnl Channel, msg messages.NFVMessage) <-chan *NFVOResponse {
 	ret := make(chan *NFVOResponse, 1)

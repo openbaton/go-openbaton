@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/mcilloni/go-openbaton/catalogue/messages"
-	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	"github.com/mcilloni/go-openbaton/util"
+	"github.com/mcilloni/go-openbaton/vnfm/channel"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
