@@ -10,7 +10,6 @@
 - [vnfm/channel](https://github.com/mcilloni/go-openbaton/tree/master/vnfm/channel): a set of interfaces that provide an abstraction above which API the VNFM uses to connect to the NFVO.
 - [vnfm/amqp](https://github.com/mcilloni/go-openbaton/tree/master/vnfm/): implements a `channel` that uses AMQP to connect with the NFVO.
 - [vnfm/config](https://github.com/mcilloni/go-openbaton/tree/master/vnfm/config): provides facilities for parsing VNFM configuration files.
-- [utils](https://github.com/mcilloni/go-openbaton/tree/master/utils): for internal usage only.
 
 ## Issue tracker
 
@@ -36,8 +35,6 @@ Check the [Open Baton Website][openbaton]
 
 ## Licensing and distribution
 Licensed under the Apache License, Version 2.0. See LICENSE for further details.
-## Support
-The Open Baton project provides community support through the Open Baton Public Mailing List and through StackOverflow using the tags openbaton.
 
 [openbaton]: http://openbaton.org
 [openbaton-doc]: http://openbaton.org/documentation

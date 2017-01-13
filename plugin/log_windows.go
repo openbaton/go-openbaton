@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/sys/windows/svc/eventlog"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/shiena/ansicolor"
+	log "github.com/sirupsen/logrus"
 )
 
 type logData *eventLogHook
@@ -40,7 +40,7 @@ func (p *plug) initLogger() error {
 	if p.params.LogFile == "-" {
 		p.l.Formatter = &log.TextFormatter{
 			DisableColors: false,
-			ForceColors: true,
+			ForceColors:   true,
 		}
 
 		p.l.Out = ansicolor.NewAnsiColorWriter(os.Stdout)

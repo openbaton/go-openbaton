@@ -6,6 +6,8 @@ import (
 
 const interfaceVersion = "1.0"
 
+// Driver describes a VIMDriver.
+// Every driver implementation must adhere to this interface and implements its methods. 
 type Driver interface {
 	AddFlavour(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
@@ -78,9 +80,10 @@ type Driver interface {
 // to be returned to the NFVO.
 type DriverError struct {
 	Message string            `json:"detailMessage"`
-	Server  *catalogue.Server `json:"server"`
+	*catalogue.Server `json:"server"`
 }
 
+// Error returns a description of the error.
 func (e DriverError) Error() string {
-	return e.Message
+	return e.Message + " on server " + e.Server.Name
 }

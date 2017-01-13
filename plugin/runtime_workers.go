@@ -110,7 +110,7 @@ func (p *plug) worker(id int) {
 
 		// IMPORTANT: Acknowledge the received delivery!
 		// The VimDriverCaller executor thread of the NFVO
-		// will perpetually sleep when trying to publish the 
+		// will perpetually sleep when trying to publish the
 		// next request if this step is omitted.
 		if err := p.cnl.Ack(req.DeliveryTag, false); err != nil {
 			p.l.WithError(err).WithFields(log.Fields{
