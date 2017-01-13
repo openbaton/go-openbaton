@@ -3,11 +3,13 @@
 package plugin
 
 import (
+	"os"
 	"strings"
 
 	"golang.org/x/sys/windows/svc/eventlog"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/shiena/ansicolor"
 )
 
 type logData *eventLogHook
@@ -33,6 +35,15 @@ func (p *plug) initLogger() error {
 	// no default
 	if err := p.openLog(""); err != nil {
 		return err
+	}
+
+	if p.params.LogFile == "-" {
+		p.l.Formatter = &log.TextFormatter{
+			DisableColors: false,
+			ForceColors: true,
+		}
+
+		p.l.Out = ansicolor.NewAnsiColorWriter(os.Stdout)
 	}
 
 	// do not enable the event logger if the logfile is present.

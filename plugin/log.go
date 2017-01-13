@@ -8,8 +8,8 @@ import (
 )
 
 func (p *plug) closeLog() (err error) {
-	if p.l.Out != os.Stderr {
-		err = p.l.Out.(*os.File).Close()
+	if file, ok := p.l.Out.(*os.File); ok {
+		err = file.Close()
 		p.l.Out = os.Stderr
 	}
 
