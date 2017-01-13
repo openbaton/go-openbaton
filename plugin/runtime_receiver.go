@@ -51,7 +51,6 @@ RecvLoop:
 				p.l.WithFields(log.Fields{
 					"tag":        tag,
 					"req-method": req.MethodName,
-					"req-body":   string(delivery.Body),
 				}).Debug("received message")
 
 				p.reqChan <- req

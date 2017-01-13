@@ -104,7 +104,6 @@ func (p *plug) worker(id int) {
 		p.l.WithFields(log.Fields{
 			"tag":          tag,
 			"worker-id":    id,
-			"resp-json":    string(bResp),
 			"reply-queue":  req.ReplyTo,
 			"reply-corrid": req.CorrID,
 		}).Info("response sent")
