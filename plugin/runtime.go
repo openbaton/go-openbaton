@@ -139,6 +139,10 @@ MainLoop:
 				// send nil to Stop
 				close(p.quitChan)
 
+				p.l.WithFields(log.Fields{
+					"tag": tag,
+				}).Debug("main loop quitting")
+
 				break MainLoop
 			}
 
@@ -193,7 +197,7 @@ func (p *plug) Stop() error {
 
 	p.l.WithFields(log.Fields{
 		"tag": tag,
-	}).Debug("plugin stopped cleanly")
+	}).Info("plugin stopped cleanly")
 
 	return nil
 }
