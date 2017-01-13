@@ -41,6 +41,8 @@ type VirtualNetworkFunctionRecord struct {
 	PackageID                     string                   `json:"packageId"`
 }
 
+// NewVNFR returns a new VNFR.
+// TODO: CHECK THIS FUNCTION! Errors here may cause weird, unpredictable bugs.
 func NewVNFR(
 	vnfd *VirtualNetworkFunctionDescriptor,
 	flavourKey string,

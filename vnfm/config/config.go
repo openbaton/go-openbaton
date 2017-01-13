@@ -42,6 +42,7 @@ func Load(reader io.Reader) (*Config, error) {
 	return New(props)
 }
 
+// LoadFile loads a Config from a file containing TOML data.
 func LoadFile(fileName string) (*Config, error) {
 	reader, err := os.Open(fileName)
 	if err != nil {
@@ -51,6 +52,7 @@ func LoadFile(fileName string) (*Config, error) {
 	return Load(reader)
 }
 
+// New parses the [vnfm] section of a Properties instance into a Config.
 func New(props Properties) (*Config, error) {
 	vnfm, ok := props.Section("vnfm")
 	if !ok {

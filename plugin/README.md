@@ -6,7 +6,7 @@ Currently, only vim-drivers are supported; see [go-vimdriver-test] for a sample 
 
 ## Implementing a VIM driver
 
-A new plugin can be created by using the `plugin.New(inteface{}, *plugin.Params) (plugin.Plugin, error)` function together with a `plugin.Driver` instance:
+A new plugin can be created by using the `plugin.New(interface{}, *plugin.Params) (plugin.Plugin, error)` function together with a `plugin.Driver` instance:
 
 ```go
 var driver plugin.Driver = &myDriver{}

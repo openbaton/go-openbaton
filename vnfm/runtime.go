@@ -16,6 +16,7 @@ import (
 
 var impls = make(map[string]channel.Driver)
 
+// Register registers a channel.Driver. Invoke this in an init() method of a driver package.
 func Register(name string, driver channel.Driver) {
 	if _, ok := impls[name]; ok {
 		panic(fmt.Sprintf("trying to register driver of type %T with already existing name '%s'", driver, name))
@@ -28,12 +29,19 @@ func Register(name string, driver channel.Driver) {
 	impls[name] = driver
 }
 
+// VNFM represents a VNFM instance.
 type VNFM interface {
+	// Logger returns a logrus logger instance.
 	Logger() *log.Logger
+
+	// Serve launches the VNFM. No error will be returned after a valid initialization. See the logfile or the return value of Stop().
 	Serve() error
+
+	// Stop signals the VNFM to quit. It returns when the VNFM quits or after a timeout.
 	Stop() error
 }
 
+// New returns a new VNFM. implName must be a string representing a Driver previously registered by Register().
 func New(implName string, handler Handler, config *config.Config) (VNFM, error) {
 	if _, ok := impls[implName]; !ok {
 		return nil, fmt.Errorf("no implementation available for %s. Have you forgot to import its package?", implName)

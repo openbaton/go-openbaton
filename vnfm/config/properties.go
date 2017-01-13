@@ -4,8 +4,10 @@ import (
 	"strings"
 )
 
+// Properties is a nestable and queriable map.
 type Properties map[string]interface{}
 
+// Section returns a Properties instance representing a subsection of the current properties.
 func (p Properties) Section(key string) (section Properties, ok bool) {
 	if val, ok := p.Value(key, nil); ok {
 		switch ret := val.(type) {
@@ -20,6 +22,7 @@ func (p Properties) Section(key string) (section Properties, ok bool) {
 	return nil, false
 }
 
+// Value returns a key.
 func (p Properties) Value(key string, fb interface{}) (interface{}, bool) {
 	keys := stack(strings.Split(key, "."))
 	current := p
@@ -58,6 +61,7 @@ func (p Properties) ValueBool(key string, fb bool) (value, ok bool) {
 	return fb, false
 }
 
+// ValueInt returns a key as an int value.
 func (p Properties) ValueInt(key string, fb int) (value int, ok bool) {
 	if val, ok := p.Value(key, nil); ok {
 		ret, ok := val.(int)
@@ -68,6 +72,7 @@ func (p Properties) ValueInt(key string, fb int) (value int, ok bool) {
 	return fb, false
 }
 
+// ValueString returns a key as a string value.
 func (p Properties) ValueString(key string, fb string) (value string, ok bool) {
 	if val, ok := p.Value(key, nil); ok {
 		ret, ok := val.(string)
