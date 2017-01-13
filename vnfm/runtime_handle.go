@@ -25,45 +25,6 @@ type worker struct {
 	id int
 }
 
-func (wk *worker) spawn() {
-	wk.l.WithFields(log.Fields{
-		"tag":       "worker-vnfm-handle",
-		"worker-id": wk.id,
-	}).Debug("VNFM worker starting")
-
-	// msgChan should be closed by the driver when exiting.
-	for msg := range wk.msgChan {
-		wk.l.WithFields(log.Fields{
-			"tag":          "worker-vnfm-handle",
-			"worker-id":    wk.id,
-			"action":       msg.Action(),
-			"content-type": reflect.TypeOf(msg.Content()).Name(),
-		}).Debug("accepting new message")
-
-		if err := wk.handle(msg); err != nil {
-			wk.l.WithFields(log.Fields{
-				"tag":       "worker-vnfm-handle",
-				"worker-id": wk.id,
-				"err":       err,
-			}).Error("Handling error")
-		} else {
-			wk.l.WithFields(log.Fields{
-				"tag":          "worker-vnfm-handle",
-				"worker-id":    wk.id,
-				"action":       msg.Action(),
-				"content-type": reflect.TypeOf(msg.Content()).Name(),
-			}).Debug("message successfully handled")
-		}
-	}
-
-	wk.l.WithFields(log.Fields{
-		"tag":       "worker-vnfm-handle",
-		"worker-id": wk.id,
-	}).Debug("VNFM worker exiting")
-
-	wk.wg.Done()
-}
-
 func (wk *worker) allocateResources(
 	vnfr *catalogue.VirtualNetworkFunctionRecord,
 	vimInstances map[string]*catalogue.VIMInstance,
@@ -694,4 +655,43 @@ func (wk *worker) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMe
 	}
 
 	return nfvMessage, nil
+}
+
+func (wk *worker) work() {
+	wk.l.WithFields(log.Fields{
+		"tag":       "worker-vnfm-handle",
+		"worker-id": wk.id,
+	}).Debug("VNFM worker starting")
+
+	// msgChan should be closed by the driver when exiting.
+	for msg := range wk.msgChan {
+		wk.l.WithFields(log.Fields{
+			"tag":          "worker-vnfm-handle",
+			"worker-id":    wk.id,
+			"action":       msg.Action(),
+			"content-type": reflect.TypeOf(msg.Content()).Name(),
+		}).Debug("accepting new message")
+
+		if err := wk.handle(msg); err != nil {
+			wk.l.WithFields(log.Fields{
+				"tag":       "worker-vnfm-handle",
+				"worker-id": wk.id,
+				"err":       err,
+			}).Error("Handling error")
+		} else {
+			wk.l.WithFields(log.Fields{
+				"tag":          "worker-vnfm-handle",
+				"worker-id":    wk.id,
+				"action":       msg.Action(),
+				"content-type": reflect.TypeOf(msg.Content()).Name(),
+			}).Debug("message successfully handled")
+		}
+	}
+
+	wk.l.WithFields(log.Fields{
+		"tag":       "worker-vnfm-handle",
+		"worker-id": wk.id,
+	}).Debug("VNFM worker exiting")
+
+	wk.wg.Done()
 }

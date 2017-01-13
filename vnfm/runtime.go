@@ -155,6 +155,6 @@ func (vnfm *vnfm) spawnWorkers() {
 	vnfm.wg.Add(NumWorkers)
 
 	for i := 0; i < NumWorkers; i++ {
-		go (&worker{vnfm, i}).spawn()
+		go (&worker{vnfm, i}).work()
 	}
 }
