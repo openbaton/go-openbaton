@@ -37,7 +37,7 @@ func New(impl interface{}, p *Params) (Plugin, error) {
 	plug := &plug{
 		connstr:              util.AmqpUriBuilder(p.Username, p.Password, p.BrokerIP, "", p.Port, false),
 		params:               p,
-		quitChan:             make(chan error, 1),
+		quitChan:             make(chan error),
 		receiverDeliveryChan: make(chan (<-chan amqp.Delivery), 1),
 		reqChan:              make(chan request, 30),
 	}
