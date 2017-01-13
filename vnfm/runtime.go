@@ -55,6 +55,8 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 		}
 
 		logger.Out = file
+	} else {
+		logger.Out = terminalWriter()
 	}
 
 	return &vnfm{
@@ -89,9 +91,11 @@ func (vnfm *vnfm) Serve() (err error) {
 	defer func() {
 		r := recover()
 
-		// If it's not stderr, it's the file we opened in New.
-		if vnfm.l.Out != os.Stderr {
-			vnfm.l.Out.(*os.File).Close()
+		// Check if if a file has been opened in New.
+		if file, ok := vnfm.l.Out.(*os.File); ok {
+			if err := file.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "error while closing logfile: %v\n", err)
+			}
 		}
 
 		// answering the channel signals Stop() that we're quitting
