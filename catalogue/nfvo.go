@@ -61,6 +61,10 @@ func NewDate() *Date {
 	return &Date{time.Now()}
 }
 
+func UnixDate(timestamp int64) *Date {
+	return &Date{time.Unix(timestamp, 0)}
+}
+
 func (d *Date) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%s"`, d.Format("Jan 02, 2006 03:04:05 PM"))), nil
 }
