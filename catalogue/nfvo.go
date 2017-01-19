@@ -167,7 +167,7 @@ type Server struct {
 	ID                 string              `json:"id,omitempty"`
 	Version            int                 `json:"version"`
 	Name               string              `json:"name"`
-	Image              NFVImage            `json:"image"`
+	Image              *NFVImage           `json:"image"`
 	Flavour            *DeploymentFlavour  `json:"flavor"`
 	Status             string              `json:"status"`
 	ExtendedStatus     string              `json:"extendedStatus"`
