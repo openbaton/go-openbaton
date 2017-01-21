@@ -101,7 +101,7 @@ func (p *plug) worker(id int) {
 			continue
 		}
 
-		p.l.WithFields(log.Fields{
+		p.l.WithError(err).WithFields(log.Fields{
 			"tag":          tag,
 			"worker-id":    id,
 			"reply-queue":  req.ReplyTo,
