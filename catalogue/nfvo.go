@@ -66,7 +66,7 @@ func UnixDate(timestamp int64) *Date {
 }
 
 func (d *Date) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%s"`, d.Format("Jan 02, 2006 03:04:05 PM"))), nil
+	return []byte(fmt.Sprintf(`"%s"`, d.Format("Jan 2, 2006 3:4:5 PM"))), nil
 }
 
 func (d *Date) UnmarshalJSON(in []byte) (err error) {
@@ -77,7 +77,12 @@ func (d *Date) UnmarshalJSON(in []byte) (err error) {
 		return fmt.Errorf("cannot parse the JSON message %q as a Date", ts)
 	}
 
-	d.Time, err = time.Parse("Jan 02, 2006 03:04:05 PM", ts[1])
+	d.Time, err = time.Parse("Jan 2, 2006 3:4:5 PM", ts[1])
+	// Try other formats
+	if err != nil {
+		d.Time, err = time.Parse("Jan 02, 2006 03:04:05 PM", ts[1])
+	}
+	
 	return
 }
 
