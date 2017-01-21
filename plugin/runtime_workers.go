@@ -92,7 +92,7 @@ func (p *plug) worker(id int) {
 		)
 
 		if err != nil {
-			p.l.WithError(err).WithFields(log.Fields{
+			p.l.WithError(resp.Exception).WithFields(log.Fields{
 				"tag":          tag,
 				"worker-id":    id,
 				"reply-queue":  req.ReplyTo,
