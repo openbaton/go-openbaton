@@ -11,6 +11,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
+// Close closes the Channel.
 func (acnl *Channel) Close() error {
 	acnl.quitChan <- struct{}{}
 
@@ -142,13 +143,26 @@ func (acnl *Channel) rpc(queue string, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	for delivery := range deliveries {
-		acnl.l.WithFields(log.Fields{
-			"tag": "channel-amqp-rpc",
-		}).Debug("received delivery")
+	timeout := time.After(DefaultTimeout)
 
-		if delivery.CorrelationId == corrID {
-			return delivery.Body, nil
+DeliveryLoop:
+	for {
+		select {
+		case <-timeout:
+			break DeliveryLoop
+			
+		case delivery, ok := <-deliveries:
+			if !ok {
+				break DeliveryLoop
+			}
+			
+			acnl.l.WithFields(log.Fields{
+				"tag": "channel-amqp-rpc",
+			}).Debug("received delivery")
+
+			if delivery.CorrelationId == corrID {
+				return delivery.Body, nil
+			}
 		}
 	}
 

@@ -1,6 +1,11 @@
 package amqp
 
+import (
+	"time"
+)
+
 const (
+	DefaultTimeout  = 2 * time.Minute
 	ExchangeDefault = "openbaton-exchange"
 )
 
