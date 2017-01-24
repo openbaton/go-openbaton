@@ -11,7 +11,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func (acnl *amqpChannel) Close() error {
+func (acnl *Channel) Close() error {
 	acnl.quitChan <- struct{}{}
 
 	select {
@@ -23,7 +23,13 @@ func (acnl *amqpChannel) Close() error {
 	}
 }
 
-func (acnl *amqpChannel) Exchange(queue string, msg []byte) ([]byte, error) {
+// AMQPExchange returns a string containing the default exchange.
+func (acnl *Channel) AMQPExchange() string {
+	return acnl.cfg.exchange.name
+} 
+
+// Exchange executes an RPC call to a given queue on the default exchange.
+func (acnl *Channel) Exchange(queue string, msg []byte) ([]byte, error) {
 	respChan := make(chan response)
 
 	acnl.sendQueue <- &exchange{queue, msg, respChan}
@@ -32,7 +38,8 @@ func (acnl *amqpChannel) Exchange(queue string, msg []byte) ([]byte, error) {
 	return resp.msg, resp.error
 }
 
-func (acnl *amqpChannel) NFVOExchange(msg messages.NFVMessage) (messages.NFVMessage, error) {
+// NFVOExchange delivers a message to the NFVO through an RPC call, and awaits a response.
+func (acnl *Channel) NFVOExchange(msg messages.NFVMessage) (messages.NFVMessage, error) {
 	msgBytes, err := messages.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -46,7 +53,8 @@ func (acnl *amqpChannel) NFVOExchange(msg messages.NFVMessage) (messages.NFVMess
 	return messages.Unmarshal(retBytes, messages.NFVO)
 }
 
-func (acnl *amqpChannel) NFVOSend(msg messages.NFVMessage) error {
+// NFVOSend delivers a message to the NFVO.
+func (acnl *Channel) NFVOSend(msg messages.NFVMessage) error {
 	msgBytes, err := messages.Marshal(msg)
 	if err != nil {
 		return err
@@ -55,7 +63,10 @@ func (acnl *amqpChannel) NFVOSend(msg messages.NFVMessage) error {
 	return acnl.Send(QueueVNFMCoreActions, msgBytes)
 }
 
-func (acnl *amqpChannel) NotifyReceived() (<-chan messages.NFVMessage, error) {
+// NotifyReceived creates and returns a channel of NFVMessage; every received message
+// will be broadcasted to every channel created by this function.
+// If nobody is listening on the receiving channel, the channel will be dropped.
+func (acnl *Channel) NotifyReceived() (<-chan messages.NFVMessage, error) {
 	notifyChan := make(chan messages.NFVMessage, 5)
 
 	acnl.subChan <- notifyChan
@@ -63,17 +74,19 @@ func (acnl *amqpChannel) NotifyReceived() (<-chan messages.NFVMessage, error) {
 	return notifyChan, nil
 }
 
-func (acnl *amqpChannel) Send(queue string, msg []byte) error {
+// Send sends a message to a given queue on the default exchange.
+func (acnl *Channel) Send(queue string, msg []byte) error {
 	acnl.sendQueue <- &exchange{queue, msg, nil}
 
 	return nil
 }
 
-func (acnl *amqpChannel) Status() channel.Status {
+// Status returns the current Status of the Channel.
+func (acnl *Channel) Status() channel.Status {
 	return acnl.status
 }
 
-func (acnl *amqpChannel) publish(queue string, msg []byte) error {
+func (acnl *Channel) publish(queue string, msg []byte) error {
 	return acnl.cnl.Publish(
 		acnl.cfg.exchange.name,
 		queue,
@@ -86,7 +99,7 @@ func (acnl *amqpChannel) publish(queue string, msg []byte) error {
 	)
 }
 
-func (acnl *amqpChannel) rpc(queue string, msg []byte) ([]byte, error) {
+func (acnl *Channel) rpc(queue string, msg []byte) ([]byte, error) {
 	replyQueue, err := acnl.temporaryQueue()
 	if err != nil {
 		return nil, err
@@ -142,7 +155,7 @@ func (acnl *amqpChannel) rpc(queue string, msg []byte) ([]byte, error) {
 	return nil, errors.New("no reply received")
 }
 
-func (acnl *amqpChannel) temporaryQueue() (string, error) {
+func (acnl *Channel) temporaryQueue() (string, error) {
 	queue, err := acnl.cnl.QueueDeclare(
 		"",    // name
 		false, // durable

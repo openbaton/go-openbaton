@@ -14,7 +14,7 @@ var (
 	ErrTimedOut = errors.New("timed out")
 )
 
-func (acnl *amqpChannel) closeQueues() {
+func (acnl *Channel) closeQueues() {
 	acnl.setStatus(channel.Quitting)
 
 	close(acnl.statusChan)
@@ -27,7 +27,7 @@ func (acnl *amqpChannel) closeQueues() {
 	acnl.wg.Wait()
 }
 
-func (acnl *amqpChannel) setStatus(newStatus channel.Status) {
+func (acnl *Channel) setStatus(newStatus channel.Status) {
 	for i := 0; i < acnl.numOfWorkers; i++ {
 		acnl.statusChan <- newStatus
 	}
@@ -36,7 +36,7 @@ func (acnl *amqpChannel) setStatus(newStatus channel.Status) {
 }
 
 // spawn spawns the main handler for AMQP communications.
-func (acnl *amqpChannel) spawn() error {
+func (acnl *Channel) spawn() error {
 	errChan, err := acnl.setup()
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func (acnl *amqpChannel) spawn() error {
 // incoming messages from the NFVO on a dedicated queue.
 // The receiver main channel is updated by setup() with a new
 // consumer each time the connection is reestablished.
-func (acnl *amqpChannel) spawnReceiver() {
+func (acnl *Channel) spawnReceiver() {
 	acnl.wg.Add(1)
 
 	go func() {
@@ -223,14 +223,14 @@ func (acnl *amqpChannel) spawnReceiver() {
 		acnl.wg.Done()
 	}()
 }
-func (acnl *amqpChannel) spawnWorkers() {
+func (acnl *Channel) spawnWorkers() {
 	acnl.wg.Add(acnl.numOfWorkers)
 	for i := 0; i < acnl.numOfWorkers; i++ {
 		go acnl.worker(i)
 	}
 }
 
-func (acnl *amqpChannel) worker(id int) {
+func (acnl *Channel) worker(id int) {
 	acnl.l.WithFields(log.Fields{
 		"tag":       "worker-amqp",
 		"worker-id": id,

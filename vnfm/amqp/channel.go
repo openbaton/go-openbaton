@@ -26,10 +26,10 @@ type response struct {
 	error
 }
 
-// An amqpChannel is a control structure to handle an AMQP connection.
+// A Channel is a control structure to handle an AMQP connection.
 // The main logic is handled in an event loop, which is fed using Go channels through
 // the amqpChannel methods.
-type amqpChannel struct {
+type Channel struct {
 	cfg struct {
 		connstr string
 		cfg     amqp.Config
@@ -66,10 +66,10 @@ type amqpChannel struct {
 	wg sync.WaitGroup
 }
 
-func newChannel(config *config.Config, l *log.Logger) (*amqpChannel, error) {
+func newChannel(config *config.Config, l *log.Logger) (*Channel, error) {
 	props := config.Properties
 
-	acnl := &amqpChannel{
+	acnl := &Channel{
 		l:                    l,
 		quitChan:             make(chan struct{}),
 		receiverDeliveryChan: make(chan (<-chan amqp.Delivery), 1),
@@ -151,7 +151,7 @@ func newChannel(config *config.Config, l *log.Logger) (*amqpChannel, error) {
 	return acnl, acnl.spawn()
 }
 
-func (acnl *amqpChannel) register() error {
+func (acnl *Channel) register() error {
 	msg, err := json.Marshal(acnl.endpoint)
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func (acnl *amqpChannel) register() error {
 	return acnl.publish(QueueVNFMRegister, msg)
 }
 
-func (acnl *amqpChannel) setup() (<-chan *amqp.Error, error) {
+func (acnl *Channel) setup() (<-chan *amqp.Error, error) {
 	acnl.l.WithFields(log.Fields{
 		"tag": "channel-amqp-setup",
 	}).Info("dialing AMQP")
@@ -212,7 +212,7 @@ func (acnl *amqpChannel) setup() (<-chan *amqp.Error, error) {
 }
 
 // Pretty random, should be checked
-func (acnl *amqpChannel) setupQueues(cnl *amqp.Channel) error {
+func (acnl *Channel) setupQueues(cnl *amqp.Channel) error {
 	/*if _, err := cnl.QueueDeclare(QueueVNFMRegister, true, acnl.cfg.queues.autodelete,
 		acnl.cfg.queues.exclusive, false, nil); err != nil {
 
@@ -268,7 +268,7 @@ func (acnl *amqpChannel) setupQueues(cnl *amqp.Channel) error {
 
 // unregister attempts several times to unregister the Endpoint,
 // reestablishing the connection in case of previous failure.
-func (acnl *amqpChannel) unregister() error {
+func (acnl *Channel) unregister() error {
 	const Attempts = 2
 
 	msg, err := json.Marshal(acnl.endpoint)
