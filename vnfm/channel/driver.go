@@ -73,7 +73,7 @@ type Channel interface {
 	// A success while sending the message is no guarantee about the destination actually receiving it.
 	Send(dest string, msg []byte) error
 
-	// Status returns the current status of the Channel.s
+	// Status returns the current status of the Channel.
 	Status() Status
 }
 

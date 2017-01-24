@@ -14,6 +14,10 @@ import (
 
 const pluginExchange = "plugin-exchange"
 
+var (
+	ErrNotInitialised = errors.New("not connected yet. Retry later")
+)
+
 // Params is a struct containing the plugin's configuration.
 type Params struct {
 	// BrokerAddress is the address at which the broker AMQP server can be reached.
@@ -43,8 +47,11 @@ type Params struct {
 	LogLevel log.Level
 }
 
-//  Plugin represents a plugin instance.
+// Plugin represents a plugin instance.
 type Plugin interface {
+	// ChannelAccessor returns a closure that returns the underlying *amqp.Channel of this Plugin.
+	ChannelAccessor() func() (*amqp.Channel, error)
+
 	// Logger returns the internal logger of this Plugin.
 	Logger() *log.Logger
 
@@ -115,6 +122,16 @@ type plug struct {
 	rh                   reqHandler
 	stopped              bool
 	wg                   sync.WaitGroup
+}
+
+func (p *plug) ChannelAccessor() func() (*amqp.Channel, error) {
+	return func() (*amqp.Channel, error) {
+		if p.cnl == nil {
+			return nil, ErrNotInitialised
+		}
+
+		return p.cnl, nil
+	}
 }
 
 func (p *plug) Logger() *log.Logger {

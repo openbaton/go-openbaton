@@ -31,6 +31,10 @@ func Register(name string, driver channel.Driver) {
 
 // VNFM represents a VNFM instance.
 type VNFM interface {
+	// ChannelAccessor returns a function that returns the underlying channel.Channel of this VNFM.
+	// If Serve() hasn't been called, the returned function will lock until it's ready.
+	ChannelAccessor() func() (channel.Channel, error)
+
 	// Logger returns a logrus logger instance.
 	Logger() *log.Logger
 
@@ -68,6 +72,7 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 	}
 
 	return &vnfm{
+		cnlCond: sync.NewCond(&sync.Mutex{}),
 		hnd:      handler,
 		implName: implName,
 		conf:     config,
@@ -78,6 +83,8 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 
 type vnfm struct {
 	cnl      channel.Channel
+	cnlErr	 error
+	cnlCond  *sync.Cond
 	conf     *config.Config
 	hnd      Handler
 	implName string
@@ -87,12 +94,27 @@ type vnfm struct {
 	wg       sync.WaitGroup
 }
 
+func (vnfm *vnfm) ChannelAccessor() func() (channel.Channel, error) {
+	return vnfm.channel
+}
+
 func (vnfm *vnfm) Logger() *log.Logger {
 	return vnfm.l
 }
 
 func (vnfm *vnfm) Serve() (err error) {
-	if vnfm.cnl, err = impls[vnfm.implName].Init(vnfm.conf, vnfm.l); err != nil {
+	vnfm.cnl, err = impls[vnfm.implName].Init(vnfm.conf, vnfm.l)
+
+	if err != nil {
+		vnfm.cnl = nil
+		vnfm.cnlErr = errors.New("fetching channel failed")
+	}
+
+	// tell the Channel() listeners that we have a result,
+	// either good or bad
+	vnfm.cnlCond.Broadcast()
+
+	if err != nil {
 		return
 	}
 
@@ -155,6 +177,18 @@ func (vnfm *vnfm) Stop() error {
 	case <-time.After(1 * time.Minute):
 		return errors.New("the VNFM refused to quit")
 	}
+}
+
+func (vnfm *vnfm) channel() (channel.Channel, error) {
+	// Use a condition: get the lock, check if there is a channel or an error, and then Wait for it.
+	vnfm.cnlCond.L.Lock()
+	defer vnfm.cnlCond.L.Unlock()
+
+	for vnfm.cnl == nil && vnfm.cnlErr == nil {
+		vnfm.cnlCond.Wait()
+	}
+	
+	return vnfm.cnl, vnfm.cnlErr
 }
 
 func (vnfm *vnfm) spawnWorkers() {
