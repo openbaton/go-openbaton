@@ -173,7 +173,7 @@ func (acnl *Channel) temporaryQueue() (string, error) {
 	queue, err := acnl.cnl.QueueDeclare(
 		"",    // name
 		false, // durable
-		false, // delete when usused
+		false, // delete when unused
 		true,  // exclusive
 		false, // noWait
 		nil,   // arguments
