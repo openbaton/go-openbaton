@@ -2,8 +2,6 @@
 package catalogue
 
 import (
-	"fmt"
-	"regexp"
 	"time"
 )
 
@@ -53,37 +51,35 @@ func (cfg *Configuration) Append(p *ConfigurationParameter) {
 	cfg.ConfigurationParameters = append(cfg.ConfigurationParameters, p)
 }
 
-type Date struct {
-	time.Time
+type Date string
+
+func NewDate() Date {
+	return NewDateWithTime(time.Now())
 }
 
-func NewDate() *Date {
-	return &Date{time.Now()}
+func NewDateWithTime(t time.Time) Date {
+	return Date(t.Format("Jan 2, 2006 3:4:5 PM"))
 }
 
-func UnixDate(timestamp int64) *Date {
-	return &Date{time.Unix(timestamp, 0)}
+func UnixDate(timestamp int64) Date {
+	return NewDateWithTime(time.Unix(timestamp, 0))
 }
 
-func (d Date) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%s"`, d.Format("Jan 2, 2006 3:4:5 PM"))), nil
-}
-
-func (d Date) UnmarshalJSON(in []byte) (err error) {
-	re := regexp.MustCompile(`"(.*)"`)
-
-	ts := re.FindStringSubmatch(string(in))
-	if len(ts) != 2 || ts[1] == "" {
-		return fmt.Errorf("cannot parse the JSON message %q as a Date", ts)
+func (d Date) Time() time.Time {
+	if d == "" {
+		return time.Unix(0, 0)
 	}
 
-	d.Time, err = time.Parse("Jan 2, 2006 3:4:5 PM", ts[1])
+	t, err := time.Parse("Jan 2, 2006 3:4:5 PM", string(d))
 	// Try other formats
 	if err != nil {
-		d.Time, err = time.Parse("Jan 02, 2006 03:04:05 PM", ts[1])
+		t, err = time.Parse("Jan 02, 2006 03:04:05 PM", string(d))
+		if err != nil {
+			return time.Unix(0, 0)
+		}
 	}
-	
-	return
+
+	return t
 }
 
 type DependencyParameters struct {
@@ -139,8 +135,8 @@ type NFVImage struct {
 	Public          bool   `json:"public,omitempty"`
 	DiskFormat      string `json:"diskFormat,omitempty"`
 	ContainerFormat string `json:"containerFormat,omitempty"`
-	Created         *Date  `json:"created,omitempty"`
-	Updated         *Date  `json:"updated,omitempty"`
+	Created         Date  `json:"created,omitempty"`
+	Updated         Date  `json:"updated,omitempty"`
 	IsPublic        bool   `json:"isPublic"`
 }
 
@@ -179,8 +175,8 @@ type Server struct {
 	ExtID              string              `json:"extId"`
 	IPs                map[string][]string `json:"ips"`
 	FloatingIPs        map[string]string   `json:"floatingIps"`
-	Created            *Date               `json:"created,omitempty"`
-	Updated            *Date               `json:"updated,omitempty"`
+	Created            Date               `json:"created,omitempty"`
+	Updated            Date               `json:"updated,omitempty"`
 	HostName           string              `json:"hostName"`
 	HypervisorHostName string              `json:"hypervisorHostName"`
 	InstanceName       string              `json:"instanceName"`

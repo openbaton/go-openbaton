@@ -84,11 +84,15 @@ func (dh driverHandler) Handle(fname string, args []json.RawMessage) (interface{
 		return nil, err
 	}
 
-	if !respVal.IsValid() {
-		return nil, plugError{"broken response from handler"}
+	if len(retVals) == 2 {
+		if !respVal.IsValid() {
+			return nil, plugError{"broken response from driver"}
+		}
+
+		return respVal.Interface(), nil
 	}
 
-	return respVal.Interface(), nil
+	return nil, nil
 }
 
 func (dh driverHandler) QueueTag() string {
