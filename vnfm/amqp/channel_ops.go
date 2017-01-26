@@ -39,6 +39,11 @@ func (acnl *Channel) Exchange(queue string, msg []byte) ([]byte, error) {
 	return resp.msg, resp.error
 }
 
+// Impl returns the current amqp.Channel. Use with caution.
+func (acnl *Channel) Impl() (interface{}, error) {
+	return acnl.cnl, nil
+}
+
 // NFVOExchange delivers a message to the NFVO through an RPC call, and awaits a response.
 func (acnl *Channel) NFVOExchange(msg messages.NFVMessage) (messages.NFVMessage, error) {
 	msgBytes, err := messages.Marshal(msg)
