@@ -154,7 +154,7 @@ DeliveryLoop:
 	for {
 		select {
 		case <-timeout:
-			break DeliveryLoop
+			return nil, errors.New("response timed out")
 			
 		case delivery, ok := <-deliveries:
 			if !ok {
