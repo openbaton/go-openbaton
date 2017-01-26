@@ -65,11 +65,11 @@ func UnixDate(timestamp int64) *Date {
 	return &Date{time.Unix(timestamp, 0)}
 }
 
-func (d *Date) MarshalJSON() ([]byte, error) {
+func (d Date) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%s"`, d.Format("Jan 2, 2006 3:4:5 PM"))), nil
 }
 
-func (d *Date) UnmarshalJSON(in []byte) (err error) {
+func (d Date) UnmarshalJSON(in []byte) (err error) {
 	re := regexp.MustCompile(`"(.*)"`)
 
 	ts := re.FindStringSubmatch(string(in))
