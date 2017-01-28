@@ -1,4 +1,8 @@
-# Go libraries for OpenBaton
+Go libraries for OpenBaton
+==========================
+
+[![GoDoc](https://godoc.org/github.com/mcilloni/go-openbaton?status.svg)](https://godoc.org/github.com/mcilloni/go-openbaton)
+
 `go-openbaton` contains several packages that can be used to write services that interface with the [OpenBaton][openbaton] [NFVO][nfvo] using the Go language.
 
 ## Packages
