@@ -26,7 +26,7 @@ type NetworkServiceRecord struct {
 	VLR                      []*VirtualLinkRecord             `json:"vlr"`
 	VNFR                     []*VirtualNetworkFunctionRecord  `json:"vnfr"`
 	VNFDependency            []*VNFRecordDependency           `json:"vnf_dependency"`
-	LifecycleEvent           []*LifecycleEvent                `json:"lifecycle_event"`
+	LifecycleEvents          LifecycleEvents                  `json:"lifecycle_event"`
 	VNFFGR                   []*VNFForwardingGraphRecord      `json:"vnffgr"`
 	PNFR                     []*PhysicalNetworkFunctionRecord `json:"pnfr"`
 	FaultManagementPolicy    []*FaultManagementPolicy         `json:"faultManagementPolicy"`
@@ -35,7 +35,7 @@ type NetworkServiceRecord struct {
 	RuntimePolicyInfo        string                           `json:"runtime_policy_info"`
 	Status                   Status                           `json:"status"`
 	Notification             string                           `json:"notification"`
-	LifecycleEventHistory    []*LifecycleEvent                `json:"lifecycle_event_history"`
+	LifecycleEventHistory    LifecycleEvents                  `json:"lifecycle_event_history"`
 	AuditLog                 string                           `json:"audit_log"`
 	CreatedAt                string                           `json:"createdAt"`
 	KeyNames                 []string                         `json:"keyNames"`
@@ -104,7 +104,7 @@ type VirtualLinkRecord struct {
 	AllocatedCapacity     []string                    `json:"allocated_capacity"`
 	Status                LinkStatus                  `json:"status"`
 	Notification          []string                    `json:"notification"`
-	LifecycleEventHistory []*LifecycleEvent           `json:"lifecycle_event_history"`
+	LifecycleEventHistory LifecycleEvents             `json:"lifecycle_event_history"`
 	AuditLog              []string                    `json:"audit_log"`
 	Connection            []string                    `json:"connection"`
 }
@@ -129,7 +129,7 @@ type VNFForwardingGraphRecord struct {
 	DependentVirtualLink  []*VirtualLinkRecord            `json:"dependent_virtual_link"`
 	Status                *Status                         `json:"status,omitempty"`
 	Notification          []string                        `json:"notification"`
-	LifecycleEventHistory []*LifecycleEvent               `json:"lifecycle_event_history"`
+	LifecycleEventHistory LifecycleEvents                 `json:"lifecycle_event_history"`
 	AuditLog              string                          `json:"audit_log"`
 	NetworkForwardingPath *NetworkForwardingPath          `json:"network_forwarding_path,omitempty"`
 	ConnectionPoint       []*VNFDConnectionPoint          `json:"connection_point"`

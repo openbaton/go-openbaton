@@ -27,7 +27,7 @@ func (acnl *Channel) Close() error {
 // AMQPExchange returns a string containing the default exchange.
 func (acnl *Channel) AMQPExchange() string {
 	return acnl.cfg.exchange.name
-} 
+}
 
 // Exchange executes an RPC call to a given queue on the default exchange.
 func (acnl *Channel) Exchange(queue string, msg []byte) ([]byte, error) {
@@ -155,12 +155,12 @@ DeliveryLoop:
 		select {
 		case <-timeout:
 			return nil, errors.New("response timed out")
-			
+
 		case delivery, ok := <-deliveries:
 			if !ok {
 				break DeliveryLoop
 			}
-			
+
 			acnl.l.WithFields(log.Fields{
 				"tag": "channel-amqp-rpc",
 			}).Debug("received delivery")

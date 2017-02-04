@@ -14,7 +14,7 @@ type VirtualNetworkFunctionRecord struct {
 	ProjectID                     string                   `json:"projectId"`
 	DeploymentFlavourKey          string                   `json:"deployment_flavour_key"`
 	Configurations                *Configuration           `json:"configurations,omitempty"`
-	LifecycleEvents               []*LifecycleEvent        `json:"lifecycle_event"`
+	LifecycleEvents               LifecycleEvents          `json:"lifecycle_event"`
 	LifecycleEventHistory         []*HistoryLifecycleEvent `json:"lifecycle_event_history"`
 	Localization                  string                   `json:"localization"`
 	MonitoringParameters          []string                 `json:"monitoring_parameter"`
@@ -84,7 +84,7 @@ func NewVNFR(
 		endpoint = vnfd.Type
 	}
 
-	lifecycleEvents := make([]*LifecycleEvent, len(vnfd.LifecycleEvents))
+	lifecycleEvents := make(LifecycleEvents, len(vnfd.LifecycleEvents))
 	for i, lifecycleEvent := range vnfd.LifecycleEvents {
 		lceStrings := make([]string, len(lifecycleEvent.LifecycleEvents))
 		copy(lceStrings, lifecycleEvent.LifecycleEvents)
@@ -309,7 +309,7 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 
 	newVDU.VNFCInstances = make([]*VNFCInstance, len(parentVDU.VNFCInstances))
 
-	newVDU.LifecycleEvents = make([]*LifecycleEvent, len(parentVDU.LifecycleEvents))
+	newVDU.LifecycleEvents = make(LifecycleEvents, len(parentVDU.LifecycleEvents))
 
 	for i, lifecycleEvent := range parentVDU.LifecycleEvents {
 		lifecycleEvents := make([]string, len(lifecycleEvent.LifecycleEvents))

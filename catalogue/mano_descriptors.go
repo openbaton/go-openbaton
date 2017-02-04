@@ -47,7 +47,7 @@ type VirtualDeploymentUnit struct {
 	ComputationRequirement          string                     `json:"computation_requirement"`
 	VirtualMemoryResourceElement    string                     `json:"virtual_memory_resource_element"`
 	VirtualNetworkBandwidthResource string                     `json:"virtual_network_bandwidth_resource"`
-	LifecycleEvents                 []*LifecycleEvent          `json:"lifecycle_event"`
+	LifecycleEvents                 LifecycleEvents            `json:"lifecycle_event"`
 	VduConstraint                   string                     `json:"vdu_constraint"`
 	HighAvailability                *HighAvailability          `json:"high_availability,omitempty"`
 	FaultManagementPolicies         []*VRFaultManagementPolicy `json:"fault_management_policy,omitempty"`
@@ -75,7 +75,7 @@ type VirtualLinkDescriptor struct {
 type VirtualNetworkFunctionDescriptor struct {
 	NFVEntityDescriptor
 
-	LifecycleEvents      []*LifecycleEvent              `json:"lifecycle_event"`
+	LifecycleEvents      LifecycleEvents                `json:"lifecycle_event"`
 	Configurations       *Configuration                 `json:"configurations,omitempty"`
 	VDUs                 []*VirtualDeploymentUnit       `json:"vdu"`
 	VirtualLinks         []*InternalVirtualLink         `json:"virtual_link"`

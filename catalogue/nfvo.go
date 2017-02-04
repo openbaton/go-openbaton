@@ -135,8 +135,8 @@ type NFVImage struct {
 	Public          bool   `json:"public,omitempty"`
 	DiskFormat      string `json:"diskFormat,omitempty"`
 	ContainerFormat string `json:"containerFormat,omitempty"`
-	Created         Date  `json:"created,omitempty"`
-	Updated         Date  `json:"updated,omitempty"`
+	Created         Date   `json:"created,omitempty"`
+	Updated         Date   `json:"updated,omitempty"`
 	IsPublic        bool   `json:"isPublic"`
 }
 
@@ -175,8 +175,8 @@ type Server struct {
 	ExtID              string              `json:"extId"`
 	IPs                map[string][]string `json:"ips"`
 	FloatingIPs        map[string]string   `json:"floatingIps"`
-	Created            Date               `json:"created,omitempty"`
-	Updated            Date               `json:"updated,omitempty"`
+	Created            Date                `json:"created,omitempty"`
+	Updated            Date                `json:"updated,omitempty"`
 	HostName           string              `json:"hostName"`
 	HypervisorHostName string              `json:"hypervisorHostName"`
 	InstanceName       string              `json:"instanceName"`

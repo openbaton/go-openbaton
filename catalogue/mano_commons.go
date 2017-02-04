@@ -101,6 +101,22 @@ type LifecycleEvent struct {
 	LifecycleEvents []string `json:"lifecycle_events"`
 }
 
+// LifecycleEvents represents a list of LifecycleEvent.
+type LifecycleEvents []*LifecycleEvent
+
+// Filter returns only the LifecycleEvent having the given Event from the list of events.
+func (les LifecycleEvents) Filter(event Event) LifecycleEvents {
+	ret := LifecycleEvents{}
+
+	for _, le := range les {
+		if le.Event == event {
+			ret = append(ret, le)
+		}
+	}
+
+	return ret
+}
+
 // NetworkServiceDeploymentFlavour as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type NetworkServiceDeploymentFlavour struct {
 	Vendor                string                      `json:"vendor"`
@@ -113,7 +129,7 @@ type NetworkServiceDeploymentFlavour struct {
 	AllocatedCapacity     []string                    `json:"allocated_capacity"`
 	Status                LinkStatus                  `json:"status"`
 	Notification          []string                    `json:"notification"`
-	LifecycleEventHistory []*LifecycleEvent           `json:"lifecycle_event_history"`
+	LifecycleEventHistory LifecycleEvents             `json:"lifecycle_event_history"`
 	AuditLog              []string                    `json:"audit_log"`
 	Connection            []string                    `json:"connection"`
 }

@@ -72,7 +72,7 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 	}
 
 	return &vnfm{
-		cnlCond: sync.NewCond(&sync.Mutex{}),
+		cnlCond:  sync.NewCond(&sync.Mutex{}),
 		hnd:      handler,
 		implName: implName,
 		conf:     config,
@@ -83,7 +83,7 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 
 type vnfm struct {
 	cnl      channel.Channel
-	cnlErr	 error
+	cnlErr   error
 	cnlCond  *sync.Cond
 	conf     *config.Config
 	hnd      Handler
@@ -187,7 +187,7 @@ func (vnfm *vnfm) channel() (channel.Channel, error) {
 	for vnfm.cnl == nil && vnfm.cnlErr == nil {
 		vnfm.cnlCond.Wait()
 	}
-	
+
 	return vnfm.cnl, vnfm.cnlErr
 }
 

@@ -57,7 +57,7 @@ type Channel interface {
 	// Exchange sends a message to an implementation defined destination, and then waits for a reply.
 	Exchange(dest string, msg []byte) ([]byte, error)
 
-	// Impl returns the underlying implementation of this channel (if any), i.e., an amqp Channel will return the 
+	// Impl returns the underlying implementation of this channel (if any), i.e., an amqp Channel will return the
 	// AMQP Channel underlying.
 	// The caller must know if the channel is of the correct type.
 	Impl() (interface{}, error)
