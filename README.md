@@ -1,13 +1,18 @@
-Go libraries for OpenBaton
-==========================
+  <img src="https://raw.githubusercontent.com/openbaton/openbaton.github.io/master/images/openBaton.png" width="250"/>
+
+  Copyright © 2015-2016 [Open Baton](http://openbaton.org).
+  Licensed under [Apache v2 License](http://www.apache.org/licenses/LICENSE-2.0).
+  
+  
+# Go libraries for OpenBaton
 
 [![GoDoc](https://godoc.org/github.com/mcilloni/go-openbaton?status.svg)](https://godoc.org/github.com/mcilloni/go-openbaton)
 
-`go-openbaton` contains several packages that can be used to write services that interface with the [OpenBaton][openbaton] [NFVO][nfvo] using the Go language.
+`go-openbaton` contains several packages that can be used to write services that interface with the [Open Baton][openbaton] [NFVO][nfvo] using the Go language.
 
 ## Packages
 
-- [catalogue](https://github.com/mcilloni/go-openbaton/tree/master/catalogue): provides a partial implementation of the OpenBaton catalogue.
+- [catalogue](https://github.com/mcilloni/go-openbaton/tree/master/catalogue): provides a partial implementation of the Open Baton catalogue.
 - [catalogue/messages](https://github.com/mcilloni/go-openbaton/tree/master/catalogue/messages): defines the default message types for NFVO-VNFM communication, plus facilities to handle their serialisation.
 - [plugin](https://github.com/mcilloni/go-openbaton/tree/master/plugin): provides a runtime to develop and execute plugins for the NFVO.
 - [vnfm](https://github.com/mcilloni/go-openbaton/tree/master/vnfm): provides a runtime to develop and execute VNFManagers in Go.
@@ -36,12 +41,37 @@ The Source Code of the other Open Baton projects can be found [here][openbaton-g
 ## News and Website
 
 Check the [Open Baton Website][openbaton]
+Follow us on Twitter @[openbaton][openbaton-twitter].
 
 ## Licensing and distribution
-Licensed under the Apache License, Version 2.0. See LICENSE for further details.
+Copyright © [2015-2017] Open Baton project
 
+Licensed under the Apache License, Version 2.0 (the "License");
+
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+## Support
+The Open Baton project provides community support through the Open Baton Public Mailing List and through StackOverflow using the tags openbaton.
+
+## Supported by
+  <img src="https://raw.githubusercontent.com/openbaton/openbaton.github.io/master/images/fokus.png" width="250"/><img src="https://raw.githubusercontent.com/openbaton/openbaton.github.io/master/images/tu.png" width="150"/>
+
+[fokus-logo]: https://raw.githubusercontent.com/openbaton/openbaton.github.io/master/images/fokus.png
 [openbaton]: http://openbaton.org
 [openbaton-doc]: http://openbaton.org/documentation
 [openbaton-github]: http://github.org/openbaton
+[openbaton-logo]: https://raw.githubusercontent.com/openbaton/openbaton.github.io/master/images/openBaton.png
+[openbaton-mail]: mailto:users@openbaton.org
+[openbaton-twitter]: https://twitter.com/openbaton
 [nfvo]: https://github.com/openbaton/NFVO
 [NFV MANO]:http://docbox.etsi.org/ISG/NFV/Open/Published/gs_NFV-MAN001v010101p%20-%20Management%20and%20Orchestration.pdf
+[tub-logo]: https://raw.githubusercontent.com/openbaton/openbaton.github.io/master/images/tu.png
