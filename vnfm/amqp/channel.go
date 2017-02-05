@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mcilloni/go-openbaton/catalogue"
-	"github.com/mcilloni/go-openbaton/catalogue/messages"
-	"github.com/mcilloni/go-openbaton/util"
-	"github.com/mcilloni/go-openbaton/vnfm/channel"
-	"github.com/mcilloni/go-openbaton/vnfm/config"
+	"github.com/openbaton/go-openbaton/catalogue"
+	"github.com/openbaton/go-openbaton/catalogue/messages"
+	"github.com/openbaton/go-openbaton/util"
+	"github.com/openbaton/go-openbaton/vnfm/channel"
+	"github.com/openbaton/go-openbaton/vnfm/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )

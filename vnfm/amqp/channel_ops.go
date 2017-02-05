@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mcilloni/go-openbaton/catalogue/messages"
-	"github.com/mcilloni/go-openbaton/util"
-	"github.com/mcilloni/go-openbaton/vnfm/channel"
+	"github.com/openbaton/go-openbaton/catalogue/messages"
+	"github.com/openbaton/go-openbaton/util"
+	"github.com/openbaton/go-openbaton/vnfm/channel"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )

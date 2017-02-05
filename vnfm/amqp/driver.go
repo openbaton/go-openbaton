@@ -1,9 +1,9 @@
 package amqp
 
 import (
-	"github.com/mcilloni/go-openbaton/vnfm"
-	"github.com/mcilloni/go-openbaton/vnfm/channel"
-	"github.com/mcilloni/go-openbaton/vnfm/config"
+	"github.com/openbaton/go-openbaton/vnfm"
+	"github.com/openbaton/go-openbaton/vnfm/channel"
+	"github.com/openbaton/go-openbaton/vnfm/config"
 	log "github.com/sirupsen/logrus"
 )
 

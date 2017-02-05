@@ -1,7 +1,7 @@
 package messages
 
 import (
-	"github.com/mcilloni/go-openbaton/catalogue"
+	"github.com/openbaton/go-openbaton/catalogue"
 )
 
 type orMessage struct{}

@@ -1,7 +1,7 @@
 package vnfm
 
 import (
-	"github.com/mcilloni/go-openbaton/catalogue"
+	"github.com/openbaton/go-openbaton/catalogue"
 )
 
 // The Handler interface defines an abstraction of the operations that a VNFM should provide.

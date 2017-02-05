@@ -1,6 +1,6 @@
 package messages
 
-import "github.com/mcilloni/go-openbaton/catalogue"
+import "github.com/openbaton/go-openbaton/catalogue"
 
 type vnfmMessage struct{}
 

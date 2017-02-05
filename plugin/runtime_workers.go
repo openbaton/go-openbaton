@@ -3,7 +3,7 @@ package plugin
 import (
 	"encoding/json"
 
-	"github.com/mcilloni/go-openbaton/util"
+	"github.com/openbaton/go-openbaton/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )

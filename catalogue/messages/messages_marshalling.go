@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/fatih/structs"
-	"github.com/mcilloni/go-openbaton/catalogue"
+	"github.com/openbaton/go-openbaton/catalogue"
 )
 
 var (

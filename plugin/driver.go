@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"github.com/mcilloni/go-openbaton/catalogue"
+	"github.com/openbaton/go-openbaton/catalogue"
 )
 
 const interfaceVersion = "1.0"

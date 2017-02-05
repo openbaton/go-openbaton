@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/mcilloni/go-openbaton/catalogue"
-	"github.com/mcilloni/go-openbaton/catalogue/messages"
+	"github.com/openbaton/go-openbaton/catalogue"
+	"github.com/openbaton/go-openbaton/catalogue/messages"
 	log "github.com/sirupsen/logrus"
 )
 
