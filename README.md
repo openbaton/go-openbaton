@@ -6,19 +6,19 @@
   
 # Go libraries for OpenBaton
 
-[![GoDoc](https://godoc.org/github.com/mcilloni/go-openbaton?status.svg)](https://godoc.org/github.com/mcilloni/go-openbaton)
+[![GoDoc](https://godoc.org/github.com/openbaton/go-openbaton?status.svg)](https://godoc.org/github.com/openbaton/go-openbaton)
 
 `go-openbaton` contains several packages that can be used to write services that interface with the [Open Baton][openbaton] [NFVO][nfvo] using the Go language.
 
 ## Packages
 
-- [catalogue](https://github.com/mcilloni/go-openbaton/tree/master/catalogue): provides a partial implementation of the Open Baton catalogue.
-- [catalogue/messages](https://github.com/mcilloni/go-openbaton/tree/master/catalogue/messages): defines the default message types for NFVO-VNFM communication, plus facilities to handle their serialisation.
-- [plugin](https://github.com/mcilloni/go-openbaton/tree/master/plugin): provides a runtime to develop and execute plugins for the NFVO.
-- [vnfm](https://github.com/mcilloni/go-openbaton/tree/master/vnfm): provides a runtime to develop and execute VNFManagers in Go.
-- [vnfm/channel](https://github.com/mcilloni/go-openbaton/tree/master/vnfm/channel): a set of interfaces that provide an abstraction above which API the VNFM uses to connect to the NFVO.
-- [vnfm/amqp](https://github.com/mcilloni/go-openbaton/tree/master/vnfm/): implements a `channel` that uses AMQP to connect with the NFVO.
-- [vnfm/config](https://github.com/mcilloni/go-openbaton/tree/master/vnfm/config): provides facilities for parsing VNFM configuration files.
+- [catalogue](https://github.com/openbaton/go-openbaton/tree/master/catalogue): provides a partial implementation of the Open Baton catalogue.
+- [catalogue/messages](https://github.com/openbaton/go-openbaton/tree/master/catalogue/messages): defines the default message types for NFVO-VNFM communication, plus facilities to handle their serialisation.
+- [plugin](https://github.com/openbaton/go-openbaton/tree/master/plugin): provides a runtime to develop and execute plugins for the NFVO.
+- [vnfm](https://github.com/openbaton/go-openbaton/tree/master/vnfm): provides a runtime to develop and execute VNFManagers in Go.
+- [vnfm/channel](https://github.com/openbaton/go-openbaton/tree/master/vnfm/channel): a set of interfaces that provide an abstraction above which API the VNFM uses to connect to the NFVO.
+- [vnfm/amqp](https://github.com/openbaton/go-openbaton/tree/master/vnfm/): implements a `channel` that uses AMQP to connect with the NFVO.
+- [vnfm/config](https://github.com/openbaton/go-openbaton/tree/master/vnfm/config): provides facilities for parsing VNFM configuration files.
 
 ## Issue tracker
 
