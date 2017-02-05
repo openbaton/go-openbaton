@@ -24,6 +24,19 @@ import (
 	"github.com/streadway/amqp"
 )
 
+func (p *plug) setupDeliveries(cnl *amqp.Channel) (<-chan amqp.Delivery, error) {
+	// setup incoming deliveries
+	return cnl.Consume(
+		p.id(), // queue
+		"",     // consumer
+		false,  // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+}
+
 func (p *plug) spawnWorkers() {
 	tag := util.FuncName()
 
@@ -38,22 +51,6 @@ func (p *plug) spawnWorkers() {
 	}
 }
 
-func (p *plug) temporaryQueue() (string, error) {
-	queue, err := p.cnl.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when usused
-		true,  // exclusive
-		false, // noWait
-		nil,   // arguments
-	)
-	if err != nil {
-		return "", err
-	}
-
-	return queue.Name, nil
-}
-
 func (p *plug) worker(id int) {
 	tag := util.FuncName()
 
@@ -62,81 +59,164 @@ func (p *plug) worker(id int) {
 		"worker-id": id,
 	}).Debug("worker is starting")
 
-	for req := range p.reqChan {
-		result, err := p.rh.Handle(req.MethodName, req.Parameters)
-
-		var resp response
-		if err != nil {
-			// The NFVO expects a Java Exception;
-			// This type switch checks if the error is not one of the special
-			// Java-compatible types already and wraps it.
-			switch err.(type) {
-			case plugError:
-				resp.Exception = err
-
-			case DriverError:
-				resp.Exception = err
-
-			// if the error is not a special plugin error, than wrap it:
-			// the nfvo expects a Java exception.
-			default:
-				resp.Exception = plugError{err.Error()}
-			}
-		} else {
-			resp.Answer = result
-		}
-
-		bResp, err := json.MarshalIndent(resp, "", "  ")
+WorkerLoop:
+	for {
+		cnl, err := p.getAMQPChan()
 		if err != nil {
 			p.l.WithError(err).WithFields(log.Fields{
 				"tag":       tag,
 				"worker-id": id,
-			}).Error("failure while serialising response")
-			continue
+			}).Error("failure while getting an AMQP channel")
+
+			// retry
+			continue WorkerLoop
 		}
 
-		err = p.cnl.Publish(
-			pluginExchange,
-			req.ReplyTo,
-			false,
-			false,
-			amqp.Publishing{
-				ContentType:   "text/plain",
-				CorrelationId: req.CorrID,
-				Body:          bResp,
-			},
-		)
+		// no more channels
+		if cnl == nil {
+			break WorkerLoop
+		}
 
+		errChan := cnl.NotifyClose(make(chan *amqp.Error))
+
+		p.l.WithFields(log.Fields{
+			"tag":       tag,
+			"worker-id": id,
+		}).Debug("received an AMQP channel")
+
+		deliveries, err := p.setupDeliveries(cnl)
 		if err != nil {
 			p.l.WithError(err).WithFields(log.Fields{
-				"tag":          tag,
-				"worker-id":    id,
-				"reply-queue":  req.ReplyTo,
-				"reply-corrid": req.CorrID,
-			}).Error("failure while replying")
-			continue
+				"tag":       tag,
+				"worker-id": id,
+			}).Error("error while setting up consumer")
+
+			// get a new channel
+			continue WorkerLoop
 		}
 
-		p.l.WithError(resp.Exception).WithFields(log.Fields{
-			"tag":          tag,
-			"worker-id":    id,
-			"reply-queue":  req.ReplyTo,
-			"reply-corrid": req.CorrID,
-		}).Info("response sent")
+		p.l.WithFields(log.Fields{
+			"tag":       tag,
+			"worker-id": id,
+		}).Debug("set up consumer")
 
-		// IMPORTANT: Acknowledge the received delivery!
-		// The VimDriverCaller executor thread of the NFVO
-		// will perpetually sleep when trying to publish the
-		// next request if this step is omitted.
-		if err := p.cnl.Ack(req.DeliveryTag, false); err != nil {
-			p.l.WithError(err).WithFields(log.Fields{
-				"tag":                tag,
-				"worker-id":          id,
-				"reply-queue":        req.ReplyTo,
-				"reply-corrid":       req.CorrID,
-				"reply-delivery_tag": req.DeliveryTag,
-			}).Error("failure while acknowledging the last delivery")
-			continue
+	ServeLoop:
+		for {
+			select {
+			case err := <-errChan:
+				if err != nil {
+					p.l.WithError(err).WithFields(log.Fields{
+						"tag":       tag,
+						"worker-id": id,
+					}).Error("channel failure")
+				}
+
+				// the channel broke.
+				continue WorkerLoop
+
+			case delivery, ok := <-deliveries:
+				if !ok {
+					break WorkerLoop
+				}
+
+				p.l.WithFields(log.Fields{
+					"tag":          tag,
+					"worker-id":    id,
+					"reply-queue":  delivery.ReplyTo,
+					"reply-corrid": delivery.CorrelationId,
+				}).Debug("received delivery")
+
+				var req request
+				if err := json.Unmarshal(delivery.Body, &req); err != nil {
+					p.l.WithError(err).WithFields(log.Fields{
+						"tag":       tag,
+						"worker-id": id,
+					}).Error("message unmarshaling error")
+					continue ServeLoop
+				}
+
+				p.l.WithFields(log.Fields{
+					"tag":             tag,
+					"worker-id":       id,
+					"req-method_name": req.MethodName,
+				}).Info("deserialised request")
+
+				result, err := p.rh.Handle(req.MethodName, req.Parameters)
+
+				var resp response
+				if err != nil {
+					// The NFVO expects a Java Exception;
+					// This type switch checks if the error is not one of the special
+					// Java-compatible types already and wraps it.
+					switch err.(type) {
+					case plugError:
+						resp.Exception = err
+
+					case DriverError:
+						resp.Exception = err
+
+					// if the error is not a special plugin error, than wrap it:
+					// the nfvo expects a Java exception.
+					default:
+						resp.Exception = plugError{err.Error()}
+					}
+				} else {
+					resp.Answer = result
+				}
+
+				bResp, err := json.MarshalIndent(resp, "", "  ")
+				if err != nil {
+					p.l.WithError(err).WithFields(log.Fields{
+						"tag":       tag,
+						"worker-id": id,
+					}).Error("failure while serialising response")
+					continue ServeLoop
+				}
+
+				err = cnl.Publish(
+					pluginExchange,
+					delivery.ReplyTo,
+					false,
+					false,
+					amqp.Publishing{
+						ContentType:   "text/plain",
+						CorrelationId: delivery.CorrelationId,
+						Body:          bResp,
+					},
+				)
+
+				if err != nil {
+					p.l.WithError(err).WithFields(log.Fields{
+						"tag":          tag,
+						"worker-id":    id,
+						"reply-queue":  delivery.ReplyTo,
+						"reply-corrid": delivery.CorrelationId,
+					}).Error("failure while replying")
+					continue ServeLoop
+				}
+
+				p.l.WithError(resp.Exception).WithFields(log.Fields{
+					"tag":          tag,
+					"worker-id":    id,
+					"reply-queue":  delivery.ReplyTo,
+					"reply-corrid": delivery.CorrelationId,
+				}).Info("response sent")
+
+				// IMPORTANT: Acknowledge the received delivery!
+				// The VimDriverCaller executor thread of the NFVO
+				// will perpetually sleep when trying to publish the
+				// next request if this step is omitted.
+				if err := cnl.Ack(delivery.DeliveryTag, false); err != nil {
+					p.l.WithError(err).WithFields(log.Fields{
+						"tag":                tag,
+						"worker-id":          id,
+						"reply-queue":        delivery.ReplyTo,
+						"reply-corrid":       delivery.CorrelationId,
+						"reply-delivery_tag": delivery.DeliveryTag,
+					}).Error("failure while acknowledging the last delivery")
+					continue ServeLoop
+				}
+			}
 		}
 	}
 

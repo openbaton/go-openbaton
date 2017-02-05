@@ -31,15 +31,6 @@ func (e plugError) Error() string {
 type request struct {
 	MethodName string            `json:"methodName"`
 	Parameters []json.RawMessage `json:"parameters"`
-
-	// ReplyTo is the query onto which the reply should be sent
-	ReplyTo string `json:"-"`
-
-	// CorrID to be used while sending the reply
-	CorrID string `json:"-"`
-
-	// DeliveryTag to acknowledge the delivery
-	DeliveryTag uint64 `json:"-"`
 }
 
 type response struct {

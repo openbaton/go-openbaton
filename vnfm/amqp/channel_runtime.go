@@ -84,7 +84,7 @@ MainLoop:
 			}{cnl, err}
 
 			// after sending the response, check if it was ok.
-			// If there was an error, the client
+			// If there was an error, the connection has issues
 			if err != nil {
 				// the connection is broken.
 				// create a new one.

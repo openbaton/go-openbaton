@@ -10,20 +10,13 @@ import (
 )
 
 func (acnl *Channel) connSetup() (*amqp.Connection, error) {
+	tag := util.FuncName()
+
 	acnl.l.WithFields(log.Fields{
-		"tag": "channel-amqp-setup",
+		"tag": tag,
 	}).Info("dialing AMQP")
 
-	conn, err := amqp.DialConfig(acnl.cfg.connstr, acnl.cfg.cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, nil
+	return amqp.DialConfig(acnl.cfg.connstr, acnl.cfg.cfg)	
 }
 
 func (acnl *Channel) getAMQPChan() (*amqp.Channel, error) {

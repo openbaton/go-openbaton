@@ -32,57 +32,8 @@ const pluginExchange = "plugin-exchange"
 
 var (
 	ErrNotInitialised = errors.New("not connected yet. Retry later")
+	ErrTimeout        = errors.New("timed out")
 )
-
-// Params is a struct containing the plugin's configuration.
-type Params struct {
-	// BrokerAddress is the address at which the broker AMQP server can be reached.
-	BrokerAddress string
-
-	// Port of the AMQP broker.
-	Port int
-
-	// Username, Password for the AMQP broker.
-	Username, Password string
-
-	// LogFile contains the path to the log file.
-	// Use "" to use defaults, or "-" to use stderr.
-	LogFile string
-
-	// Name is a parameter provided by the NFVO, usually "openbaton"
-	Name string
-
-	// Type is a string that identifies the type of this plugin.
-	Type string
-
-	// Workers determines how many workers the plugin will spawn.
-	// Set this number according to your needs.
-	Workers int
-
-	// LogLevel sets the minimum logging level for the internal instance of logrus.Logger.
-	LogLevel log.Level
-}
-
-// Plugin represents a plugin instance.
-type Plugin interface {
-	// ChannelAccessor returns a closure that returns the underlying *amqp.Channel of this Plugin.
-	ChannelAccessor() func() (*amqp.Channel, error)
-
-	// Logger returns the internal logger of this Plugin.
-	Logger() *log.Logger
-
-	// Serve spawns the Plugin, blocking the current goroutine.
-	// Serve only returns non-nil errors during the initialisation phase.
-	// Check the log and the return value of Stop() for runtime and on-closing errors respectively.
-	Serve() error
-
-	// Stop() signals the event loop of the plugin to quit, and waits until either it shuts down or
-	// it times out.
-	Stop() error
-
-	// Type() returns the type of this plugin, as specified by its parameters during construction.
-	Type() string
-}
 
 // New creates a plugin from an implementation and plugin.Params.
 // impl must be of a valid Plugin implementation type, like plugin.Driver.
@@ -94,11 +45,14 @@ func New(impl interface{}, p *Params) (Plugin, error) {
 	}
 
 	plug := &plug{
-		connstr:              util.AmqpUriBuilder(p.Username, p.Password, p.BrokerAddress, "", p.Port, false),
-		params:               p,
-		quitChan:             make(chan error),
-		receiverDeliveryChan: make(chan (<-chan amqp.Delivery), 1),
-		reqChan:              make(chan request, 30),
+		connstr:     util.AmqpUriBuilder(p.Username, p.Password, p.BrokerAddress, "", p.Port, false),
+		params:      p,
+		quitChan:    make(chan error),
+		chanReqChan: make(chan struct{}, p.Workers+1),
+		newChanChan: make(chan struct {
+			*amqp.Channel
+			error
+		}),
 	}
 
 	if err := plug.initLogger(); err != nil {
@@ -125,29 +79,30 @@ func New(impl interface{}, p *Params) (Plugin, error) {
 }
 
 type plug struct {
-	cnl     *amqp.Channel
-	conn    *amqp.Connection
 	connstr string
 
-	l                    *log.Logger
-	e                    logData
-	params               *Params
-	quitChan             chan error
-	receiverDeliveryChan chan (<-chan amqp.Delivery)
-	reqChan              chan request
-	rh                   reqHandler
-	stopped              bool
-	wg                   sync.WaitGroup
+	l        *log.Logger
+	e        logData
+	params   *Params
+	quitChan chan error
+
+	// because the connection is private,
+	// to get a channel is necessary to request it
+	// through this channel.
+	// The request will be received, and the channel will be sent throgh the newChanChan channel
+	chanReqChan chan struct{}
+	newChanChan chan struct {
+		*amqp.Channel
+		error
+	}
+
+	rh      reqHandler
+	stopped bool
+	wg      sync.WaitGroup
 }
 
 func (p *plug) ChannelAccessor() func() (*amqp.Channel, error) {
-	return func() (*amqp.Channel, error) {
-		if p.cnl == nil {
-			return nil, ErrNotInitialised
-		}
-
-		return p.cnl, nil
-	}
+	return p.getAMQPChan
 }
 
 func (p *plug) Logger() *log.Logger {
@@ -167,68 +122,103 @@ func (p *plug) Serve() error {
 		"params": *p.params,
 	}).Debug("plugin starting")
 
-	errChan, err := p.setup()
-	if err != nil {
-		return err
-	}
-
 	p.spawnWorkers()
-	p.spawnReceiver()
+
+	exiting := false
 
 MainLoop:
 	for {
-		select {
-		case <-p.quitChan:
-			if err = p.conn.Close(); err != nil {
-				p.l.WithError(err).WithFields(log.Fields{
-					"tag": tag,
-				}).Error("closing Connection failed")
+		conn, err := p.connSetup()
+		if err != nil {
+			return err
+		}
 
-				p.closeQueues()
+		errChan := makeErrChan(conn)
 
-				// send the error to stop
-				p.quitChan <- err
-				return nil
-			}
+		for {
+			select {
+			case <-p.quitChan:
+				if err = conn.Close(); err != nil {
+					p.l.WithError(err).WithFields(log.Fields{
+						"tag": tag,
+					}).Error("closing Connection failed")
 
-			p.l.WithFields(log.Fields{
-				"tag": tag,
-			}).Info("initiating clean shutdown")
+					p.closeQueues()
 
-			// Close will cause the reception of nil on errChan.
-
-		case amqpErr := <-errChan:
-			// The connection closed cleanly after invoking Close().
-			if amqpErr == nil {
-				// notify the receiver and workers
-				p.closeQueues()
-
-				p.wg.Wait()
-
-				// send nil to Stop
-				close(p.quitChan)
+					// send the error to stop
+					p.quitChan <- err
+					return nil
+				}
 
 				p.l.WithFields(log.Fields{
 					"tag": tag,
-				}).Debug("main loop quitting")
+				}).Info("initiating clean shutdown")
 
-				break MainLoop
-			}
+				exiting = true
 
-			p.l.WithError(amqpErr).WithFields(log.Fields{
-				"tag": tag,
-			}).Error("received AMQP error for current connection")
+				// Close will cause the reception of nil on errChan.
 
-			// The connection crashed for some reason. Try to bring it up again.
-			for {
-				if errChan, err = p.setup(); err != nil {
-					p.l.WithError(err).WithFields(log.Fields{
-						"tag": tag,
-					}).Error("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
-					time.Sleep(30 * time.Second)
+			// some worker wants a Channel
+			case <-p.chanReqChan:
+				var cnl *amqp.Channel
+				var err error
+
+				// avoid trying to create a channel when exiting
+				if !exiting {
+					cnl, err = p.makeAMQPChan(conn)
 				}
-			}
 
+				p.newChanChan <- struct {
+					*amqp.Channel
+					error
+				}{cnl, err}
+
+				// after sending the response, check if it was ok.
+				// If there was an error, the client has issues
+				if err != nil {
+					// the connection is broken.
+					// create a new one.
+					errChan = nil // avoid receiving anything
+					continue MainLoop
+				}
+
+			case amqpErr := <-errChan:
+				// The connection closed cleanly after invoking Close().
+				if amqpErr == nil {
+					// notify the receiver and workers
+					p.closeQueues()
+
+					p.wg.Wait()
+
+					// send nil to Stop
+					close(p.quitChan)
+
+					p.l.WithFields(log.Fields{
+						"tag": tag,
+					}).Debug("main loop quitting")
+
+					break MainLoop
+				}
+
+				p.l.WithError(amqpErr).WithFields(log.Fields{
+					"tag": tag,
+				}).Error("received AMQP error for current connection")
+
+				// The connection crashed for some reason. Try to bring it up again.
+				for {
+					conn, err = p.connSetup()
+					if err != nil {
+						p.l.WithError(err).WithFields(log.Fields{
+							"tag": tag,
+						}).Error("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
+
+						time.Sleep(30 * time.Second)
+					} else {
+						errChan = makeErrChan(conn)
+					}
+				}
+
+			}
 		}
 	}
 
@@ -276,73 +266,18 @@ func (p *plug) Type() string {
 }
 
 func (p *plug) closeQueues() {
-	// closes the workers
-	close(p.reqChan)
+	// closes the new chan channel
+	close(p.newChanChan)
 
-	// closes the receiver
-	close(p.receiverDeliveryChan)
+	p.wg.Wait()
 }
 
 func (p *plug) id() string {
 	return fmt.Sprintf("%s.%s.%s", p.rh.QueueTag(), p.params.Type, p.params.Name)
 }
 
-func (p *plug) setup() (<-chan *amqp.Error, error) {
-	tag := util.FuncName()
-
-	p.l.WithFields(log.Fields{
-		"tag": tag,
-	}).Info("dialing AMQP")
-
-	conn, err := amqp.Dial(p.connstr)
-	if err != nil {
-		return nil, err
-	}
-
-	cnl, err := conn.Channel()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cnl.ExchangeDeclare(pluginExchange, "topic", false,
-		false, false, false, nil); err != nil {
-		return nil, err
-	}
-
-	queueName := p.id()
-	if _, err := cnl.QueueDeclare(queueName, false, true,
-		false, false, nil); err != nil {
-		return nil, err
-	}
-
-	if err := cnl.QueueBind(queueName, queueName, pluginExchange, false, nil); err != nil {
-		return nil, err
-	}
-
-	if err := cnl.Qos(1, 0, false); err != nil {
-		return nil, err
-	}
-
-	p.conn = conn
-	p.cnl = cnl
-
-	// setup incoming deliveries
-	deliveries, err := cnl.Consume(
-		queueName, // queue
-		"",        // consumer
-		false,     // auto-ack
-		false,     // exclusive
-		false,     // no-local
-		false,     // no-wait
-		nil,       // args
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	p.receiverDeliveryChan <- deliveries
-
-	return conn.NotifyClose(make(chan *amqp.Error)), nil
+func makeErrChan(conn *amqp.Connection) chan *amqp.Error {
+	return conn.NotifyClose(make(chan *amqp.Error))
 }
 
 type reqHandler interface {
