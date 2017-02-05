@@ -55,9 +55,9 @@ func (acnl *Channel) Exchange(queue string, msg []byte) ([]byte, error) {
 	return resp.msg, resp.error
 }
 
-// Impl returns the current amqp.Channel. Use with caution.
+// Impl creates a new amqp.Channel.
 func (acnl *Channel) Impl() (interface{}, error) {
-	return acnl.cnl, nil
+	return acnl.getAMQPChan()
 }
 
 // NFVOExchange delivers a message to the NFVO through an RPC call, and awaits a response.
@@ -108,8 +108,8 @@ func (acnl *Channel) Status() channel.Status {
 	return acnl.status
 }
 
-func (acnl *Channel) publish(queue string, msg []byte) error {
-	return acnl.cnl.Publish(
+func (acnl *Channel) publish(cnl *amqp.Channel, queue string, msg []byte) error {
+	return cnl.Publish(
 		acnl.cfg.exchange.name,
 		queue,
 		false,
@@ -121,13 +121,13 @@ func (acnl *Channel) publish(queue string, msg []byte) error {
 	)
 }
 
-func (acnl *Channel) rpc(queue string, msg []byte) ([]byte, error) {
-	replyQueue, err := acnl.temporaryQueue()
+func (acnl *Channel) rpc(cnl *amqp.Channel, queue string, msg []byte) ([]byte, error) {
+	replyQueue, err := temporaryQueue(cnl)
 	if err != nil {
 		return nil, err
 	}
 
-	deliveries, err := acnl.cnl.Consume(
+	deliveries, err := cnl.Consume(
 		replyQueue, // queue
 		"",         // consumer
 		true,       // auto-ack
@@ -148,7 +148,7 @@ func (acnl *Channel) rpc(queue string, msg []byte) ([]byte, error) {
 		"reply-to-queue": replyQueue,
 	}).Debug("sending RPC publishing")
 
-	err = acnl.cnl.Publish(
+	err = cnl.Publish(
 		acnl.cfg.exchange.name,
 		queue,
 		false,
@@ -190,8 +190,8 @@ DeliveryLoop:
 	return nil, errors.New("no reply received")
 }
 
-func (acnl *Channel) temporaryQueue() (string, error) {
-	queue, err := acnl.cnl.QueueDeclare(
+func temporaryQueue(cnl *amqp.Channel) (string, error) {
+	queue, err := cnl.QueueDeclare(
 		"",    // name
 		false, // durable
 		false, // delete when unused
