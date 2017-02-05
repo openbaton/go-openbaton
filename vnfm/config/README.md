@@ -27,5 +27,5 @@ if err != nil {
 
 Check out the [GoDoc][godoc].
 
-[godoc]: http://godoc.org/github.com/mcilloni/go-openbaton/vnfm/config
-[go-dummy-vnfm]: https://github.com/mcilloni/go-dummy-vnfm
+[godoc]: http://godoc.org/github.com/openbaton/go-openbaton/vnfm/config
+[go-dummy-vnfm]: https://github.com/openbaton/go-dummy-vnfm

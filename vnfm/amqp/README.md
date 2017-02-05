@@ -5,5 +5,5 @@
 Remember to import this package before invoking vmfm.New():
 
 ```go
-import _ "github.com/mcilloni/go-openbaton/vnfm/amqp"
+import _ "github.com/openbaton/go-openbaton/vnfm/amqp"
 ```

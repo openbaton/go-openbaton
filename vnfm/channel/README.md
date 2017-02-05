@@ -1,6 +1,6 @@
 # channel
 
-`channel` abstract the transport channel between an OpenBaton VNFM and the NFVO.
+`channel` abstract the transport channel between an Open Baton VNFM and the NFVO.
 
 See [go-dummy-vnfm] for a sample implementation of a VNFM using the AMQP driver.
 
@@ -24,5 +24,5 @@ svc, err := vnfm.New("xyz", handler, cfg)
 
 Check out the [GoDoc][godoc].
 
-[godoc]: http://godoc.org/github.com/mcilloni/go-openbaton/vnfm/channel
-[go-dummy-vnfm]: https://github.com/mcilloni/go-dummy-vnfm
+[godoc]: http://godoc.org/github.com/openbaton/go-openbaton/vnfm/channel
+[go-dummy-vnfm]: https://github.com/openbaton/go-dummy-vnfm

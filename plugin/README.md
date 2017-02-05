@@ -34,5 +34,5 @@ if err := plug.Serve(); err != nil {
 
 Check out the [GoDoc][godoc].
 
-[godoc]: http://godoc.org/github.com/mcilloni/go-openbaton/plugin
-[go-vimdriver-test]: https://github.com/mcilloni/go-vimdriver-test
+[godoc]: http://godoc.org/github.com/openbaton/go-openbaton/plugin
+[go-vimdriver-test]: https://github.com/openbaton/go-vimdriver-test

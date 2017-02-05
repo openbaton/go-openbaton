@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 
-	//"github.com/mcilloni/go-openbaton/catalogue"
 	log "github.com/sirupsen/logrus"
 )
 

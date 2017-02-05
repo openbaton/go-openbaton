@@ -46,5 +46,5 @@ if err := svc.Serve(); err != nil {
 
 Check out the [GoDoc][godoc].
 
-[godoc]: http://godoc.org/github.com/mcilloni/go-openbaton/vnfm
-[go-dummy-vnfm]: https://github.com/mcilloni/go-dummy-vnfm
+[godoc]: http://godoc.org/github.com/openbaton/go-openbaton/vnfm
+[go-dummy-vnfm]: https://github.com/openbaton/go-dummy-vnfm
