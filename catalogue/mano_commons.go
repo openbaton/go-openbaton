@@ -105,7 +105,7 @@ type HighAvailability struct {
 type IP struct {
 	ID      string `json:"id,omitempty"`
 	Version int    `json:"version"`
-	NetName string `json:"netname"`
+	NetName string `json:"netName"`
 	IP      string `json:"ip"`
 }
 
