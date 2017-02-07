@@ -49,84 +49,95 @@ func (acnl *Channel) mainLoop(conn *amqp.Connection) {
 
 	errChan := makeErrChan(conn)
 
+	first := true
+
 MainLoop:
 	for {
-		select {
-		case <-acnl.quitChan:
-			if err := acnl.unregister(conn); err != nil {
-				acnl.l.WithError(err).WithFields(log.Fields{
-					"tag": tag,
-				}).Error("unregister failed")
-			}
+		var err error
 
-			if err := conn.Close(); err != nil {
-				acnl.l.WithError(err).WithFields(log.Fields{
-					"tag": tag,
-				}).Error("closing Connection failed")
-
-				acnl.closeQueues()
-				return
-			}
-
-			acnl.l.WithFields(log.Fields{
-				"tag": tag,
-			}).Info("initiating clean shutdown")
-
-			// Close will cause the reception of nil on errChan.
-
-		case <-acnl.chanReqChan:
-			// somebody wants a new channel.
-
-			cnl, err := acnl.makeAMQPChan(conn)
-			acnl.newChanChan <- struct {
-				*amqp.Channel
-				error
-			}{cnl, err}
-
-			// after sending the response, check if it was ok.
-			// If there was an error, the connection has issues
+		// If this is the first time, then use the connection provided by the caller
+		// It this is not the first time, recreate a new connection
+		if !first {
+			conn, err = acnl.connSetup()
 			if err != nil {
-				// the connection is broken.
-				// create a new one.
-				errChan = nil // avoid receiving anything
-				continue MainLoop
+				acnl.l.WithError(err).WithFields(log.Fields{
+					"tag": tag,
+				}).Error("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
+				time.Sleep(30 * time.Second)
+			} else {
+				// update the errChan with a new one
+				errChan = makeErrChan(conn)
+
+				acnl.setStatus(channel.Running)
+
+				// resume normal operations
+				break
 			}
+		} else {
+			first = false
+		}
 
-		case amqpErr := <-errChan:
-			// The connection closed cleanly after invoking Close().
-			if amqpErr == nil {
-				// notify the receiving end and listeners
-				acnl.closeQueues()
-
-				return
-			}
-
-			acnl.l.WithError(amqpErr).WithFields(log.Fields{
-				"tag": tag,
-			}).Error("received AMQP error for current connection")
-
-			acnl.setStatus(channel.Reconnecting)
-
-			// The connection crashed for some reason. Try to bring it up again.
-			for {
-				var err error
-				conn, err = acnl.connSetup()
-				if err != nil {
+		for {
+			select {
+			case <-acnl.quitChan:
+				if err := acnl.unregister(conn); err != nil {
 					acnl.l.WithError(err).WithFields(log.Fields{
 						"tag": tag,
-					}).Error("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
-					time.Sleep(30 * time.Second)
-				} else {
-					// update the errChan with a new one
-					errChan = makeErrChan(conn)
-
-					acnl.setStatus(channel.Running)
-
-					// resume normal operations
-					break
+					}).Error("unregister failed")
 				}
-			}
 
+				if err := conn.Close(); err != nil {
+					acnl.l.WithError(err).WithFields(log.Fields{
+						"tag": tag,
+					}).Error("closing Connection failed")
+
+					acnl.closeQueues()
+					return
+				}
+
+				acnl.l.WithFields(log.Fields{
+					"tag": tag,
+				}).Info("initiating clean shutdown")
+
+				// Close will cause the reception of nil on errChan.
+
+			case <-acnl.chanReqChan:
+				// somebody wants a new channel.
+
+				cnl, err := acnl.makeAMQPChan(conn)
+				acnl.newChanChan <- struct {
+					*amqp.Channel
+					error
+				}{cnl, err}
+
+				// after sending the response, check if it was ok.
+				// If there was an error, the connection has issues
+				if err != nil {
+					// the connection is broken.
+					// create a new one.
+					errChan = nil // avoid receiving anything
+					continue MainLoop
+				}
+
+			case amqpErr := <-errChan:
+				// The connection closed cleanly after invoking Close().
+				if amqpErr == nil {
+					// notify the receiving end and listeners
+					acnl.closeQueues()
+
+					return
+				}
+
+				acnl.l.WithError(amqpErr).WithFields(log.Fields{
+					"tag": tag,
+				}).Error("received AMQP error for current connection")
+
+				acnl.setStatus(channel.Reconnecting)
+
+				// The connection crashed for some reason. Try to bring it up again.
+
+				continue MainLoop
+			}
 		}
 	}
 
