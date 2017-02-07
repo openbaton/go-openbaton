@@ -133,8 +133,8 @@ type VNFCInstance struct {
 	Hostname           string        `json:"hostname"`
 	State              string        `json:"state"`
 	NestedVNFComponent *VNFComponent `json:"vnfComponent,omitempty"`
-	FloatingIPs        []*Ip         `json:"floatingIps"`
-	IPs                []*Ip         `json:"ips"`
+	FloatingIPs        []*IP         `json:"floatingIps"`
+	IPs                []*IP         `json:"ips"`
 }
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)

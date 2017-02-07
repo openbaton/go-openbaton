@@ -102,11 +102,11 @@ type HighAvailability struct {
 	RedundancyScheme string          `json:"redundancyScheme"`
 }
 
-type Ip struct {
+type IP struct {
 	ID      string `json:"id,omitempty"`
 	Version int    `json:"version"`
 	NetName string `json:"netname"`
-	Ip      string `json:"ip"`
+	IP      string `json:"ip"`
 }
 
 // LifecycleEvent as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
