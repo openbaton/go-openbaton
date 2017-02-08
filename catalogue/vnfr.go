@@ -159,10 +159,10 @@ func NewVNFR(
 		vdus[i] = makeVDUFromParent(vdu)
 	}
 
-	/*links := make([]*InternalVirtualLink, len(vnfd.VirtualLinks))
+	links := make([]*InternalVirtualLink, len(vnfd.VirtualLinks))
 	for i, oldIVL := range vnfd.VirtualLinks {
 		links[i] = cloneInternalVirtualLink(oldIVL, vlrs)
-	}*/
+	}
 
 	return &VirtualNetworkFunctionRecord{
 		Name: vnfd.Name,
@@ -185,6 +185,7 @@ func NewVNFR(
 		Type:                  vnfd.Type,
 		Vendor:                vnfd.Vendor,
 		Version:               vnfd.Version,
+		VirtualLinks:		   links,
 		VDUs:                  vdus,
 		VNFAddresses:          []string{},
 	}, nil

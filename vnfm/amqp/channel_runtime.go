@@ -31,8 +31,6 @@ var (
 )
 
 func (acnl *Channel) closeQueues() {
-	acnl.setStatus(channel.Quitting)
-
 	close(acnl.newChanChan)
 	close(acnl.statusChan)
 	close(acnl.sendQueue)
@@ -80,6 +78,8 @@ MainLoop:
 		for {
 			select {
 			case <-acnl.quitChan:
+				acnl.setStatus(channel.Quitting)
+				
 				if err := acnl.unregister(conn); err != nil {
 					acnl.l.WithError(err).WithFields(log.Fields{
 						"tag": tag,
@@ -104,11 +104,14 @@ MainLoop:
 			case <-acnl.chanReqChan:
 				// somebody wants a new channel.
 
-				cnl, err := acnl.makeAMQPChan(conn)
-				acnl.newChanChan <- struct {
-					*amqp.Channel
-					error
-				}{cnl, err}
+				var resp struct {*amqp.Channel; error}
+
+				// if we are quitting, send nil back
+				if acnl.status != channel.Quitting {
+					resp.Channel, resp.error = acnl.makeAMQPChan(conn)
+				}
+				
+				acnl.newChanChan <- resp
 
 				// after sending the response, check if it was ok.
 				// If there was an error, the connection has issues
@@ -122,6 +125,10 @@ MainLoop:
 			case amqpErr := <-errChan:
 				// The connection closed cleanly after invoking Close().
 				if amqpErr == nil {
+					acnl.l.WithFields(log.Fields{
+						"tag": tag,
+					}).Debug("shutting down workers...")
+
 					// notify the receiving end and listeners
 					acnl.closeQueues()
 
