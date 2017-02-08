@@ -113,7 +113,7 @@ type VirtualNetworkFunctionDescriptor struct {
 type VNFComponent struct {
 	ID               string                 `json:"id,omitempty"`
 	Version          int                    `json:"version"`
-	ConnectionPoints []*VNFDConnectionPoint `json:"connection_component"`
+	ConnectionPoints []*VNFDConnectionPoint `json:"connection_point"`
 }
 
 // Virtual Network Function Descriptor Connection Point as defined by
