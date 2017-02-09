@@ -545,7 +545,7 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		wk.l.WithFields(log.Fields{
 			"tag":        "worker-vnfm-handle",
 			"worker-id":  wk.id,
-			"found-vnfc": newVNFCInstance.VNFComponent,
+			"found-vnfc": newVNFCInstance,
 		}).Debug("VNFComponentInstance found")
 
 		if strings.EqualFold(scalingMessage.Mode, "STANDBY") {

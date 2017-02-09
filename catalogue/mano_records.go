@@ -108,7 +108,15 @@ const (
 )
 
 type VirtualLinkRecord struct {
-	VirtualLink
+	ID               string   `json:"id,omitempty"`
+	HbVersion        int      `json:"hb_version"`
+	ExtID            string   `json:"extId"`
+	RootRequirement  string   `json:"root_requirement"`
+	LeafRequirement  string   `json:"leaf_requirement"`
+	QoS              []string `json:"qos"`
+	TestAccess       []string `json:"test_access"`
+	ConnectivityType []string `json:"connectivity_type"`
+	Name             string   `json:"name"`
 
 	Vendor                string                      `json:"vendor"`
 	Version               string                      `json:"version"`
@@ -126,7 +134,9 @@ type VirtualLinkRecord struct {
 }
 
 type VNFCInstance struct {
-	VNFComponent
+	ID               string                 `json:"id,omitempty"`
+	Version          int                    `json:"version"`
+	ConnectionPoints []*VNFDConnectionPoint `json:"connection_point"`
 
 	VIMID              string        `json:"vim_id"`
 	VCID               string        `json:"vc_id"`

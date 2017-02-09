@@ -77,19 +77,38 @@ type VirtualDeploymentUnit struct {
 
 // VirtualLinkDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VirtualLinkDescriptor struct {
-	VirtualLink
+	ID               string   `json:"id,omitempty"`
+	HbVersion        int      `json:"hb_version"`
+	ExtID            string   `json:"extId"`
+	RootRequirement  string   `json:"root_requirement"`
+	LeafRequirement  string   `json:"leaf_requirement"`
+	QoS              []string `json:"qos"`
+	TestAccess       []string `json:"test_access"`
+	ConnectivityType []string `json:"connectivity_type"`
+	Name             string   `json:"name"`	
+
 	ProjectID         string    `json:"projectId"`
 	Vendor            string    `json:"vendor"`
 	DescriptorVersion string    `json:"descriptor_version"`
 	NumberOfEndpoints int       `json:"number_of_endpoints"`
 	Connections       []string  `json:"connection"`
 	VLDSecurity       *Security `json:"vld_security,omitempty"`
-	Name              string    `json:"name"`
 }
 
 // VirtualNetworkFunctionDescriptor as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VirtualNetworkFunctionDescriptor struct {
-	NFVEntityDescriptor
+	ID                        string                          `json:"id,omitempty"`
+	HbVersion                 int                             `json:"hb_version,omitempty"`
+	Name                      string                          `json:"name"`
+	ProjectID                 string                          `json:"projectId"`
+	Vendor                    string                          `json:"vendor"`
+	Version                   string                          `json:"version"`
+	VNFFGDs                   []*VNFForwardingGraphDescriptor `json:"vnffgd"`
+	VLDs                      []*VirtualLinkDescriptor        `json:"vld"`
+	MonitoringParameters      []string                        `json:"monitoring_parameter"`
+	ServiceDeploymentFlavours []*DeploymentFlavour            `json:"service_deployment_flavour"`
+	AutoScalePolicies         []*AutoScalePolicy              `json:"auto_scale_policy"`
+	ConnectionPoints          []*ConnectionPoint              `json:"connection_point"`
 
 	LifecycleEvents      LifecycleEvents                `json:"lifecycle_event"`
 	Configurations       *Configuration                 `json:"configurations,omitempty"`
@@ -105,7 +124,6 @@ type VirtualNetworkFunctionDescriptor struct {
 	Requires             map[string]*RequiresParameters `json:"requires,omitempty"`
 	Provides             []string                       `json:"provides,omitempty"`
 	CyclicDependency     bool                           `json:"cyclicDependency"`
-	ConnectionPoints     []*ConnectionPoint             `json:"connection_point"`
 	VNFDConnectionPoints []*VNFDConnectionPoint         `json:"VNFDConnection_point"`
 }
 
@@ -119,7 +137,9 @@ type VNFComponent struct {
 // Virtual Network Function Descriptor Connection Point as defined by
 // ETSI GS NFV-MAN 001 V1.1.1
 type VNFDConnectionPoint struct {
-	ConnectionPoint
+	ID      string `json:"id,omitempty"`
+	Version int    `json:"version"`
+	Type    string `json:"type"`
 
 	VirtualLinkReference string `json:"virtual_link_reference"`
 	FloatingIP           string `json:"floatingIp"`

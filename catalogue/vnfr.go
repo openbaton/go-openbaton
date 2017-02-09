@@ -198,7 +198,7 @@ func NewVNFR(
 func (vnfr *VirtualNetworkFunctionRecord) FindComponentInstance(component *VNFComponent) *VNFCInstance {
 	for _, vdu := range vnfr.VDUs {
 		for _, vnfcInstance := range vdu.VNFCInstances {
-			if vnfcInstance.VNFComponent.ID == component.ID {
+			if vnfcInstance.ID == component.ID {
 				return vnfcInstance
 			}
 		}
@@ -310,9 +310,7 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 		connectionPoints := make([]*VNFDConnectionPoint, len(parentVDU.VNFCs))
 		for j, connectionPoint := range component.ConnectionPoints {
 			connectionPoints[j] = &VNFDConnectionPoint{
-				ConnectionPoint: ConnectionPoint{
-					Type: connectionPoint.Type,
-				},
+				Type: connectionPoint.Type,
 
 				FloatingIP:           connectionPoint.FloatingIP,
 				VirtualLinkReference: connectionPoint.VirtualLinkReference,
