@@ -185,7 +185,7 @@ func NewVNFR(
 		Type:                  vnfd.Type,
 		Vendor:                vnfd.Vendor,
 		Version:               vnfd.Version,
-		VirtualLinks:		   links,
+		VirtualLinks:          links,
 		VDUs:                  vdus,
 		VNFAddresses:          []string{},
 	}, nil

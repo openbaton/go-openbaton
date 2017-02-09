@@ -16,7 +16,7 @@ func (acnl *Channel) connSetup() (*amqp.Connection, error) {
 		"tag": tag,
 	}).Info("dialing AMQP")
 
-	return amqp.DialConfig(acnl.cfg.connstr, acnl.cfg.cfg)	
+	return amqp.DialConfig(acnl.cfg.connstr, acnl.cfg.cfg)
 }
 
 func (acnl *Channel) getAMQPChan() (*amqp.Channel, error) {

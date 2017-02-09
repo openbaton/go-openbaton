@@ -62,24 +62,28 @@ MainLoop:
 					"tag": tag,
 				}).Error("can't re-establish connection with AMQP; queues stalled. Retrying in 30 seconds.")
 				time.Sleep(30 * time.Second)
+				continue MainLoop
 			} else {
+				acnl.l.WithFields(log.Fields{
+					"tag": tag,
+				}).Debug("AMQP connection reestablished")
+
 				// update the errChan with a new one
 				errChan = makeErrChan(conn)
 
-				acnl.setStatus(channel.Running)
-
 				// resume normal operations
-				break
 			}
 		} else {
 			first = false
 		}
 
+		acnl.setStatus(channel.Running)
+
 		for {
 			select {
 			case <-acnl.quitChan:
 				acnl.setStatus(channel.Quitting)
-				
+
 				if err := acnl.unregister(conn); err != nil {
 					acnl.l.WithError(err).WithFields(log.Fields{
 						"tag": tag,
@@ -104,13 +108,16 @@ MainLoop:
 			case <-acnl.chanReqChan:
 				// somebody wants a new channel.
 
-				var resp struct {*amqp.Channel; error}
+				var resp struct {
+					*amqp.Channel
+					error
+				}
 
 				// if we are quitting, send nil back
 				if acnl.status != channel.Quitting {
 					resp.Channel, resp.error = acnl.makeAMQPChan(conn)
 				}
-				
+
 				acnl.newChanChan <- resp
 
 				// after sending the response, check if it was ok.
@@ -162,16 +169,19 @@ func (acnl *Channel) setStatus(newStatus channel.Status) {
 func (acnl *Channel) spawn() error {
 	//tag := util.FuncName()
 
+	// I'm allocating a new connection here to return an error in case
+	// the parameters are incorrect, instead of spawning a routine
 	conn, err := acnl.connSetup()
 	if err != nil {
 		return err
 	}
 
-	acnl.register(conn)
+	if err := acnl.register(conn); err != nil {
+		return err
+	}
 
 	acnl.spawnWorkers()
 	acnl.spawnReceiver()
-	acnl.setStatus(channel.Running)
 
 	// give the main loop the newly allocated conn
 	go acnl.mainLoop(conn)
