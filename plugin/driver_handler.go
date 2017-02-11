@@ -30,7 +30,7 @@ var (
 )
 
 type driverHandler struct {
-	Driver
+	VIMDriver
 
 	l *log.Logger
 }
@@ -123,7 +123,7 @@ func (dh driverHandler) matchFunc(fname string, args []json.RawMessage) (reflect
 
 	switch fname {
 	case "addFlavor":
-		fVal = reflect.ValueOf(dh.Driver.AddFlavour)
+		fVal = reflect.ValueOf(dh.VIMDriver.AddFlavour)
 
 	// overloaded function
 	case "addImage":

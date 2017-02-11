@@ -35,10 +35,9 @@ var (
 	ErrTimeout        = errors.New("timed out")
 )
 
-// New creates a plugin from an implementation and plugin.Params.
-// impl must be of a valid Plugin implementation type, like plugin.Driver.
-func New(impl interface{}, p *Params) (Plugin, error) {
-	tag := util.FuncName()
+// NewVIM creates a VIMManager plugin from an implementation and plugin.Params.
+func NewVIM(impl VIMDriver, p *Params) (Plugin, error) {
+	//tag := util.FuncName()
 
 	if p.Workers < 1 {
 		p.Workers = 10
@@ -59,21 +58,7 @@ func New(impl interface{}, p *Params) (Plugin, error) {
 		return nil, err
 	}
 
-	var rh reqHandler
-
-	switch v := impl.(type) {
-	case Driver:
-		rh = driverHandler{v, plug.l}
-
-	// in case we are reinitialising the plugin
-	case reqHandler:
-		rh = v
-
-	default:
-		plug.l.WithField("tag", tag).Panicf("invalid plugin implementation %T", impl)
-	}
-
-	plug.rh = rh
+	plug.rh = driverHandler{impl, plug.l}
 
 	return plug, nil
 }

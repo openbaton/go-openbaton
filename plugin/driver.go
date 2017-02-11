@@ -22,9 +22,8 @@ import (
 
 const interfaceVersion = "1.0"
 
-// Driver describes a VIMDriver.
-// Every driver implementation must adhere to this interface and implements its methods.
-type Driver interface {
+// VIMDriver describes the driver implementation to which every VIMInstance must adhere to.
+type VIMDriver interface {
 	AddFlavour(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
 	AddImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage, imageFile []byte) (*catalogue.NFVImage, error)
@@ -50,19 +49,22 @@ type Driver interface {
 	LaunchInstance(
 		vimInstance *catalogue.VIMInstance,
 		name, image, Flavour, keypair string,
-		network, secGroup []string,
+		network []*catalogue.VNFDConnectionPoint,
+		secGroup []string,
 		userData string) (*catalogue.Server, error)
 
 	LaunchInstanceAndWait(
 		vimInstance *catalogue.VIMInstance,
 		hostname, image, extID, keyPair string,
-		networks, securityGroups []string,
+		network []*catalogue.VNFDConnectionPoint,
+		securityGroups []string,
 		s string) (*catalogue.Server, error)
 
 	LaunchInstanceAndWaitWithIPs(
 		vimInstance *catalogue.VIMInstance,
 		hostname, image, extID, keyPair string,
-		networks, securityGroups []string,
+		network []*catalogue.VNFDConnectionPoint,
+		securityGroups []string,
 		s string,
 		floatingIps map[string]string,
 		keys []*catalogue.Key) (*catalogue.Server, error)
