@@ -314,6 +314,7 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 
 				FloatingIP:           connectionPoint.FloatingIP,
 				VirtualLinkReference: connectionPoint.VirtualLinkReference,
+				InterfaceID:		  connectionPoint.InterfaceID,
 			}
 		}
 

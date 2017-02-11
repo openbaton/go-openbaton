@@ -143,6 +143,7 @@ type VNFDConnectionPoint struct {
 
 	VirtualLinkReference string `json:"virtual_link_reference"`
 	FloatingIP           string `json:"floatingIp"`
+	InterfaceID			 int	`json:"interfaceId"`
 }
 
 // VNFForwardingGraphDescriptor as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
