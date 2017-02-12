@@ -85,7 +85,7 @@ type VirtualLinkDescriptor struct {
 	QoS              []string `json:"qos"`
 	TestAccess       []string `json:"test_access"`
 	ConnectivityType []string `json:"connectivity_type"`
-	Name             string   `json:"name"`	
+	Name             string   `json:"name"`
 
 	ProjectID         string    `json:"projectId"`
 	Vendor            string    `json:"vendor"`
@@ -143,7 +143,7 @@ type VNFDConnectionPoint struct {
 
 	VirtualLinkReference string `json:"virtual_link_reference"`
 	FloatingIP           string `json:"floatingIp"`
-	InterfaceID			 int	`json:"interfaceId"`
+	InterfaceID          int    `json:"interfaceId"`
 }
 
 // VNFForwardingGraphDescriptor as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)

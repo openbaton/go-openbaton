@@ -67,8 +67,8 @@ func NewVNFR(
 	vimInstances map[string][]*VIMInstance) (*VirtualNetworkFunctionRecord, error) {
 
 	autoScalePolicies := make([]*AutoScalePolicy, len(vnfd.AutoScalePolicies))
-	for _, asp := range vnfd.AutoScalePolicies {
-		autoScalePolicies = append(autoScalePolicies, cloneAutoScalePolicy(asp, vnfd))
+	for i, asp := range vnfd.AutoScalePolicies {
+		autoScalePolicies[i]  = cloneAutoScalePolicy(asp, vnfd)
 	}
 
 	configurations := &Configuration{
@@ -217,9 +217,15 @@ func (vnfr *VirtualNetworkFunctionRecord) String() string {
 }
 
 func cloneAutoScalePolicy(asp *AutoScalePolicy, vnfd *VirtualNetworkFunctionDescriptor) *AutoScalePolicy {
-	// copy all in bulk, and then deep clone the pointers
-	newAsp := new(AutoScalePolicy)
-	*newAsp = *asp
+	newAsp := &AutoScalePolicy{
+		Name:               asp.Name,
+		Type:               asp.Type,
+		Cooldown:           asp.Cooldown,
+		Period:             asp.Period,
+		ComparisonOperator: asp.ComparisonOperator,
+		Threshold:          asp.Threshold,
+		Mode:               asp.Mode,
+	}
 
 	newAsp.Actions = make([]*ScalingAction, len(asp.Actions))
 	for i, action := range asp.Actions {
@@ -314,7 +320,7 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 
 				FloatingIP:           connectionPoint.FloatingIP,
 				VirtualLinkReference: connectionPoint.VirtualLinkReference,
-				InterfaceID:		  connectionPoint.InterfaceID,
+				InterfaceID:          connectionPoint.InterfaceID,
 			}
 		}
 
