@@ -138,13 +138,13 @@ type VNFCInstance struct {
 	Version          int                    `json:"version"`
 	ConnectionPoints []*VNFDConnectionPoint `json:"connection_point"`
 
-	VIMID              string        `json:"vim_id"`
-	VCID               string        `json:"vc_id"`
-	Hostname           string        `json:"hostname"`
-	State              string        `json:"state"`
-	NestedVNFComponent *VNFComponent `json:"vnfComponent,omitempty"`
-	FloatingIPs        []*IP         `json:"floatingIps"`
-	IPs                []*IP         `json:"ips"`
+	VIMID        string        `json:"vim_id"`
+	VCID         string        `json:"vc_id"`
+	Hostname     string        `json:"hostname"`
+	State        string        `json:"state"`
+	VNFComponent *VNFComponent `json:"vnfComponent,omitempty"`
+	FloatingIPs  []*IP         `json:"floatingIps"`
+	IPs          []*IP         `json:"ips"`
 }
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)

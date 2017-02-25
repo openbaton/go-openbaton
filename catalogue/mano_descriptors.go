@@ -18,7 +18,15 @@ package catalogue
 
 // An extended Virtual Link based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type InternalVirtualLink struct {
-	VirtualLink
+	ID               string   `json:"id,omitempty"`
+	HbVersion        int      `json:"hb_version"`
+	ExtID            string   `json:"extId"`
+	RootRequirement  string   `json:"root_requirement"`
+	LeafRequirement  string   `json:"leaf_requirement"`
+	QoS              []string `json:"qos"`
+	TestAccess       []string `json:"test_access"`
+	ConnectivityType []string `json:"connectivity_type"`
+	Name             string   `json:"name"`
 
 	ConnectionPointsReferences []string `json:"connection_points_references"`
 }

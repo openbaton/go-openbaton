@@ -68,7 +68,7 @@ func NewVNFR(
 
 	autoScalePolicies := make([]*AutoScalePolicy, len(vnfd.AutoScalePolicies))
 	for i, asp := range vnfd.AutoScalePolicies {
-		autoScalePolicies[i]  = cloneAutoScalePolicy(asp, vnfd)
+		autoScalePolicies[i] = cloneAutoScalePolicy(asp, vnfd)
 	}
 
 	configurations := &Configuration{
@@ -198,7 +198,7 @@ func NewVNFR(
 func (vnfr *VirtualNetworkFunctionRecord) FindComponentInstance(component *VNFComponent) *VNFCInstance {
 	for _, vdu := range vnfr.VDUs {
 		for _, vnfcInstance := range vdu.VNFCInstances {
-			if vnfcInstance.ID == component.ID {
+			if vnfcInstance.VNFComponent.ID == component.ID {
 				return vnfcInstance
 			}
 		}
@@ -275,15 +275,13 @@ func cloneInternalVirtualLink(oldIVL *InternalVirtualLink, vlrs []*VirtualLinkRe
 	copy(testAccess, oldIVL.TestAccess)
 
 	return &InternalVirtualLink{
-		VirtualLink: VirtualLink{
-			Name:             name,
-			ConnectivityType: oldIVL.ConnectivityType,
-			ExtID:            extID,
-			LeafRequirement:  oldIVL.LeafRequirement,
-			QoS:              qos,
-			RootRequirement:  oldIVL.RootRequirement,
-			TestAccess:       testAccess,
-		},
+		Name:             name,
+		ConnectivityType: oldIVL.ConnectivityType,
+		ExtID:            extID,
+		LeafRequirement:  oldIVL.LeafRequirement,
+		QoS:              qos,
+		RootRequirement:  oldIVL.RootRequirement,
+		TestAccess:       testAccess,
 
 		ConnectionPointsReferences: cpReferences,
 	}

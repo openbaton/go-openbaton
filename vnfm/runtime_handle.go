@@ -506,7 +506,7 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 	}).Info("Adding VNFComponent")
 
 	var newVNFCInstance *catalogue.VNFCInstance
-	if wk.conf.Allocate {
+	if !wk.conf.Allocate {
 		newMsg, err := messages.New(&messages.VNFMScaling{
 			VNFR:     vnfr,
 			UserData: wk.hnd.UserData(),
@@ -516,10 +516,15 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 			return nil, &vnfmError{err.Error(), vnfr, nsrID}
 		}
 
+		respMsg, err := wk.cnl.NFVOExchange(newMsg)
+		if err != nil {
+			return nil, &vnfmError{err.Error(), vnfr, nsrID}
+		}
+
 		var replyVNFR *catalogue.VirtualNetworkFunctionRecord
 
-		switch content := newMsg.Content().(type) {
-		case messages.OrGeneric:
+		switch content := respMsg.Content().(type) {
+		case *messages.OrGeneric:
 			replyVNFR = content.VNFR
 			wk.l.WithFields(log.Fields{
 				"tag":                   "worker-vnfm-handle",
@@ -527,7 +532,7 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 				"reply-vnfr-hb_version": replyVNFR.HbVersion,
 			}).Debug("got reply VNFR")
 
-		case messages.OrError:
+		case *messages.OrError:
 			if err := wk.hnd.HandleError(content.VNFR); err != nil {
 				return nil, &vnfmError{err.Error(), content.VNFR, nsrID}
 			}
@@ -535,6 +540,13 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 			return nil, nil
 
 		default:
+			wk.l.WithFields(log.Fields{
+				"tag":                   "worker-vnfm-handle",
+				"worker-id":             wk.id,
+				"reply-vnfr-hb_version": replyVNFR.HbVersion,
+				"type":                  fmt.Sprintf("%T", respMsg.Content()),
+			}).Warn("got a weird message on reply to SCALING")
+
 			replyVNFR = vnfr
 		}
 
@@ -557,7 +569,7 @@ func (wk *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messages.N
 		wk.l.WithFields(log.Fields{
 			"tag":       "worker-vnfm-handle",
 			"worker-id": wk.id,
-		}).Warn("wk.allocate is not set. No new VNFCInstance has been instantiated.")
+		}).Warn("wk.allocate is set. No new VNFCInstance has been instantiated by the NFVO.")
 	}
 
 	var scripts interface{}
