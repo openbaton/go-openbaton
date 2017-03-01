@@ -20,6 +20,7 @@ package plugin
 
 import (
 	"path/filepath"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -42,7 +43,8 @@ func (p *plug) initLogger() error {
 	if p.params.LogFile == "-" {
 		p.l.Formatter = &log.TextFormatter{
 			DisableTimestamp: !p.params.Timestamps,
-			FullTimestamp: p.params.Timestamps,
+			FullTimestamp:    p.params.Timestamps,
+			TimestampFormat:  time.RFC3339Nano,
 		}
 	}
 

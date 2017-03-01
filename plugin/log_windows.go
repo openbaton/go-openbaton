@@ -21,6 +21,7 @@ package plugin
 import (
 	"os"
 	"strings"
+	"time"
 
 	"golang.org/x/sys/windows/svc/eventlog"
 
@@ -55,10 +56,11 @@ func (p *plug) initLogger() error {
 
 	if p.params.LogFile == "-" {
 		p.l.Formatter = &log.TextFormatter{
-			DisableColors: false,
-			ForceColors:   true,
+			DisableColors:    false,
 			DisableTimestamp: !p.params.Timestamps,
-			FullTimestamp: p.params.Timestamps,
+			ForceColors:      true,
+			FullTimestamp:    p.params.Timestamps,
+			TimestampFormat:  time.RFC3339Nano,
 		}
 
 		p.l.Out = ansicolor.NewAnsiColorWriter(os.Stdout)

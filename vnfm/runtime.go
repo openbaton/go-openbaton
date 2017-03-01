@@ -70,10 +70,11 @@ func New(implName string, handler Handler, config *config.Config) (VNFM, error) 
 	logger := log.New()
 
 	logger.Formatter = &log.TextFormatter{
-		ForceColors:      config.LogColors,
 		DisableColors:    !config.LogColors,
-		FullTimestamp:    config.LogTimestamps,
 		DisableTimestamp: !config.LogTimestamps,
+		ForceColors:      config.LogColors,
+		FullTimestamp:    config.LogTimestamps,
+		TimestampFormat:  time.RFC3339Nano,
 	}
 
 	logger.Level = config.LogLevel
