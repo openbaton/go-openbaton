@@ -13,7 +13,7 @@ var driver plugin.Driver = &myDriver{}
 
 params := &plugin.Params{ /* your configuration here */ }
 
-plug, err := plugin.New(driver, params)
+plug, err := plugin.NewVIM(driver, params)
 if err != nil {
     panic("error: " + err.Error())
 }

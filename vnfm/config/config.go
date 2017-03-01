@@ -47,9 +47,10 @@ import (
 type Config struct {
 	Allocate bool
 
-	LogColors bool
-	LogFile   string
-	LogLevel  log.Level
+	LogColors     bool
+	LogFile       string
+	LogLevel      log.Level
+	LogTimestamps bool
 
 	Type        string
 	Endpoint    string
@@ -106,12 +107,14 @@ func New(props Properties) (*Config, error) {
 	logColors := true
 	logFile := ""
 	logLevel := "WARN"
+	logTimes := true
 
 	logger, ok := vnfm.Section("logger")
 	if ok {
 		logColors, _ = logger.ValueBool("use-colors", logColors)
 		logFile, _ = logger.ValueString("out-file", logFile)
 		logLevel, _ = logger.ValueString("level", logLevel)
+		logTimes, _ = vnfm.ValueBool("timestamps", true)
 	}
 
 	lvl, err := toLogLevel(logLevel)
@@ -120,14 +123,15 @@ func New(props Properties) (*Config, error) {
 	}
 
 	return &Config{
-		Allocate:    allocate,
-		Description: descr,
-		Endpoint:    endpoint,
-		LogColors:   logColors,
-		LogFile:     logFile,
-		LogLevel:    lvl,
-		Properties:  props,
-		Type:        vnfmType,
+		Allocate:      allocate,
+		Description:   descr,
+		Endpoint:      endpoint,
+		LogColors:     logColors,
+		LogFile:       logFile,
+		LogLevel:      lvl,
+		LogTimestamps: logTimes,
+		Properties:    props,
+		Type:          vnfmType,
 	}, nil
 }
 
