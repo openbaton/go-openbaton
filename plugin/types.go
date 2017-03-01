@@ -23,6 +23,9 @@ type Params struct {
 	// Name is a parameter provided by the NFVO, usually "openbaton"
 	Name string
 
+	// Timestamps enables timestamps.
+	Timestamps bool
+
 	// Type is a string that identifies the type of this plugin.
 	Type string
 

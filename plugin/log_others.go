@@ -20,6 +20,8 @@ package plugin
 
 import (
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type logData struct{}
@@ -33,5 +35,16 @@ func (p *plug) initLogger() error {
 	pathArray := []string{"/", "var", "log", "openbaton", p.params.Type + "-plugin.log"}
 	defaultPath := filepath.Join(pathArray...)
 
-	return p.openLog(defaultPath)
+	if err := p.openLog(defaultPath); err != nil {
+		return err
+	}
+
+	if p.params.LogFile == "-" {
+		p.l.Formatter = &log.TextFormatter{
+			DisableTimestamp: !p.params.Timestamps,
+			FullTimestamp: p.params.Timestamps,
+		}
+	}
+
+	return nil
 }

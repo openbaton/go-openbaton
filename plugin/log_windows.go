@@ -57,6 +57,8 @@ func (p *plug) initLogger() error {
 		p.l.Formatter = &log.TextFormatter{
 			DisableColors: false,
 			ForceColors:   true,
+			DisableTimestamp: !p.params.Timestamps,
+			FullTimestamp: p.params.Timestamps,
 		}
 
 		p.l.Out = ansicolor.NewAnsiColorWriter(os.Stdout)
