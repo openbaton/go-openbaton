@@ -18,7 +18,9 @@ package messages
 
 import "github.com/openbaton/go-openbaton/catalogue"
 
-type vnfmMessage struct{}
+type baseMessage struct{}
+
+type vnfmMessage baseMessage
 
 func (vnfmMessage) From() SenderType {
 	return VNFM
@@ -127,3 +129,7 @@ type VNFMStartStop struct {
 func (VNFMStartStop) DefaultAction() catalogue.Action {
 	return catalogue.ActionStart
 }
+
+
+
+

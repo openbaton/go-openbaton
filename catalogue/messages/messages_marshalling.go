@@ -40,6 +40,14 @@ func Unmarshal(msgBytes []byte, from SenderType) (NFVMessage, error) {
 	return &msg, err
 }
 
+func UnmarshalCredentials(msgBytes []byte) (*catalogue.ManagerCredentials, error){
+	res := catalogue.ManagerCredentials{}
+
+	err := json.Unmarshal(msgBytes, &res)
+
+	return &res, err
+}
+
 func (msg *message) MarshalJSON() ([]byte, error) {
 	// We need to serialize the message structure into a
 	// compatible JSON message.

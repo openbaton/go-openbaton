@@ -22,6 +22,12 @@ import (
 )
 
 type Action string
+type ImageStatus string
+
+const (
+	Active = ImageStatus("ACTIVE")
+	Error  = ImageStatus("ERROR")
+)
 
 const (
 	ActionGrantOperation         = Action("GRANT_OPERATION")
@@ -141,19 +147,20 @@ type Network struct {
 }
 
 type NFVImage struct {
-	ID              string `json:"id,omitempty"`
-	Version         int    `json:"version"`
-	ExtID           string `json:"extId"`
-	Name            string `json:"name"`
-	MinRAM          int64  `json:"minRam"`
-	MinDiskSpace    int64  `json:"minDiskSpace"`
-	MinCPU          string `json:"minCPU,omitempty"`
-	Public          bool   `json:"public,omitempty"`
-	DiskFormat      string `json:"diskFormat,omitempty"`
-	ContainerFormat string `json:"containerFormat,omitempty"`
-	Created         Date   `json:"created,omitempty"`
-	Updated         Date   `json:"updated,omitempty"`
-	IsPublic        bool   `json:"isPublic"`
+	ID              string      `json:"id,omitempty"`
+	Version         int         `json:"version"`
+	ExtID           string      `json:"extId"`
+	Name            string      `json:"name"`
+	MinRAM          int64       `json:"minRam"`
+	MinDiskSpace    int64       `json:"minDiskSpace"`
+	MinCPU          string      `json:"minCPU,omitempty"`
+	Public          bool        `json:"public,omitempty"`
+	DiskFormat      string      `json:"diskFormat,omitempty"`
+	ContainerFormat string      `json:"containerFormat,omitempty"`
+	Created         Date        `json:"created,omitempty"`
+	Updated         Date        `json:"updated,omitempty"`
+	IsPublic        bool        `json:"isPublic"`
+	Status          ImageStatus `json:"status"`
 }
 
 type Quota struct {
@@ -255,4 +262,20 @@ type VNFPackage struct {
 	Image       *NFVImage `json:"image,omitempty"`
 	Scripts     []*Script `json:"scripts"`
 	ProjectID   string    `json:"projectId"`
+}
+
+type ManagerCredentials struct {
+	RabbitUsername string `json:"rabbitUsername"`
+	RabbitPassword string `json:"rabbitPassword"`
+}
+
+type PluginRegisterMessage struct {
+	Type   string `json:"type"`
+	Action string `json:"action"`
+}
+
+type VnfmRegisterMessage struct {
+	Type     string    `json:"type"`
+	Action   string    `json:"action"`
+	Endpoint *Endpoint `json:"vnfmManagerEndpoint"`
 }

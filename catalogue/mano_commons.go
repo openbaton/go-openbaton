@@ -237,3 +237,4 @@ type VNFDeploymentFlavour struct {
 	DfConstraint   []string          `json:"df_constraint"`
 	ConstituentVDU []*ConstituentVDU `json:"constituent_vdu"`
 }
+

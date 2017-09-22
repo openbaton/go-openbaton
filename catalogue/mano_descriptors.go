@@ -145,9 +145,11 @@ type VNFComponent struct {
 // Virtual Network Function Descriptor Connection Point as defined by
 // ETSI GS NFV-MAN 001 V1.1.1
 type VNFDConnectionPoint struct {
-	ID      string `json:"id,omitempty"`
-	Version int    `json:"version"`
-	Type    string `json:"type"`
+	ID         string `json:"id,omitempty"`
+	Version    int    `json:"version"`
+	Type       string `json:"type"`
+	FixedIp    string `json:"floatingIp"`
+	ChosenPool string `json:"chosenPool"`
 
 	VirtualLinkReference string `json:"virtual_link_reference"`
 	FloatingIP           string `json:"floatingIp"`
