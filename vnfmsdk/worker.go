@@ -13,7 +13,7 @@ import (
 
 type worker struct {
 	l        *logging.Logger
-	handler  sdk.HandlerVnfm
+	handler  HandlerVnfm
 	Allocate bool
 	Channel  *amqp.Channel
 }

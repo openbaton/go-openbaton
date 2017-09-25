@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"encoding/base64"
 	"github.com/op/go-logging"
-	"github.com/openbaton/go-openbaton/sdk"
 )
 
 var (
@@ -15,7 +14,7 @@ var (
 
 type worker struct {
 	l *logging.Logger
-	h sdk.HandlerVim
+	h HandlerVim
 }
 
 func (w worker) Handle(fname string, args []json.RawMessage) (interface{}, error) {

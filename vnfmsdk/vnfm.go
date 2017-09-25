@@ -20,7 +20,7 @@ type VnfmConfig struct {
 	BrokerPort  int    `toml:"brokerPort"`
 }
 
-func Start(confPath string, h sdk.HandlerVnfm, name string) (error) {
+func Start(confPath string, h HandlerVnfm, name string) (error) {
 	cfg := VnfmConfig{
 		Type:         "unknown",
 		Description: "The Vnfm written in go",

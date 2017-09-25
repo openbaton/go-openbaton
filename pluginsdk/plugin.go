@@ -17,7 +17,7 @@ type PluginConfig struct {
 	BrokerPort int    `toml:"brokerPort"`
 }
 
-func Start(confPath string, h sdk.HandlerVim, name string) (error) {
+func Start(confPath string, h HandlerVim, name string) (error) {
 	cfg := PluginConfig{
 		Type:       "unknown",
 		Workers:    5,

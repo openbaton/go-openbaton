@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package sdk
+package pluginsdk
 
 import (
 	"github.com/openbaton/go-openbaton/catalogue"
