@@ -206,9 +206,9 @@ func setupManager(username string, password string, brokerIp string, brokerPort 
 		return err
 	}
 
-	go func() {
-		fmt.Printf("closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
-	}()
+	//go func() {
+	//	fmt.Printf("closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
+	//}()
 
 	c.logger.Debugf("got Connection, getting Channel")
 	c.Channel, err = c.conn.Channel()
@@ -260,17 +260,24 @@ func (c *Manager) Shutdown() error {
 	return <-c.done
 }
 
-func (v *Manager) Unregister(typ string) {
-	msg := catalogue.PluginRegisterMessage{
-		Type:typ,
-		Action:"unregister",
+func (v *Manager) Unregister(typ, username, password string) {
+	msg := catalogue.ManagerUnregisterMessage{
+		Type:     typ,
+		Action:   "unregister",
+		Username: username,
+		Password: password,
 	}
-	resp, _, err := ExecuteRpc("nfvo.manager.handling",msg, v.Channel, v.logger)
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		v.logger.Errorf("Error while marshalling unregister message: %v", err)
+		return
+	}
+	err = SendMsg("nfvo.manager.handling", msgBytes, v.Channel, v.logger)
 	if err != nil {
 		v.logger.Errorf("Error unregistering: %v", err)
 		return
 	}
-	v.logger.Debugf("Unregistered and got answer: %v", resp)
+	//v.logger.Debugf("Unregistered and got answer: %v", resp)
 }
 
 func (c *VnfmManager) Serve(worker interface{}) {

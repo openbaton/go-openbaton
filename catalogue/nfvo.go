@@ -279,3 +279,10 @@ type VnfmRegisterMessage struct {
 	Action   string    `json:"action"`
 	Endpoint *Endpoint `json:"vnfmManagerEndpoint"`
 }
+
+type ManagerUnregisterMessage struct {
+	Type     string `json:"type"`
+	Action   string `json:"action"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}

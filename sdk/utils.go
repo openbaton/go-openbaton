@@ -1,7 +1,7 @@
 package sdk
 
 import (
-	logging "github.com/op/go-logging"
+	"github.com/op/go-logging"
 	"os"
 	"strings"
 	"math/rand"
@@ -48,14 +48,12 @@ func toLogLevel(lvlStr string) (lvl logging.Level) {
 	case "PANIC":
 		lvl = logging.CRITICAL
 
-
 	default:
 		lvl = logging.DEBUG
 	}
 
 	return
 }
-
 
 func RandomString(l int) string {
 	bytes := make([]byte, l)
@@ -69,7 +67,7 @@ func randInt(min int, max int) int {
 	return min + rand.Intn(max-min)
 }
 
-func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *logging.Logger) (<- chan amqp.Delivery, string, error) {
+func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *logging.Logger) (<-chan amqp.Delivery, string, error) {
 	q, err := channel.QueueDeclare(
 		"",    // name
 		false, // durable
@@ -79,7 +77,7 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 		nil,   // arguments
 	)
 
-	if err != nil{
+	if err != nil {
 		l.Errorf("Failed to declare a queue")
 		return nil, "", err
 	}
@@ -93,11 +91,10 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 		false,  // no-wait
 		nil,    // args
 	)
-	if err != nil{
+	if err != nil {
 		l.Errorf("Failed to register a consumer")
 		return nil, "", err
 	}
-
 
 	corrId := RandomString(32)
 
@@ -107,10 +104,10 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 		return nil, "", err
 	}
 	err = channel.Publish(
-		"openbaton-exchange",          // exchange
-		queue, // routing key
-		false,       // mandatory
-		false,       // immediate
+		"openbaton-exchange", // exchange
+		queue,                // routing key
+		false,                // mandatory
+		false,                // immediate
 		amqp.Publishing{
 			ContentType:   "text/plain",
 			CorrelationId: corrId,
@@ -118,15 +115,33 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 			Body:          []byte(mrs),
 		})
 
-	if err != nil{
+	if err != nil {
 		l.Errorf("Failed to publish a message")
 		return nil, "", err
 	}
 	return msgs, corrId, nil
 }
 
+func SendMsg(queue string, message []byte, channel *amqp.Channel, logger *logging.Logger) (error) {
+	err := channel.Publish(
+		"openbaton-exchange", // exchange
+		queue,                // routing key
+		false,                // mandatory
+		false,                // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(message),
+		})
+
+	if err != nil {
+		logger.Errorf("Failed to publish a message: %v", err)
+		return err
+	}
+	return nil
+}
+
 type DriverError struct {
-	Message           string `json:"detailMessage"`
+	Message string    `json:"detailMessage"`
 	*catalogue.Server `json:"server"`
 }
 

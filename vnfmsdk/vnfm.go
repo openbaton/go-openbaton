@@ -5,6 +5,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/openbaton/go-openbaton/sdk"
 	"github.com/openbaton/go-openbaton/catalogue"
+	"os/signal"
 )
 
 type VnfmConfig struct {
@@ -22,7 +23,7 @@ type VnfmConfig struct {
 
 func Start(confPath string, h HandlerVnfm, name string) (error) {
 	cfg := VnfmConfig{
-		Type:         "unknown",
+		Type:        "unknown",
 		Description: "The Vnfm written in go",
 		Workers:     5,
 		Allocate:    false,
@@ -77,8 +78,16 @@ func Start(confPath string, h HandlerVnfm, name string) (error) {
 		logger.Errorf("Error while creating vnfm: %v", err)
 		return err
 	}
-	defer manager.Shutdown()
-	defer manager.Unregister(cfg.Type)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for _ = range c {
+			logger.Infof("Received ctrl-c, unregistering")
+			manager.Manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword)
+			go manager.Shutdown()
+			os.Exit(0)
+		}
+	}()
 
 	wk := &worker{
 		l:        logger,

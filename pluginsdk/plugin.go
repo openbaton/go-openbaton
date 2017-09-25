@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/openbaton/go-openbaton/sdk"
+	"os/signal"
 )
 
 type PluginConfig struct {
@@ -67,15 +68,22 @@ func Start(confPath string, h HandlerVim, name string) (error) {
 	if err != nil {
 		return err
 	}
-	defer manager.Shutdown()
-	defer manager.Manager.Unregister(cfg.Type)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for _ = range c {
+			logger.Infof("Received ctrl-c, unregistering")
+			manager.Manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword)
+			go manager.Shutdown()
+			os.Exit(0)
+		}
+	}()
 
 	wk := &worker{
 		l: logger,
 		h: h,
 	}
 	manager.Serve(wk)
-
 
 	return err
 }
