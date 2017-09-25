@@ -68,11 +68,14 @@ func Start(confPath string, h HandlerVim, name string) (error) {
 		return err
 	}
 	defer manager.Shutdown()
+	defer manager.Manager.Unregister(cfg.Type)
+
 	wk := &worker{
 		l: logger,
 		h: h,
 	}
 	manager.Serve(wk)
+
 
 	return err
 }

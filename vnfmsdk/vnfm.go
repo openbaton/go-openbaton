@@ -78,6 +78,8 @@ func Start(confPath string, h HandlerVnfm, name string) (error) {
 		return err
 	}
 	defer manager.Shutdown()
+	defer manager.Unregister(cfg.Type)
+
 	wk := &worker{
 		l:        logger,
 		Channel:  manager.Channel,

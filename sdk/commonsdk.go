@@ -260,6 +260,19 @@ func (c *Manager) Shutdown() error {
 	return <-c.done
 }
 
+func (v *Manager) Unregister(typ string) {
+	msg := catalogue.PluginRegisterMessage{
+		Type:typ,
+		Action:"unregister",
+	}
+	resp, _, err := ExecuteRpc("nfvo.manager.handling",msg, v.Channel, v.logger)
+	if err != nil {
+		v.logger.Errorf("Error unregistering: %v", err)
+		return
+	}
+	v.logger.Debugf("Unregistered and got answer: %v", resp)
+}
+
 func (c *VnfmManager) Serve(worker interface{}) {
 	forever := make(chan bool)
 
