@@ -260,13 +260,30 @@ func (c *Manager) Shutdown() error {
 	return <-c.done
 }
 
-func (v *Manager) Unregister(typ, username, password string) {
+
+func (v * VnfmManager) Unregister(typ, username, password string, vnfm_endpoint *catalogue.Endpoint) {
+	msg := catalogue.VnfmManagerUnregisterMessage{
+		Type:     typ,
+		Action:   "unregister",
+		Username: username,
+		Password: password,
+		Endpoint: vnfm_endpoint,
+	}
+	v.Manager.unregister(msg)
+}
+
+func (v * PluginManager) Unregister(typ, username, password string) {
 	msg := catalogue.ManagerUnregisterMessage{
 		Type:     typ,
 		Action:   "unregister",
 		Username: username,
 		Password: password,
 	}
+	v.Manager.unregister(msg)
+}
+
+func (v *Manager) unregister(msg interface{}) {
+
 	msgBytes, err := json.Marshal(msg)
 	if err != nil {
 		v.logger.Errorf("Error while marshalling unregister message: %v", err)

@@ -24,9 +24,9 @@ type VnfmConfig struct {
 func Start(confPath string, h HandlerVnfm, name string) (error) {
 	cfg := VnfmConfig{
 		Type:        "unknown",
-		Description: "The Vnfm written in go",
 		Workers:     5,
 		Allocate:    false,
+		Description: "The Vnfm written in go",
 		Username:    "openbaton-manager-user",
 		Password:    "openbaton",
 		LogLevel:    "DEBUG",
@@ -83,7 +83,7 @@ func Start(confPath string, h HandlerVnfm, name string) (error) {
 	go func() {
 		for _ = range c {
 			logger.Infof("Received ctrl-c, unregistering")
-			manager.Manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword)
+			manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword, &endpoint)
 			go manager.Shutdown()
 			os.Exit(0)
 		}

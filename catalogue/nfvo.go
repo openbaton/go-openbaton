@@ -286,3 +286,11 @@ type ManagerUnregisterMessage struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+type VnfmManagerUnregisterMessage struct {
+	Type     string   `json:"type"`
+	Action   string   `json:"action"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Endpoint *Endpoint `json:"vnfmManagerEndpoint"`
+}

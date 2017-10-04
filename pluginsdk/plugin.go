@@ -73,8 +73,9 @@ func Start(confPath string, h HandlerVim, name string) (error) {
 	go func() {
 		for _ = range c {
 			logger.Infof("Received ctrl-c, unregistering")
-			manager.Manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword)
+			manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword)
 			go manager.Shutdown()
+			logger.Infof("Done")
 			os.Exit(0)
 		}
 	}()
