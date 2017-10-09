@@ -72,7 +72,7 @@ func NewVNFR(
 	}
 
 	configurations := &Configuration{
-		Name: vnfd.Name,
+		Name:                    vnfd.Name,
 		ConfigurationParameters: []*ConfigurationParameter{},
 	}
 
@@ -117,7 +117,7 @@ func NewVNFR(
 	nsrID := extension["nsr-id"]
 
 	provides := &Configuration{
-		Name: "provides",
+		Name:                    "provides",
 		ConfigurationParameters: []*ConfigurationParameter{},
 	}
 
@@ -130,7 +130,7 @@ func NewVNFR(
 	}
 
 	requires := &Configuration{
-		Name: "requires",
+		Name:                    "requires",
 		ConfigurationParameters: []*ConfigurationParameter{},
 	}
 
@@ -157,6 +157,11 @@ func NewVNFR(
 		}
 
 		vdus[i] = makeVDUFromParent(vdu)
+		vimNames := make([]string, len(vimInstances[vdu.ID]))
+		for i, vim := range vimInstances[vdu.ID] {
+			vimNames[i] = vim.Name
+		}
+		vdus[i].VIMInstanceNames = vimNames
 	}
 
 	links := make([]*InternalVirtualLink, len(vnfd.VirtualLinks))
