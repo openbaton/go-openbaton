@@ -31,12 +31,15 @@ type Component interface{}
 // NetworkServiceRecord as defined by ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type NetworkServiceRecord struct {
 	ID                       string                           `json:"id,omitempty"`
+	HbVersion                int                              `json:"hbVersion,omitempty"`
+	ProjectID                string                           `json:"projectId"`
+	Shared                   bool                             `json:"shared,omitempty"`
+	Metadata                 map[string]string                `json:"metadata,omitempty"`
 	AutoScalePolicy          []*AutoScalePolicy               `json:"auto_scale_policy"`
 	ConnectionPoint          []*ConnectionPoint               `json:"connection_point"`
 	MonitoringParameter      []string                         `json:"monitoring_parameterid"`
 	ServiceDeploymentFlavour NetworkServiceDeploymentFlavour  `json:"service_deployment_flavour"`
 	Vendor                   string                           `json:"vendor"`
-	ProjectID                string                           `json:"projectId"`
 	Task                     string                           `json:"task"`
 	Version                  string                           `json:"version"`
 	VLR                      []*VirtualLinkRecord             `json:"vlr"`
@@ -61,10 +64,13 @@ type NetworkServiceRecord struct {
 // PhysicalNetworkFunctionRecord based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type PhysicalNetworkFunctionRecord struct {
 	ID                   string                      `json:"id,omitempty"`
+	HbVersion            int                         `json:"hbVersion,omitempty"`
+	ProjectID            string                      `json:"projectId"`
+	Shared               bool                        `json:"shared,omitempty"`
+	Metadata             map[string]string           `json:"metadata,omitempty"`
 	Vendor               string                      `json:"vendor"`
 	Version              string                      `json:"version"`
 	Description          string                      `json:"description"`
-	ProjectID            string                      `json:"projectId"`
 	ConnectionPoint      []*ConnectionPoint          `json:"connection_point"`
 	ParentNSID           string                      `json:"parent_ns_id"`
 	DescriptorReference  string                      `json:"descriptor_reference"`
@@ -75,8 +81,11 @@ type PhysicalNetworkFunctionRecord struct {
 }
 
 type Policy struct {
-	ID      string `json:"id,omitempty"`
-	Version int    `json:"version"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
 }
 
 type Status string
@@ -108,16 +117,18 @@ const (
 )
 
 type VirtualLinkRecord struct {
-	ID               string   `json:"id,omitempty"`
-	HbVersion        int      `json:"hb_version"`
-	ExtID            string   `json:"extId"`
-	RootRequirement  string   `json:"root_requirement"`
-	LeafRequirement  string   `json:"leaf_requirement"`
-	QoS              []string `json:"qos"`
-	TestAccess       []string `json:"test_access"`
-	ConnectivityType []string `json:"connectivity_type"`
-	Name             string   `json:"name"`
-
+	ID                    string                      `json:"id,omitempty"`
+	HbVersion             int                         `json:"hbVersion,omitempty"`
+	ProjectID             string                      `json:"projectId"`
+	Shared                bool                        `json:"shared,omitempty"`
+	Metadata              map[string]string           `json:"metadata,omitempty"`
+	ExtID                 string                      `json:"extId"`
+	RootRequirement       string                      `json:"root_requirement"`
+	LeafRequirement       string                      `json:"leaf_requirement"`
+	QoS                   []string                    `json:"qos"`
+	TestAccess            []string                    `json:"test_access"`
+	ConnectivityType      []string                    `json:"connectivity_type"`
+	Name                  string                      `json:"name"`
 	Vendor                string                      `json:"vendor"`
 	Version               string                      `json:"version"`
 	NumberOfEndpoints     int                         `json:"number_of_endpoints"`
@@ -135,21 +146,27 @@ type VirtualLinkRecord struct {
 
 type VNFCInstance struct {
 	ID               string                 `json:"id,omitempty"`
-	Version          int                    `json:"version"`
+	HbVersion        int                    `json:"hbVersion,omitempty"`
+	ProjectID        string                 `json:"projectId"`
+	Shared           bool                   `json:"shared,omitempty"`
+	Metadata         map[string]string      `json:"metadata,omitempty"`
 	ConnectionPoints []*VNFDConnectionPoint `json:"connection_point"`
-
-	VIMID        string        `json:"vim_id"`
-	VCID         string        `json:"vc_id"`
-	Hostname     string        `json:"hostname"`
-	State        string        `json:"state"`
-	VNFComponent *VNFComponent `json:"vnfComponent,omitempty"`
-	FloatingIPs  []*IP         `json:"floatingIps"`
-	IPs          []*IP         `json:"ips"`
+	VIMID            string                 `json:"vim_id"`
+	VCID             string                 `json:"vc_id"`
+	Hostname         string                 `json:"hostname"`
+	State            string                 `json:"state"`
+	VNFComponent     *VNFComponent          `json:"vnfComponent,omitempty"`
+	FloatingIPs      []*IP                  `json:"floatingIps"`
+	IPs              []*IP                  `json:"ips"`
 }
 
 // Based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type VNFForwardingGraphRecord struct {
 	ID                    string                          `json:"id,omitempty"`
+	HbVersion             int                             `json:"hbVersion,omitempty"`
+	ProjectID             string                          `json:"projectId"`
+	Shared                bool                            `json:"shared,omitempty"`
+	Metadata              map[string]string               `json:"metadata,omitempty"`
 	DescriptorReference   *VNFForwardingGraphDescriptor   `json:"descriptor_reference"`
 	ParentNS              *NetworkServiceRecord           `json:"parent_ns"`
 	DependentVirtualLink  []*VirtualLinkRecord            `json:"dependent_virtual_link"`
@@ -170,7 +187,10 @@ type VNFForwardingGraphRecord struct {
 
 type VNFRecordDependency struct {
 	ID             string                               `json:"id,omitempty"`
-	Version        int                                  `json:"version"`
+	HbVersion      int                                  `json:"hbVersion,omitempty"`
+	ProjectID      string                               `json:"projectId"`
+	Shared         bool                                 `json:"shared,omitempty"`
+	Metadata       map[string]string                    `json:"metadata,omitempty"`
 	Target         string                               `json:"target"`
 	Parameters     map[string]*DependencyParameters     `json:"parameters"`
 	VNFCParameters map[string]*VNFCDependencyParameters `json:"vnfcParameters"`

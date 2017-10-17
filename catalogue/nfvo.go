@@ -54,17 +54,22 @@ const (
 )
 
 type ConfigurationParameter struct {
-	ID          string `json:"id,omitempty"`
-	Version     int    `json:"version,omitempty"`
-	Description string `json:"description,omitempty"`
-	ConfKey     string `json:"confKey"`
-	Value       string `json:"value,omitempty"`
+	ID          string            `json:"id,omitempty"`
+	HbVersion   int               `json:"hbVersion,omitempty"`
+	ProjectID   string            `json:"projectId"`
+	Shared      bool              `json:"shared,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
+	Description string            `json:"description,omitempty"`
+	ConfKey     string            `json:"confKey"`
+	Value       string            `json:"value,omitempty"`
 }
 
 type Configuration struct {
 	ID                      string                    `json:"id,omitempty"`
-	Version                 int                       `json:"version"`
+	HbVersion               int                       `json:"hbVersion,omitempty"`
 	ProjectID               string                    `json:"projectId"`
+	Shared                  bool                      `json:"shared,omitempty"`
+	Metadata                map[string]string         `json:"metadata,omitempty"`
 	ConfigurationParameters []*ConfigurationParameter `json:"configurationParameters"`
 	Name                    string                    `json:"name"`
 }
@@ -106,90 +111,121 @@ func (d Date) Time() time.Time {
 
 type DependencyParameters struct {
 	ID         string            `json:"id,omitempty"`
-	Version    int               `json:"version"`
+	HbVersion  int               `json:"hbVersion,omitempty"`
+	ProjectID  string            `json:"projectId"`
+	Shared     bool              `json:"shared,omitempty"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
 	Parameters map[string]string `json:"parameters"`
 }
 
 type Endpoint struct {
-	ID           string `json:"id,omitempty"`
-	Version      int    `json:"version"`
-	Type         string `json:"type"`
-	EndpointType string `json:"endpointType"`
-	Endpoint     string `json:"endpoint"`
-	Description  string `json:"description"`
-	Enabled      bool   `json:"enabled"`
-	Active       bool   `json:"active"`
+	ID           string            `json:"id,omitempty"`
+	HbVersion    int               `json:"hbVersion,omitempty"`
+	ProjectID    string            `json:"projectId"`
+	Shared       bool              `json:"shared,omitempty"`
+	Metadata     map[string]string `json:"metadata,omitempty"`
+	Type         string            `json:"type"`
+	EndpointType string            `json:"endpointType"`
+	Endpoint     string            `json:"endpoint"`
+	Description  string            `json:"description"`
+	Enabled      bool              `json:"enabled"`
+	Active       bool              `json:"active"`
 }
 
 type HistoryLifecycleEvent struct {
-	ID          string `json:"id,omitempty"`
-	Event       string `json:"event"`
-	Description string `json:"description"`
-	ExecutedAt  string `json:"executedAt"`
+	ID          string            `json:"id,omitempty"`
+	HbVersion   int               `json:"hbVersion,omitempty"`
+	ProjectID   string            `json:"projectId"`
+	Shared      bool              `json:"shared,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
+	Event       string            `json:"event"`
+	Description string            `json:"description"`
+	ExecutedAt  string            `json:"executedAt"`
 }
 
 type Location struct {
-	ID        string `json:"id,omitempty"`
-	Version   int    `json:"version,omitempty"`
-	Name      string `json:"name,omitempty"`
-	Latitude  string `json:"latitude,omitempty"`
-	Longitude string `json:"longitude,omitempty"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Name      string            `json:"name,omitempty"`
+	Latitude  string            `json:"latitude,omitempty"`
+	Longitude string            `json:"longitude,omitempty"`
 }
 
 type Network struct {
-	ID       string    `json:"id,omitempty"`
-	Version  int       `json:"version"`
-	Name     string    `json:"name"`
-	ExtID    string    `json:"extId"`
-	External bool      `json:"external"`
-	Shared   bool      `json:"shared"`
-	Subnets  []*Subnet `json:"subnets"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Name      string            `json:"name"`
+	ExtID     string            `json:"extId"`
+	External  bool              `json:"external"`
+	ExtShared bool              `json:"extShared"`
+	Subnets   []*Subnet         `json:"subnets"`
 }
 
 type NFVImage struct {
-	ID              string      `json:"id,omitempty"`
-	Version         int         `json:"version"`
-	ExtID           string      `json:"extId"`
-	Name            string      `json:"name"`
-	MinRAM          int64       `json:"minRam"`
-	MinDiskSpace    int64       `json:"minDiskSpace"`
-	MinCPU          string      `json:"minCPU,omitempty"`
-	Public          bool        `json:"public,omitempty"`
-	DiskFormat      string      `json:"diskFormat,omitempty"`
-	ContainerFormat string      `json:"containerFormat,omitempty"`
-	Created         Date        `json:"created,omitempty"`
-	Updated         Date        `json:"updated,omitempty"`
-	IsPublic        bool        `json:"isPublic"`
-	Status          ImageStatus `json:"status"`
+	ID              string            `json:"id,omitempty"`
+	HbVersion       int               `json:"hbVersion,omitempty"`
+	ProjectID       string            `json:"projectId"`
+	Shared          bool              `json:"shared,omitempty"`
+	Metadata        map[string]string `json:"metadata,omitempty"`
+	ExtID           string            `json:"extId"`
+	Name            string            `json:"name"`
+	MinRAM          int64             `json:"minRam"`
+	MinDiskSpace    int64             `json:"minDiskSpace"`
+	MinCPU          string            `json:"minCPU,omitempty"`
+	Public          bool              `json:"public,omitempty"`
+	DiskFormat      string            `json:"diskFormat,omitempty"`
+	ContainerFormat string            `json:"containerFormat,omitempty"`
+	Created         Date              `json:"created,omitempty"`
+	Updated         Date              `json:"updated,omitempty"`
+	IsPublic        bool              `json:"isPublic"`
+	Status          ImageStatus       `json:"status"`
 }
 
 type Quota struct {
-	ID          string `json:"id"`
-	Version     int    `json:"version"`
-	Tenant      string `json:"tenant"`
-	Cores       int    `json:"cores"`
-	FloatingIPs int    `json:"floatingIps"`
-	Instances   int    `json:"instances"`
-	KeyPairs    int    `json:"keyPairs"`
-	RAM         int    `json:"ram"`
+	ID          string            `json:"id,omitempty"`
+	HbVersion   int               `json:"hbVersion,omitempty"`
+	ProjectID   string            `json:"projectId"`
+	Shared      bool              `json:"shared,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
+	Tenant      string            `json:"tenant"`
+	Cores       int               `json:"cores"`
+	FloatingIPs int               `json:"floatingIps"`
+	Instances   int               `json:"instances"`
+	KeyPairs    int               `json:"keyPairs"`
+	RAM         int               `json:"ram"`
 }
 
 type RequiresParameters struct {
-	ID         string   `json:"id,omitempty"`
-	Version    int      `json:"version"`
-	Parameters []string `json:"parameters"`
+	ID         string            `json:"id,omitempty"`
+	HbVersion  int               `json:"hbVersion,omitempty"`
+	ProjectID  string            `json:"projectId"`
+	Shared     bool              `json:"shared,omitempty"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
+	Parameters []string          `json:"parameters"`
 }
 
 type Script struct {
-	ID      string `json:"id,omitempty"`
-	Version int    `json:"version"`
-	Name    string `json:"name"`
-	Payload []byte `json:"-"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Name      string            `json:"name"`
+	Payload   []byte            `json:"-"`
 }
 
 type Server struct {
 	ID                 string              `json:"id,omitempty"`
-	Version            int                 `json:"version"`
+	HbVersion          int                 `json:"hbVersion,omitempty"`
+	ProjectID          string              `json:"projectId"`
+	Shared             bool                `json:"shared,omitempty"`
+	Metadata           map[string]string   `json:"metadata,omitempty"`
 	Name               string              `json:"name"`
 	Image              *NFVImage           `json:"image"`
 	Flavour            *DeploymentFlavour  `json:"flavor"`
@@ -206,18 +242,24 @@ type Server struct {
 }
 
 type Subnet struct {
-	ID        string `json:"id,omitempty"`
-	Version   int    `json:"version"`
-	Name      string `json:"name"`
-	ExtID     string `json:"extId"`
-	NetworkID string `json:"networkId"`
-	CIDR      string `json:"cidr"`
-	GatewayIP string `json:"gatewayIp"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Name      string            `json:"name"`
+	ExtID     string            `json:"extId"`
+	NetworkID string            `json:"networkId"`
+	CIDR      string            `json:"cidr"`
+	GatewayIP string            `json:"gatewayIp"`
 }
 
 type VIMInstance struct {
 	ID             string               `json:"id,omitempty"`
-	Version        int                  `json:"version"`
+	HbVersion      int                  `json:"hbVersion,omitempty"`
+	ProjectID      string               `json:"projectId"`
+	Shared         bool                 `json:"shared,omitempty"`
+	Metadata       map[string]string    `json:"metadata,omitempty"`
 	Name           string               `json:"name"`
 	AuthURL        string               `json:"authUrl"`
 	Tenant         string               `json:"tenant"`
@@ -230,7 +272,6 @@ type VIMInstance struct {
 	Type           string               `json:"type"`
 	Images         []*NFVImage          `json:"images"`
 	Networks       []*Network           `json:"networks"`
-	ProjectID      string               `json:"projectId"`
 	Active         bool                 `json:"active"`
 }
 
@@ -245,23 +286,28 @@ func (vi *VIMInstance) HasFlavour(key string) bool {
 }
 
 type VNFCDependencyParameters struct {
-	VNFCID     string                           `json:"vnfcId"`
 	ID         string                           `json:"id,omitempty"`
-	Version    int                              `json:"version"`
+	HbVersion  int                              `json:"hbVersion,omitempty"`
+	ProjectID  string                           `json:"projectId"`
+	Shared     bool                             `json:"shared,omitempty"`
+	Metadata   map[string]string                `json:"metadata,omitempty"`
+	VNFCID     string                           `json:"vnfcId"`
 	Parameters map[string]*DependencyParameters `json:"parameters"`
 }
 
 type VNFPackage struct {
-	ID          string    `json:"id,omitempty"`
-	Version     int       `json:"version"`
-	Name        string    `json:"name"`
-	NFVOVersion string    `json:"nfvo_version"`
-	VIMTypes    []string  `json:"vimTypes"`
-	ImageLink   string    `json:"imageLink,omitempty"`
-	ScriptsLink string    `json:"scriptsLink,omitempty"`
-	Image       *NFVImage `json:"image,omitempty"`
-	Scripts     []*Script `json:"scripts"`
-	ProjectID   string    `json:"projectId"`
+	ID          string            `json:"id,omitempty"`
+	HbVersion   int               `json:"hbVersion,omitempty"`
+	ProjectID   string            `json:"projectId"`
+	Shared      bool              `json:"shared,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
+	Name        string            `json:"name"`
+	NFVOVersion string            `json:"nfvo_version"`
+	VIMTypes    []string          `json:"vimTypes"`
+	ImageLink   string            `json:"imageLink,omitempty"`
+	ScriptsLink string            `json:"scriptsLink,omitempty"`
+	Image       *NFVImage         `json:"image,omitempty"`
+	Scripts     []*Script         `json:"scripts"`
 }
 
 type ManagerCredentials struct {
@@ -288,9 +334,9 @@ type ManagerUnregisterMessage struct {
 }
 
 type VnfmManagerUnregisterMessage struct {
-	Type     string   `json:"type"`
-	Action   string   `json:"action"`
-	Username string   `json:"username"`
-	Password string   `json:"password"`
+	Type     string    `json:"type"`
+	Action   string    `json:"action"`
+	Username string    `json:"username"`
+	Password string    `json:"password"`
 	Endpoint *Endpoint `json:"vnfmManagerEndpoint"`
 }

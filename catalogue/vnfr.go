@@ -23,11 +23,13 @@ import (
 
 // A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
 type VirtualNetworkFunctionRecord struct {
-	ID                            string                   `json:"id,omitempty"`
-	HbVersion                     int                      `json:"hb_version"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
 	AutoScalePolicies             []*AutoScalePolicy       `json:"auto_scale_policy"`
 	ConnectionPoints              []*ConnectionPoint       `json:"connection_point"`
-	ProjectID                     string                   `json:"projectId"`
 	DeploymentFlavourKey          string                   `json:"deployment_flavour_key"`
 	Configurations                *Configuration           `json:"configurations,omitempty"`
 	LifecycleEvents               LifecycleEvents          `json:"lifecycle_event"`
@@ -170,8 +172,7 @@ func NewVNFR(
 	}
 
 	return &VirtualNetworkFunctionRecord{
-		Name: vnfd.Name,
-
+		Name:                  vnfd.Name,
 		AutoScalePolicies:     autoScalePolicies,
 		Configurations:        configurations,
 		ConnectionPoints:      connectionPoints,
@@ -308,19 +309,24 @@ func cloneVRFaultManagementPolicy(oldVRFMP *VRFaultManagementPolicy) *VRFaultMan
 func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit {
 	// copy all of the struct at once, and then deep clone the pointer/list parts
 	newVDU := new(VirtualDeploymentUnit)
-	*newVDU = *parentVDU
-
+	//*newVDU = *parentVDU
+	//newVDU.ID = ""
+	//newVDU.HbVersion = 0
+	newVDU.Shared = parentVDU.Shared
+	newVDU.Hostname = parentVDU.Hostname
+	newVDU.ScaleInOut = parentVDU.ScaleInOut
+	newVDU.ProjectID = parentVDU.ProjectID
+	newVDU.Metadata = parentVDU.Metadata
 	// reset the ID of the new VDU
 	newVDU.ParentVDU = parentVDU.ID
 
 	newVDU.VNFCs = make([]*VNFComponent, len(parentVDU.VNFCs))
 
 	for i, component := range parentVDU.VNFCs {
-		connectionPoints := make([]*VNFDConnectionPoint, len(parentVDU.VNFCs))
+		connectionPoints := make([]*VNFDConnectionPoint, len(component.ConnectionPoints))
 		for j, connectionPoint := range component.ConnectionPoints {
 			connectionPoints[j] = &VNFDConnectionPoint{
-				Type: connectionPoint.Type,
-
+				Type:                 connectionPoint.Type,
 				FloatingIP:           connectionPoint.FloatingIP,
 				VirtualLinkReference: connectionPoint.VirtualLinkReference,
 				InterfaceID:          connectionPoint.InterfaceID,

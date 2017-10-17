@@ -17,55 +17,71 @@
 package catalogue
 
 type AutoScalePolicy struct {
-	ID                 string           `json:"id,omitempty"`
-	Version            int              `json:"version"`
-	Name               string           `json:"name"`
-	Threshold          float64          `json:"threshold"`
-	ComparisonOperator string           `json:"comparisonOperator"`
-	Period             int              `json:"period"`
-	Cooldown           int              `json:"cooldown"`
-	Mode               ScalingMode      `json:"mode,omitempty"`
-	Type               ScalingType      `json:"type,omitempty"`
-	Alarms             []*ScalingAlarm  `json:"alarms,omitempty"`
-	Actions            []*ScalingAction `json:"actions,omitempty"`
+	ID                 string            `json:"id,omitempty"`
+	HbVersion          int               `json:"hbVersion,omitempty"`
+	ProjectID          string            `json:"projectId"`
+	Shared             bool              `json:"shared,omitempty"`
+	Metadata           map[string]string `json:"metadata,omitempty"`
+	Name               string            `json:"name"`
+	Threshold          float64           `json:"threshold"`
+	ComparisonOperator string            `json:"comparisonOperator"`
+	Period             int               `json:"period"`
+	Cooldown           int               `json:"cooldown"`
+	Mode               ScalingMode       `json:"mode,omitempty"`
+	Type               ScalingType       `json:"type,omitempty"`
+	Alarms             []*ScalingAlarm   `json:"alarms,omitempty"`
+	Actions            []*ScalingAction  `json:"actions,omitempty"`
 }
 
 type ConnectionPoint struct {
-	ID      string `json:"id,omitempty"`
-	Version int    `json:"version"`
-	Type    string `json:"type"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Type      string            `json:"type"`
 }
 
 // ConstituentVDU as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type ConstituentVDU struct {
-	ID                string `json:"id,omitempty"`
-	Version           int    `json:"version"`
-	VDUReference      string `json:"vdu_reference"`
-	NumberOfInstances int    `json:"number_of_instances"`
-	ConstituentVNFC   string `json:"constituent_vnfc"`
+	ID                string            `json:"id,omitempty"`
+	HbVersion         int               `json:"hbVersion,omitempty"`
+	ProjectID         string            `json:"projectId"`
+	Shared            bool              `json:"shared,omitempty"`
+	Metadata          map[string]string `json:"metadata,omitempty"`
+	VDUReference      string            `json:"vdu_reference"`
+	NumberOfInstances int               `json:"number_of_instances"`
+	ConstituentVNFC   string            `json:"constituent_vnfc"`
 }
 
 // ConstituentVNF as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type ConstituentVNF struct {
-	ID                    string          `json:"id,omitempty"`
-	VnfReference          string          `json:"vnf_reference"`
-	VnfFlavourIDReference string          `json:"vnf_flavour_id_reference"`
-	RedundancyModel       RedundancyModel `json:"redundancy_modelid"`
-	Affinity              string          `json:"affinity"`
-	Capability            string          `json:"capability"`
-	NumberOfInstances     int             `json:"number_of_instancesid"`
-	Version               int             `json:"version"`
+	ID                    string            `json:"id,omitempty"`
+	HbVersion             int               `json:"hbVersion,omitempty"`
+	ProjectID             string            `json:"projectId"`
+	Shared                bool              `json:"shared,omitempty"`
+	Metadata              map[string]string `json:"metadata,omitempty"`
+	VnfReference          string            `json:"vnf_reference"`
+	VnfFlavourIDReference string            `json:"vnf_flavour_id_reference"`
+	RedundancyModel       RedundancyModel   `json:"redundancy_modelid"`
+	Affinity              string            `json:"affinity"`
+	Capability            string            `json:"capability"`
+	NumberOfInstances     int               `json:"number_of_instancesid"`
+	Version               int               `json:"version"`
 }
 
 // DeploymentFlavour as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type DeploymentFlavour struct {
-	ID         string `json:"id,omitempty"`
-	Version    int    `json:"version"`
-	FlavourKey string `json:"flavour_key"`
-	ExtID      string `json:"extId"`
-	RAM        int    `json:"ram"`
-	Disk       int    `json:"disk"`
-	VCPUs      int    `json:"vcpus"`
+	ID         string            `json:"id,omitempty"`
+	HbVersion  int               `json:"hbVersion,omitempty"`
+	ProjectID  string            `json:"projectId"`
+	Shared     bool              `json:"shared,omitempty"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
+	FlavourKey string            `json:"flavour_key"`
+	ExtID      string            `json:"extId"`
+	RAM        int               `json:"ram"`
+	Disk       int               `json:"disk"`
+	VCPUs      int               `json:"vcpus"`
 }
 
 type Event string
@@ -95,26 +111,35 @@ const (
 )
 
 type HighAvailability struct {
-	ID               string          `json:"id,omitempty"`
-	Version          int             `json:"version"`
-	ResiliencyLevel  ResiliencyLevel `json:"resiliencyLevel"`
-	GeoRedundancy    bool            `json:"geoRedundancy"`
-	RedundancyScheme string          `json:"redundancyScheme"`
+	ID               string            `json:"id,omitempty"`
+	HbVersion        int               `json:"hbVersion,omitempty"`
+	ProjectID        string            `json:"projectId"`
+	Shared           bool              `json:"shared,omitempty"`
+	Metadata         map[string]string `json:"metadata,omitempty"`
+	ResiliencyLevel  ResiliencyLevel   `json:"resiliencyLevel"`
+	GeoRedundancy    bool              `json:"geoRedundancy"`
+	RedundancyScheme string            `json:"redundancyScheme"`
 }
 
 type IP struct {
-	ID      string `json:"id,omitempty"`
-	Version int    `json:"version"`
-	NetName string `json:"netName"`
-	IP      string `json:"ip"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	NetName   string            `json:"netName"`
+	IP        string            `json:"ip"`
 }
 
 // LifecycleEvent as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type LifecycleEvent struct {
-	ID              string   `json:"id,omitempty"`
-	Version         int      `json:"version"`
-	Event           Event    `json:"event"`
-	LifecycleEvents []string `json:"lifecycle_events"`
+	ID              string            `json:"id,omitempty"`
+	HbVersion       int               `json:"hbVersion,omitempty"`
+	ProjectID       string            `json:"projectId"`
+	Shared          bool              `json:"shared,omitempty"`
+	Metadata        map[string]string `json:"metadata,omitempty"`
+	Event           Event             `json:"event"`
+	LifecycleEvents []string          `json:"lifecycle_events"`
 }
 
 // LifecycleEvents represents a list of LifecycleEvent.
@@ -135,6 +160,7 @@ func (les LifecycleEvents) Filter(event Event) LifecycleEvents {
 
 // NetworkServiceDeploymentFlavour as specified in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type NetworkServiceDeploymentFlavour struct {
+	DeploymentFlavour
 	Vendor                string                      `json:"vendor"`
 	Version               string                      `json:"version"`
 	NumberOfEndpoints     int                         `json:"number_of_endpoints"`
@@ -165,11 +191,14 @@ const (
 )
 
 type ScalingAction struct {
-	ID      string            `json:"id,omitempty"`
-	Version int               `json:"version"`
-	Type    ScalingActionType `json:"type"`
-	Value   string            `json:"value,omitempty"`
-	Target  string            `json:"target,omitempty"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Type      ScalingActionType `json:"type"`
+	Value     string            `json:"value,omitempty"`
+	Target    string            `json:"target,omitempty"`
 }
 
 type ScalingActionType string
@@ -184,13 +213,16 @@ const (
 )
 
 type ScalingAlarm struct {
-	ID                 string  `json:"id,omitempty"`
-	Version            int     `json:"version"`
-	Metric             string  `json:"metric"`
-	Statistic          string  `json:"statistic"`
-	ComparisonOperator string  `json:"comparisonOperator"`
-	Threshold          float64 `json:"threshold"`
-	Weight             float64 `json:"weight"`
+	ID                 string            `json:"id,omitempty"`
+	HbVersion          int               `json:"hbVersion,omitempty"`
+	ProjectID          string            `json:"projectId"`
+	Shared             bool              `json:"shared,omitempty"`
+	Metadata           map[string]string `json:"metadata,omitempty"`
+	Metric             string            `json:"metric"`
+	Statistic          string            `json:"statistic"`
+	ComparisonOperator string            `json:"comparisonOperator"`
+	Threshold          float64           `json:"threshold"`
+	Weight             float64           `json:"weight"`
 }
 
 type ScalingMode string
@@ -210,8 +242,11 @@ const (
 )
 
 type Security struct {
-	ID      string `json:"id,omitempty"`
-	Version int    `json:"version"`
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
 }
 
 // VirtualLink (abstract) based on ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
@@ -221,15 +256,18 @@ type Security struct {
 // on VNFs in ETSI GS NFV-SWA 001 [i.8]. Therefore a set of VLs in a Network Service can be mapped
 // to a Network Connectivity Topology (NCT) as defined in ETSI GS NFV-SWA 001 [i.8].
 type VirtualLink struct {
-	ID               string   `json:"id,omitempty"`
-	HbVersion        int      `json:"hb_version"`
-	ExtID            string   `json:"extId"`
-	RootRequirement  string   `json:"root_requirement"`
-	LeafRequirement  string   `json:"leaf_requirement"`
-	QoS              []string `json:"qos"`
-	TestAccess       []string `json:"test_access"`
-	ConnectivityType []string `json:"connectivity_type"`
-	Name             string   `json:"name"`
+	ID               string            `json:"id,omitempty"`
+	HbVersion        int               `json:"hbVersion,omitempty"`
+	ProjectID        string            `json:"projectId"`
+	Shared           bool              `json:"shared,omitempty"`
+	Metadata         map[string]string `json:"metadata,omitempty"`
+	ExtID            string            `json:"extId"`
+	RootRequirement  string            `json:"root_requirement"`
+	LeafRequirement  string            `json:"leaf_requirement"`
+	QoS              []string          `json:"qos"`
+	TestAccess       []string          `json:"test_access"`
+	ConnectivityType []string          `json:"connectivity_type"`
+	Name             string            `json:"name"`
 }
 
 type VNFDeploymentFlavour struct {
@@ -237,4 +275,3 @@ type VNFDeploymentFlavour struct {
 	DfConstraint   []string          `json:"df_constraint"`
 	ConstituentVDU []*ConstituentVDU `json:"constituent_vdu"`
 }
-

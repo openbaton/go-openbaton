@@ -10,7 +10,7 @@ import (
 )
 
 func handleNfvMessage(bytemsg []byte, wk interface{}) ([]byte, error) {
-	logger := sdk.GetLogger("handler-function", "DEUBG")
+	logger := sdk.GetLogger("handler-function", "DEBUG")
 	n, verr := messages.Unmarshal(bytemsg, messages.NFVO)
 	if verr != nil {
 		logger.Errorf("Error while unmarshaling nfv message: %v", verr)
@@ -37,6 +37,7 @@ func handleNfvMessage(bytemsg []byte, wk interface{}) ([]byte, error) {
 		byteRes = []byte(merr)
 	} else {
 		resp, err := json.Marshal(response)
+		//logger.Debugf("Sending back: \n%v" , string(resp))
 		if err != nil {
 			logger.Errorf("Error while marshaling response: %v", err)
 			return nil, err
