@@ -19,7 +19,7 @@ func GetLogger(name string, levelStr string) (*logging.Logger) {
 	level := toLogLevel(levelStr)
 	log = logging.MustGetLogger(name)
 	var format = logging.MustStringFormatter(
-		`%{color}%{time:15:04:05} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
+		`%{color}%{time:15:04:05} [%{level:.4s}] %{module:6.10s} -> %{longfunc:10.10s} ▶ %{color:reset} %{message}`,
 	)
 	backend := logging.NewLogBackend(os.Stdout, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, format)
