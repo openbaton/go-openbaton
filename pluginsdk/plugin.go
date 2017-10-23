@@ -6,6 +6,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/openbaton/go-openbaton/sdk"
 	"os/signal"
+	"encoding/json"
 )
 
 type PluginConfig struct {
@@ -63,7 +64,11 @@ func startWithCfg(cfg PluginConfig, h HandlerVim, name string) error {
 	pluginId := fmt.Sprintf("vim-drivers.%s.%s", cfg.Type, name)
 	logger := sdk.GetLogger(cfg.Type, cfg.LogLevel)
 	logger.Infof("Starting Plugin of type %s", cfg.Type)
-
+	jsonCfg, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	logger.Debugf("Config are %s", jsonCfg)
 	rabbitCredentials, err := sdk.GetPluginCreds(cfg.Username, cfg.Password, cfg.BrokerIp, cfg.BrokerPort, pluginId, "DEBUG")
 
 	if err != nil {
