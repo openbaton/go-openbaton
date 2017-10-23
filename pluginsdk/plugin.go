@@ -42,12 +42,29 @@ func Start(confPath string, h HandlerVim, name string) (error) {
 		os.Exit(100)
 	}
 
-	plugin_id := fmt.Sprintf("vim-drivers.%s.%s", cfg.Type, name)
+	return startWithCfg(cfg, h, name)
+}
 
+func StartWithConfig(typ, username, password, loglevel, brokerip string, workers, brokerPort int, h HandlerVim, name string) (error) {
+	cfg := PluginConfig{
+		Type:       typ,
+		Workers:    workers,
+		Username:   username,
+		Password:   password,
+		LogLevel:   loglevel,
+		BrokerIp:   brokerip,
+		BrokerPort: brokerPort,
+	}
+
+	return startWithCfg(cfg, h, name)
+}
+
+func startWithCfg(cfg PluginConfig, h HandlerVim, name string) error {
+	pluginId := fmt.Sprintf("vim-drivers.%s.%s", cfg.Type, name)
 	logger := sdk.GetLogger(cfg.Type, cfg.LogLevel)
 	logger.Infof("Starting Plugin of type %s", cfg.Type)
 
-	rabbitCredentials, err := sdk.GetPluginCreds(cfg.Username, cfg.Password, cfg.BrokerIp, cfg.BrokerPort, plugin_id, "DEBUG")
+	rabbitCredentials, err := sdk.GetPluginCreds(cfg.Username, cfg.Password, cfg.BrokerIp, cfg.BrokerPort, pluginId, "DEBUG")
 
 	if err != nil {
 		logger.Errorf("Error getting credentials: %v", err)
@@ -60,7 +77,7 @@ func Start(confPath string, h HandlerVim, name string) (error) {
 		cfg.BrokerIp,
 		cfg.BrokerPort,
 		"openbaton-exchange",
-		plugin_id,
+		pluginId,
 		cfg.Workers,
 		handlePluginRequest,
 		"DEBUG",

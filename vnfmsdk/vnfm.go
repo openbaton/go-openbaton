@@ -44,6 +44,28 @@ func Start(confPath string, h HandlerVnfm, name string) (error) {
 		return err
 	}
 
+	return startWithCfg(cfg, name, h)
+}
+
+func StartWithConfig(typ, description, username, password, loglevel, brokerIp string, brokerPort, workers int, allocate bool, h HandlerVnfm, name string) (error) {
+	cfg := VnfmConfig{
+		Type:        typ,
+		Workers:     workers,
+		Allocate:    allocate,
+		Description: description,
+		Username:    username,
+		Password:    password,
+		LogLevel:    loglevel,
+		BrokerIp:    brokerIp,
+		BrokerPort:  brokerPort,
+	}
+	cfg.Endpoint = cfg.Type
+
+	return startWithCfg(cfg, name, h)
+}
+
+
+func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 	logger := sdk.GetLogger(cfg.Type, cfg.LogLevel)
 	logger.Infof("Starting VNFM of type %s", cfg.Type)
 
