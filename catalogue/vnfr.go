@@ -23,11 +23,11 @@ import (
 
 // A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
 type VirtualNetworkFunctionRecord struct {
-	ID        string            `json:"id,omitempty"`
-	HbVersion int               `json:"hbVersion,omitempty"`
-	ProjectID string            `json:"projectId"`
-	Shared    bool              `json:"shared,omitempty"`
-	Metadata  map[string]string `json:"metadata,omitempty"`
+	ID                            string                   `json:"id,omitempty"`
+	HbVersion                     int                      `json:"hbVersion,omitempty"`
+	ProjectID                     string                   `json:"projectId"`
+	Shared                        bool                     `json:"shared,omitempty"`
+	Metadata                      map[string]string        `json:"metadata,omitempty"`
 	AutoScalePolicies             []*AutoScalePolicy       `json:"auto_scale_policy"`
 	ConnectionPoints              []*ConnectionPoint       `json:"connection_point"`
 	DeploymentFlavourKey          string                   `json:"deployment_flavour_key"`
@@ -309,9 +309,6 @@ func cloneVRFaultManagementPolicy(oldVRFMP *VRFaultManagementPolicy) *VRFaultMan
 func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit {
 	// copy all of the struct at once, and then deep clone the pointer/list parts
 	newVDU := new(VirtualDeploymentUnit)
-	//*newVDU = *parentVDU
-	//newVDU.ID = ""
-	//newVDU.HbVersion = 0
 	newVDU.Shared = parentVDU.Shared
 	newVDU.Hostname = parentVDU.Hostname
 	newVDU.ScaleInOut = parentVDU.ScaleInOut
@@ -328,8 +325,13 @@ func makeVDUFromParent(parentVDU *VirtualDeploymentUnit) *VirtualDeploymentUnit 
 			connectionPoints[j] = &VNFDConnectionPoint{
 				Type:                 connectionPoint.Type,
 				FloatingIP:           connectionPoint.FloatingIP,
+				FixedIp:              connectionPoint.FixedIp,
 				VirtualLinkReference: connectionPoint.VirtualLinkReference,
 				InterfaceID:          connectionPoint.InterfaceID,
+				Metadata:             connectionPoint.Metadata,
+				Shared:               connectionPoint.Shared,
+				ChosenPool:           connectionPoint.ChosenPool,
+				ProjectID:            connectionPoint.ProjectID,
 			}
 		}
 
