@@ -3,6 +3,7 @@ package vnfmsdk
 import (
 	"os"
 	"github.com/BurntSushi/toml"
+	"encoding/json"
 	"github.com/openbaton/go-openbaton/sdk"
 	"github.com/openbaton/go-openbaton/catalogue"
 	"os/signal"
@@ -68,6 +69,11 @@ func StartWithConfig(typ, description, username, password, loglevel, brokerIp st
 func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 	logger := sdk.GetLogger(cfg.Type, cfg.LogLevel)
 	logger.Infof("Starting VNFM of type %s", cfg.Type)
+	jsonCfg, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	logger.Debugf("Config are %s", jsonCfg)
 
 	endpoint := catalogue.Endpoint{
 		Type:         cfg.Type,

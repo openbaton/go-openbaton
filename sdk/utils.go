@@ -5,9 +5,11 @@ import (
 	"os"
 	"strings"
 	"math/rand"
+	"runtime/debug"
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"github.com/openbaton/go-openbaton/catalogue"
+	"time"
 )
 
 var log *logging.Logger
@@ -68,34 +70,56 @@ func randInt(min int, max int) int {
 }
 
 func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *logging.Logger) (<-chan amqp.Delivery, string, error) {
-	q, err := channel.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when unused
-		true,  // exclusive
-		false, // noWait
-		nil,   // arguments
-	)
-
-	if err != nil {
-		l.Errorf("Failed to declare a queue")
+	tenative := 0
+	var q amqp.Queue
+	var err error
+	var done bool = false
+	var msgs <-chan amqp.Delivery
+	for tenative < 100 && !done {
+		q, err = channel.QueueDeclare(
+			"",    // name
+			false, // durable
+			false, // delete when unused
+			true,  // exclusive
+			false, // noWait
+			nil,   // arguments
+		)
+		if err != nil {
+			debug.PrintStack()
+			l.Errorf("Failed to declare a queue")
+			tenative++
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		done = true
+	}
+	if !done {
 		return nil, "", err
 	}
-
-	msgs, err := channel.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
-	)
-	if err != nil {
-		l.Errorf("Failed to register a consumer")
+	done = false
+	tenative = 0
+	for tenative < 100 && !done {
+		msgs, err = channel.Consume(
+			q.Name, // queue
+			"",     // consumer
+			true,   // auto-ack
+			false,  // exclusive
+			false,  // no-local
+			false,  // no-wait
+			nil,    // args
+		)
+		if err != nil {
+			debug.PrintStack()
+			l.Errorf("Failed to register a consumer")
+			tenative++
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		done = true
+	}
+	if !done {
 		return nil, "", err
 	}
-
 	corrId := RandomString(32)
 
 	mrs, err := json.Marshal(message)
