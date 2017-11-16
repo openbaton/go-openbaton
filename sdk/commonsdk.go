@@ -206,10 +206,6 @@ func setupManager(username string, password string, brokerIp string, brokerPort 
 		return err
 	}
 
-	//go func() {
-	//	fmt.Printf("closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
-	//}()
-
 	c.logger.Debugf("got Connection, getting Channel")
 	c.Channel, err = c.conn.Channel()
 	if err != nil {

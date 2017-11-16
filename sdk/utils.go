@@ -75,7 +75,9 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 	var err error
 	var done bool = false
 	var msgs <-chan amqp.Delivery
+
 	for tenative < 100 && !done {
+		l.Debugf("Declaring Queue for RPC tentative number: %d", tenative)
 		q, err = channel.QueueDeclare(
 			"",    // name
 			false, // durable
@@ -86,19 +88,23 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 		)
 		if err != nil {
 			debug.PrintStack()
-			l.Errorf("Failed to declare a queue")
+			l.Errorf("Failed to declare a queue: %v", err)
 			tenative++
 			time.Sleep(1 * time.Second)
 			continue
 		}
 		done = true
 	}
+
 	if !done {
+		l.Errorf("Failed to declare a queue: %v", err)
 		return nil, "", err
 	}
+
 	done = false
 	tenative = 0
 	for tenative < 100 && !done {
+		l.Debugf("Registering consume for RPC tentative number: %d", tenative)
 		msgs, err = channel.Consume(
 			q.Name, // queue
 			"",     // consumer
@@ -117,6 +123,7 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 		}
 		done = true
 	}
+
 	if !done {
 		return nil, "", err
 	}
