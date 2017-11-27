@@ -27,14 +27,24 @@ func (w worker) Handle(fname string, args []json.RawMessage) (interface{}, error
 		return nil, err
 	}
 
+
 	fType := fValue.Type()
 
 	// matchFunc ensures the length of args is correct
 	callArgs := make([]reflect.Value, len(args))
 	for i, jsonArg := range args {
 		argType := fType.In(i)
-		// special case: argument is an array of bytes
-		if argType.Kind() == reflect.Slice && argType.Elem().Kind() == reflect.Uint8 {
+
+		kind := argType.Kind()
+		if kind == reflect.Interface && i == 0 { // special case: VimInstance at first position
+			argValue := map[string]interface{}{}
+			if err := json.Unmarshal(jsonArg, &argValue); err != nil {
+				return nil, err
+			}
+
+			//callArgs[i] = &catalogue.DockerVimInstance{}
+			callArgs[i] = reflect.ValueOf(GetVimInstance(jsonArg, argValue))
+		} else if kind == reflect.Slice && argType.Elem().Kind() == reflect.Uint8 { // special case: argument is an array of bytes
 			var baseStr string
 			if err := json.Unmarshal(jsonArg, &baseStr); err != nil {
 				return nil, err
@@ -169,6 +179,9 @@ func (w worker) matchFunc(fname string, args []json.RawMessage) (reflect.Value, 
 
 	case "listFlavors":
 		fVal = reflect.ValueOf(w.h.ListFlavours)
+
+	case "refresh":
+		fVal = reflect.ValueOf(w.h.Refresh)
 
 	case "listImages":
 		fVal = reflect.ValueOf(w.h.ListImages)

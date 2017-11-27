@@ -41,7 +41,7 @@ type HandlerVnfm interface {
 
 	// Instantiate allows to create a VNF instance.
 	Instantiate(vnfr *catalogue.VirtualNetworkFunctionRecord, scripts interface{},
-		vimInstances map[string][]*catalogue.VIMInstance) (*catalogue.VirtualNetworkFunctionRecord, error)
+		vimInstances map[string][]*catalogue.BaseVimInstance) (*catalogue.VirtualNetworkFunctionRecord, error)
 
 	// Modify allows making structural changes (e.g.configuration, topology, behavior, redundancy model) to a VNF instance.
 	Modify(vnfr *catalogue.VirtualNetworkFunctionRecord,

@@ -24,44 +24,46 @@ import (
 
 // The Handler interface defines an abstraction of the operations that a VNFM should provide.
 type HandlerVim interface {
-	AddFlavour(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
+	AddFlavour(vimInstance interface{}, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
-	AddImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage, imageFile []byte) (*catalogue.NFVImage, error)
+	AddImage(vimInstance interface{}, image *catalogue.DockerImage, imageFile []byte) (*catalogue.DockerImage, error)
 
-	AddImageFromURL(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage, imageURL string) (*catalogue.NFVImage, error)
+	AddImageFromURL(vimInstance interface{}, image *catalogue.DockerImage, imageURL string) (*catalogue.DockerImage, error)
 
-	CopyImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage, imageFile []byte) (*catalogue.NFVImage, error)
+	CopyImage(vimInstance interface{}, image *catalogue.DockerImage, imageFile []byte) (*catalogue.DockerImage, error)
 
-	CreateNetwork(vimInstance *catalogue.VIMInstance, network *catalogue.Network) (*catalogue.Network, error)
+	CreateNetwork(vimInstance interface{}, network *catalogue.DockerNetwork) (*catalogue.DockerNetwork, error)
 
-	CreateSubnet(vimInstance *catalogue.VIMInstance, createdNetwork *catalogue.Network, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
+	CreateSubnet(vimInstance interface{}, createdNetwork *catalogue.DockerNetwork, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
 
-	DeleteFlavour(vimInstance *catalogue.VIMInstance, extID string) (bool, error)
+	DeleteFlavour(vimInstance interface{}, extID string) (bool, error)
 
-	DeleteImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage) (bool, error)
+	DeleteImage(vimInstance interface{}, image *catalogue.DockerImage) (bool, error)
 
-	DeleteNetwork(vimInstance *catalogue.VIMInstance, extID string) (bool, error)
+	DeleteNetwork(vimInstance interface{}, extID string) (bool, error)
 
-	DeleteServerByIDAndWait(vimInstance *catalogue.VIMInstance, id string) error
+	DeleteServerByIDAndWait(vimInstance interface{}, id string) error
 
-	DeleteSubnet(vimInstance *catalogue.VIMInstance, existingSubnetExtID string) (bool, error)
+	DeleteSubnet(vimInstance interface{}, existingSubnetExtID string) (bool, error)
+
+	Refresh(vimInstance interface{}) (interface{}, error)
 
 	LaunchInstance(
-		vimInstance *catalogue.VIMInstance,
+		vimInstance interface{},
 		name, image, Flavour, keypair string,
 		network []*catalogue.VNFDConnectionPoint,
 		secGroup []string,
 		userData string) (*catalogue.Server, error)
 
 	LaunchInstanceAndWait(
-		vimInstance *catalogue.VIMInstance,
+		vimInstance interface{},
 		hostname, image, extID, keyPair string,
 		network []*catalogue.VNFDConnectionPoint,
 		securityGroups []string,
 		s string) (*catalogue.Server, error)
 
 	LaunchInstanceAndWaitWithIPs(
-		vimInstance *catalogue.VIMInstance,
+		vimInstance interface{},
 		hostname, image, extID, keyPair string,
 		network []*catalogue.VNFDConnectionPoint,
 		securityGroups []string,
@@ -69,27 +71,27 @@ type HandlerVim interface {
 		floatingIps map[string]string,
 		keys []*catalogue.Key) (*catalogue.Server, error)
 
-	ListFlavours(vimInstance *catalogue.VIMInstance) ([]*catalogue.DeploymentFlavour, error)
+	ListFlavours(vimInstance interface{}) ([]*catalogue.DeploymentFlavour, error)
 
-	ListImages(vimInstance *catalogue.VIMInstance) ([]*catalogue.NFVImage, error)
+	ListImages(vimInstance interface{}) ([]*catalogue.DockerImage, error)
 
-	ListNetworks(vimInstance *catalogue.VIMInstance) ([]*catalogue.Network, error)
+	ListNetworks(vimInstance interface{}) ([]*catalogue.DockerNetwork, error)
 
-	ListServer(vimInstance *catalogue.VIMInstance) ([]*catalogue.Server, error)
+	ListServer(vimInstance interface{}) ([]*catalogue.Server, error)
 
-	NetworkByID(vimInstance *catalogue.VIMInstance, id string) (*catalogue.Network, error)
+	NetworkByID(vimInstance interface{}, id string) (*catalogue.DockerNetwork, error)
 
-	Quota(vimInstance *catalogue.VIMInstance) (*catalogue.Quota, error)
+	Quota(vimInstance interface{}) (*catalogue.Quota, error)
 
-	SubnetsExtIDs(vimInstance *catalogue.VIMInstance, networkExtID string) ([]string, error)
+	SubnetsExtIDs(vimInstance interface{}, networkExtID string) ([]string, error)
 
-	Type(vimInstance *catalogue.VIMInstance) (string, error)
+	Type(vimInstance interface{}) (string, error)
 
-	UpdateFlavour(vimInstance *catalogue.VIMInstance, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
+	UpdateFlavour(vimInstance interface{}, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
-	UpdateImage(vimInstance *catalogue.VIMInstance, image *catalogue.NFVImage) (*catalogue.NFVImage, error)
+	UpdateImage(vimInstance interface{}, image *catalogue.DockerImage) (*catalogue.DockerImage, error)
 
-	UpdateNetwork(vimInstance *catalogue.VIMInstance, network *catalogue.Network) (*catalogue.Network, error)
+	UpdateNetwork(vimInstance interface{}, network *catalogue.DockerNetwork) (*catalogue.DockerNetwork, error)
 
-	UpdateSubnet(vimInstance *catalogue.VIMInstance, createdNetwork *catalogue.Network, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
+	UpdateSubnet(vimInstance interface{}, createdNetwork *catalogue.DockerNetwork, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
 }

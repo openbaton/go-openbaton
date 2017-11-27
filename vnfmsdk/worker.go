@@ -406,7 +406,7 @@ func (wk *worker) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMe
 
 func (wk *worker) allocateResources(
 	vnfr *catalogue.VirtualNetworkFunctionRecord,
-	vimInstances map[string]*catalogue.VIMInstance,
+	vimInstances map[string]*catalogue.BaseVimInstance,
 	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
 
 	wk.l.Debug("allocating resources for the VNFR")

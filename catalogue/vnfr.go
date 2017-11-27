@@ -66,7 +66,7 @@ func NewVNFR(
 	flavourKey string,
 	vlrs []*VirtualLinkRecord,
 	extension map[string]string,
-	vimInstances map[string][]*VIMInstance) (*VirtualNetworkFunctionRecord, error) {
+	vimInstances map[string][]*BaseVimInstance) (*VirtualNetworkFunctionRecord, error) {
 
 	autoScalePolicies := make([]*AutoScalePolicy, len(vnfd.AutoScalePolicies))
 	for i, asp := range vnfd.AutoScalePolicies {
@@ -148,15 +148,15 @@ func NewVNFR(
 
 	vdus := make([]*VirtualDeploymentUnit, len(vnfd.VDUs))
 	for i, vdu := range vnfd.VDUs {
-		for _, vi := range vimInstances[vdu.ID] {
-			for _, name := range vdu.VIMInstanceNames {
-				if name == vi.Name {
-					if !vi.HasFlavour(flavourKey) {
-						return nil, fmt.Errorf("no key %s found in vim instance: %v", flavourKey, vi)
-					}
-				}
-			}
-		}
+		//for _, vi := range vimInstances[vdu.ID] {
+		//	for _, name := range vdu.VIMInstanceNames {
+		//		if name == vi.Name {
+		//			if !vi.HasFlavour(flavourKey) {
+		//				return nil, fmt.Errorf("no key %s found in vim instance: %v", flavourKey, vi)
+		//			}
+		//		}
+		//	}
+		//}
 
 		vdus[i] = makeVDUFromParent(vdu)
 		vimNames := make([]string, len(vimInstances[vdu.ID]))
