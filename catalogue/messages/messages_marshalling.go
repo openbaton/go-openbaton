@@ -40,7 +40,7 @@ func Unmarshal(msgBytes []byte, from SenderType) (NFVMessage, error) {
 	return &msg, err
 }
 
-func UnmarshalCredentials(msgBytes []byte) (*catalogue.ManagerCredentials, error){
+func UnmarshalCredentials(msgBytes []byte) (*catalogue.ManagerCredentials, error) {
 	res := catalogue.ManagerCredentials{}
 
 	err := json.Unmarshal(msgBytes, &res)
@@ -120,7 +120,27 @@ func (msg *message) unmarshalNFVOMessage(data []byte) error {
 		msg.content = &OrError{}
 
 	case catalogue.ActionInstantiate:
-		msg.content = &OrInstantiate{}
+		tmp := make(map[string]json.RawMessage)
+
+		if err := json.Unmarshal(data, &tmp); err != nil {
+			return err
+		}
+		tmpContent := &OrInstantiate{}
+		json.Unmarshal(data, tmpContent)
+		tmpContent.VIMInstances = make(map[string][]interface{})
+		tmpVim := make(map[string][]json.RawMessage)
+		if err := json.Unmarshal(tmp["vimInstances"], &tmpVim); err != nil {
+			return err
+		}
+		for k, v := range tmpVim { //map[string][]interface{}
+			tmpContent.VIMInstances[k] = make([]interface{}, len(v))
+			for i, vimRaw := range v {
+				tmpContent.VIMInstances[k][i] = parseVim(vimRaw)
+			}
+		}
+
+		msg.content = tmpContent
+		return nil
 
 	case catalogue.ActionHeal:
 		msg.content = &OrHealVNFRequest{}
@@ -138,6 +158,37 @@ func (msg *message) unmarshalNFVOMessage(data []byte) error {
 	}
 
 	return json.Unmarshal(data, &msg.content)
+}
+func parseVim(rawVim json.RawMessage) interface{} {
+	tmp := make(map[string]json.RawMessage)
+
+	if err := json.Unmarshal(rawVim, &tmp); err != nil {
+		return err
+	}
+
+	var _typ string
+	if err := json.Unmarshal(tmp["type"], &_typ); err != nil {
+		return err
+	}
+	if _typ == "docker" {
+		res := &catalogue.DockerVimInstance{}
+		if err := json.Unmarshal(rawVim, res); err != nil {
+			return err
+		}
+		return res
+	} else if string(tmp["type"]) == "openstack" {
+		res := &catalogue.OpenstackVimInstance{}
+		if err := json.Unmarshal(rawVim, res); err != nil {
+			return err
+		}
+		return res
+	} else {
+		res := &catalogue.BaseVimInstance{}
+		if err := json.Unmarshal(rawVim, res); err != nil {
+			return err
+		}
+		return res
+	}
 }
 
 func (msg *message) unmarshalVNFMMessage(data []byte) error {

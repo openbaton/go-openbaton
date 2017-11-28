@@ -154,7 +154,7 @@ type Location struct {
 	Longitude string            `json:"longitude,omitempty"`
 }
 
-type Network struct {
+type BaseNetwork struct {
 	ID        string            `json:"id,omitempty"`
 	HbVersion int               `json:"hbVersion,omitempty"`
 	ProjectID string            `json:"projectId"`
@@ -162,29 +162,16 @@ type Network struct {
 	Metadata  map[string]string `json:"metadata,omitempty"`
 	Name      string            `json:"name"`
 	ExtID     string            `json:"extId"`
-	External  bool              `json:"external"`
-	ExtShared bool              `json:"extShared"`
-	Subnets   []*Subnet         `json:"subnets"`
 }
 
-type NFVImage struct {
-	ID              string            `json:"id,omitempty"`
-	HbVersion       int               `json:"hbVersion,omitempty"`
-	ProjectID       string            `json:"projectId"`
-	Shared          bool              `json:"shared,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	ExtID           string            `json:"extId"`
-	Name            string            `json:"name"`
-	MinRAM          int64             `json:"minRam"`
-	MinDiskSpace    int64             `json:"minDiskSpace"`
-	MinCPU          string            `json:"minCPU,omitempty"`
-	Public          bool              `json:"public,omitempty"`
-	DiskFormat      string            `json:"diskFormat,omitempty"`
-	ContainerFormat string            `json:"containerFormat,omitempty"`
-	Created         Date              `json:"created,omitempty"`
-	Updated         Date              `json:"updated,omitempty"`
-	IsPublic        bool              `json:"isPublic"`
-	Status          ImageStatus       `json:"status"`
+type BaseNfvImage struct {
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	ExtID     string            `json:"extId"`
+	Created   Date              `json:"created,omitempty"`
 }
 
 type Quota struct {
@@ -227,7 +214,7 @@ type Server struct {
 	Shared             bool                `json:"shared,omitempty"`
 	Metadata           map[string]string   `json:"metadata,omitempty"`
 	Name               string              `json:"name"`
-	Image              *NFVImage           `json:"image"`
+	Image              *DockerImage        `json:"image"`
 	Flavour            *DeploymentFlavour  `json:"flavor"`
 	Status             string              `json:"status"`
 	ExtendedStatus     string              `json:"extendedStatus"`
@@ -254,37 +241,48 @@ type Subnet struct {
 	GatewayIP string            `json:"gatewayIp"`
 }
 
-type VIMInstance struct {
-	ID             string               `json:"id,omitempty"`
-	HbVersion      int                  `json:"hbVersion,omitempty"`
-	ProjectID      string               `json:"projectId"`
-	Shared         bool                 `json:"shared,omitempty"`
-	Metadata       map[string]string    `json:"metadata,omitempty"`
-	Name           string               `json:"name"`
-	AuthURL        string               `json:"authUrl"`
-	Tenant         string               `json:"tenant"`
-	Username       string               `json:"username"`
-	Password       string               `json:"password"`
-	KeyPair        string               `json:"keyPair"`
-	Location       *Location            `json:"location,omitempty"`
-	SecurityGroups []string             `json:"securityGroups"`
-	Flavours       []*DeploymentFlavour `json:"flavours"`
-	Type           string               `json:"type"`
-	Images         []*NFVImage          `json:"images"`
-	Networks       []*Network           `json:"networks"`
-	Active         bool                 `json:"active"`
+type BaseVimInstance struct {
+	ID        string            `json:"id,omitempty"`
+	HbVersion int               `json:"hbVersion,omitempty"`
+	ProjectID string            `json:"projectId"`
+	Shared    bool              `json:"shared,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Name      string            `json:"name"`
+	AuthURL   string            `json:"authUrl"`
+	Active    bool              `json:"active"`
+	Location  *Location         `json:"location,omitempty"`
+	Type      string            `json:"type"`
 }
 
-func (vi *VIMInstance) HasFlavour(key string) bool {
-	for _, df := range vi.Flavours {
-		if df.FlavourKey == key || df.ExtID == key || df.ID == key {
-			return true
-		}
-	}
-
-	return false
+type DockerImage struct {
+	BaseNfvImage
+	Tags []string `json:"tags"`
 }
 
+type DockerNetwork struct {
+	BaseNetwork
+	Scope   string `json:"scope"`
+	Driver  string `json:"driver"`
+	Gateway string `json:"gateway"`
+	Subnet  string `json:"subnet"`
+}
+
+type OpenstackVimInstance struct {
+	BaseVimInstance
+	Username string `json:"username"`
+	Password string `json:"password"`
+	KeyPair  string `json:"keyPair"`
+	Tenant   string `json:"tenant"`
+}
+
+type DockerVimInstance struct {
+	BaseVimInstance
+	Ca        string          `json:"ca"`
+	Cert      string          `json:"cert"`
+	DockerKey string          `json:"dockerKey"`
+	Images    []DockerImage   `json:"images"`
+	Networks  []DockerNetwork `json:"networks"`
+}
 type VNFCDependencyParameters struct {
 	ID         string                           `json:"id,omitempty"`
 	HbVersion  int                              `json:"hbVersion,omitempty"`
@@ -306,7 +304,7 @@ type VNFPackage struct {
 	VIMTypes    []string          `json:"vimTypes"`
 	ImageLink   string            `json:"imageLink,omitempty"`
 	ScriptsLink string            `json:"scriptsLink,omitempty"`
-	Image       *NFVImage         `json:"image,omitempty"`
+	Image       *BaseNfvImage     `json:"image,omitempty"`
 	Scripts     []*Script         `json:"scripts"`
 }
 

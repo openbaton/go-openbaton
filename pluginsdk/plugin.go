@@ -1,3 +1,6 @@
+/*
+	Plugin SDK for Open Baton Managers
+ */
 package pluginsdk
 
 import (
@@ -9,6 +12,7 @@ import (
 	"encoding/json"
 )
 
+// The Config struct for a plugin
 type PluginConfig struct {
 	Type       string `toml:"type"`
 	Workers    int    `toml:"workers"`
@@ -19,6 +23,7 @@ type PluginConfig struct {
 	BrokerPort int    `toml:"brokerPort"`
 }
 
+// Start the plugin using the configuration file
 func Start(confPath string, h HandlerVim, name string) (error) {
 	cfg := PluginConfig{
 		Type:       "unknown",
@@ -46,6 +51,7 @@ func Start(confPath string, h HandlerVim, name string) (error) {
 	return startWithCfg(cfg, h, name)
 }
 
+// Start the plugin with specific configuration
 func StartWithConfig(typ, username, password, loglevel, brokerip string, workers, brokerPort int, h HandlerVim, name string) (error) {
 	cfg := PluginConfig{
 		Type:       typ,

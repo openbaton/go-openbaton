@@ -14,6 +14,7 @@ import (
 
 var log *logging.Logger
 
+//Obtain the Logger preformatted
 func GetLogger(name string, levelStr string) (*logging.Logger) {
 	if log != nil {
 		return log
@@ -57,7 +58,7 @@ func toLogLevel(lvlStr string) (lvl logging.Level) {
 	return
 }
 
-func RandomString(l int) string {
+func randomString(l int) string {
 	bytes := make([]byte, l)
 	for i := 0; i < l; i++ {
 		bytes[i] = byte(randInt(65, 90))
@@ -69,6 +70,7 @@ func randInt(min int, max int) int {
 	return min + rand.Intn(max-min)
 }
 
+// Execute a AMQP RPC call to a specific queue
 func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *logging.Logger) (<-chan amqp.Delivery, string, error) {
 	tenative := 0
 	var q amqp.Queue
@@ -127,7 +129,7 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 	if !done {
 		return nil, "", err
 	}
-	corrId := RandomString(32)
+	corrId := randomString(32)
 
 	mrs, err := json.Marshal(message)
 	if err != nil {
@@ -153,6 +155,7 @@ func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *log
 	return msgs, corrId, nil
 }
 
+// Send message to a specific queue
 func SendMsg(queue string, message []byte, channel *amqp.Channel, logger *logging.Logger) (error) {
 	err := channel.Publish(
 		"openbaton-exchange", // exchange
@@ -171,6 +174,7 @@ func SendMsg(queue string, message []byte, channel *amqp.Channel, logger *loggin
 	return nil
 }
 
+// Vim Driver Error
 type DriverError struct {
 	Message string    `json:"detailMessage"`
 	*catalogue.Server `json:"server"`

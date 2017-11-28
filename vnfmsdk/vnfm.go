@@ -1,3 +1,6 @@
+/*
+	VNFM SDK for Open Baton Managers
+ */
 package vnfmsdk
 
 import (
@@ -9,6 +12,7 @@ import (
 	"os/signal"
 )
 
+// The VNFM config struct
 type VnfmConfig struct {
 	Type        string `toml:"type"`
 	Endpoint    string `toml:"endpoint"`
@@ -22,6 +26,7 @@ type VnfmConfig struct {
 	BrokerPort  int    `toml:"brokerPort"`
 }
 
+// Start the VNFM with config file
 func Start(confPath string, h HandlerVnfm, name string) (error) {
 	cfg := VnfmConfig{
 		Type:        "unknown",
@@ -48,6 +53,7 @@ func Start(confPath string, h HandlerVnfm, name string) (error) {
 	return startWithCfg(cfg, name, h)
 }
 
+// Start the VNFM with specific config
 func StartWithConfig(typ, description, username, password, loglevel, brokerIp string, brokerPort, workers int, allocate bool, h HandlerVnfm, name string) (error) {
 	cfg := VnfmConfig{
 		Type:        typ,

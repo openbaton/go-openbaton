@@ -1,3 +1,6 @@
+/*
+	Common package for the VNFM and the Plugin SDK for Open Baton Managers
+ */
 package sdk
 
 import (
@@ -11,15 +14,13 @@ import (
 
 type Handler interface{}
 
+// Handler function for the VNFMs
 type handleVnfmFunction func(bytemsg []byte, worker interface{}) ([]byte, error)
 
+// Handler function for the Plugins
 type handlePluginFunction func(bytemsg []byte, worker interface{}) ([]byte, error)
 
-type manager interface {
-	Start(confPath string, name *string)
-	getCreds() catalogue.ManagerCredentials
-}
-
+// Function to retrieve the private amqp credentials for a VNFM
 func GetVnfmCreds(username string, password string, brokerIp string, brokerPort int, vnfm_endpoint *catalogue.Endpoint, log_level string) (*catalogue.ManagerCredentials, error) {
 	registerMessage := catalogue.VnfmRegisterMessage{}
 	registerMessage.Action = "register"
@@ -28,6 +29,7 @@ func GetVnfmCreds(username string, password string, brokerIp string, brokerPort 
 	return getCreds(username, password, brokerIp, brokerPort, registerMessage, log_level)
 }
 
+// Function to retrieve the private amqp credentials for a Plugin
 func GetPluginCreds(username string, password string, brokerIp string, brokerPort int, plugin_type string, log_level string) (*catalogue.ManagerCredentials, error) {
 	registerMessage := catalogue.PluginRegisterMessage{}
 	registerMessage.Action = "register"
@@ -78,7 +80,7 @@ func getCreds(username string, password string, brokerIp string, brokerPort int,
 		return nil, err
 	}
 
-	corrId := RandomString(32)
+	corrId := randomString(32)
 	mrs, err := json.Marshal(msg)
 	if err != nil {
 		logger.Errorf("Error while marshaling: %v", err)
@@ -116,6 +118,7 @@ func getAmqpUri(username string, password string, brokerIp string, brokerPort in
 	return fmt.Sprintf("amqp://%s:%s@%s:%d/", username, password, brokerIp, brokerPort)
 }
 
+// Base Manager struct
 type Manager struct {
 	conn       *amqp.Connection
 	Channel    *amqp.Channel
@@ -126,16 +129,19 @@ type Manager struct {
 	deliveries <-chan amqp.Delivery
 }
 
+// Specialization of Manager for VNFMs containing the right handler function
 type VnfmManager struct {
 	*Manager
 	handlerFunction handleVnfmFunction
 }
 
+// Specialization of Manager for Plugins containing the right handler function
 type PluginManager struct {
 	*Manager
 	handlerFunction handlePluginFunction
 }
 
+// Instantiate a new Plugin Manager struct
 func NewPluginManager(username string,
 	password string,
 	brokerIp string,
@@ -165,6 +171,7 @@ func NewPluginManager(username string,
 	return m, nil
 }
 
+// Instantiate a new Vnfm Manager struct
 func NewVnfmManager(username string,
 	password string,
 	brokerIp string,
@@ -244,6 +251,7 @@ func setupManager(username string, password string, brokerIp string, brokerPort 
 	return nil
 }
 
+// Shutdown the manager
 func (c *Manager) Shutdown() error {
 	if err := c.conn.Close(); err != nil {
 		c.logger.Errorf("AMQP connection close error: %s", err)
@@ -256,8 +264,8 @@ func (c *Manager) Shutdown() error {
 	return <-c.done
 }
 
-
-func (v * VnfmManager) Unregister(typ, username, password string, vnfm_endpoint *catalogue.Endpoint) {
+// Unregister function for VNFM
+func (v *VnfmManager) Unregister(typ, username, password string, vnfm_endpoint *catalogue.Endpoint) {
 	msg := catalogue.VnfmManagerUnregisterMessage{
 		Type:     typ,
 		Action:   "unregister",
@@ -268,7 +276,8 @@ func (v * VnfmManager) Unregister(typ, username, password string, vnfm_endpoint 
 	v.Manager.unregister(msg)
 }
 
-func (v * PluginManager) Unregister(typ, username, password string) {
+// Unregister function for Plugin
+func (v *PluginManager) Unregister(typ, username, password string) {
 	msg := catalogue.ManagerUnregisterMessage{
 		Type:     typ,
 		Action:   "unregister",
@@ -279,7 +288,6 @@ func (v * PluginManager) Unregister(typ, username, password string) {
 }
 
 func (v *Manager) unregister(msg interface{}) {
-
 	msgBytes, err := json.Marshal(msg)
 	if err != nil {
 		v.logger.Errorf("Error while marshalling unregister message: %v", err)
@@ -293,6 +301,7 @@ func (v *Manager) unregister(msg interface{}) {
 	//v.logger.Debugf("Unregistered and got answer: %v", resp)
 }
 
+// Serve function for VNFM
 func (c *VnfmManager) Serve(worker interface{}) {
 	forever := make(chan bool)
 
@@ -344,6 +353,7 @@ func (c *VnfmManager) Serve(worker interface{}) {
 	<-forever
 }
 
+// Serve function for Plugin
 func (c *PluginManager) Serve(worker interface{}) {
 	forever := make(chan bool)
 

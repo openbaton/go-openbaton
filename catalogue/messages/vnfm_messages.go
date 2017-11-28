@@ -30,7 +30,7 @@ type VNFMAllocateResources struct {
 	vnfmMessage
 
 	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
-	VIMInstances map[string]*catalogue.VIMInstance       `json:"vimInstances,omitempty"`
+	VIMInstances map[string]interface{}                  `json:"vimInstances,omitempty"`
 	Userdata     string                                  `json:"userdata,omitempty"`
 	KeyPairs     []*catalogue.Key                        `json:"keyPairs,omitempty"`
 }

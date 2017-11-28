@@ -77,9 +77,17 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 
 	vimInstances := instantiateMessage.VIMInstances
 
+	var flavorKey string
+
+	if instantiateMessage.VNFDFlavour != nil {
+		flavorKey = instantiateMessage.VNFDFlavour.FlavourKey
+	} else {
+		flavorKey = ""
+	}
+
 	vnfr, err := catalogue.NewVNFR(
 		instantiateMessage.VNFD,
-		instantiateMessage.VNFDFlavour.FlavourKey,
+		flavorKey,
 		instantiateMessage.VLRs,
 		instantiateMessage.Extension,
 		vimInstances)
@@ -151,6 +159,7 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 
 	return nfvMessage, nil
 }
+
 func (worker *worker) executeRpc(queue string, message messages.NFVMessage) (messages.NFVMessage, error) {
 	msgs, corrId, err := sdk.ExecuteRpc(queue, message, worker.Channel, worker.l)
 	if err != nil {
@@ -406,7 +415,7 @@ func (wk *worker) handleUpdate(updateMessage *messages.OrUpdate) (messages.NFVMe
 
 func (wk *worker) allocateResources(
 	vnfr *catalogue.VirtualNetworkFunctionRecord,
-	vimInstances map[string]*catalogue.VIMInstance,
+	vimInstances map[string]interface{},
 	keyPairs []*catalogue.Key) (*catalogue.VirtualNetworkFunctionRecord, *vnfmError) {
 
 	wk.l.Debug("allocating resources for the VNFR")
