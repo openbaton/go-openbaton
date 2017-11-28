@@ -1,3 +1,6 @@
+/*
+	Plugin SDK for Open Baton Managers
+ */
 package pluginsdk
 
 import (

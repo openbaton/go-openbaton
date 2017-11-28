@@ -1,3 +1,6 @@
+/*
+	VNFM SDK for Open Baton Managers
+ */
 package vnfmsdk
 
 import (

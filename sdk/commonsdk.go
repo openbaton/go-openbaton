@@ -1,5 +1,5 @@
 /*
-	Common package for the VNFM and the Plugin SDK for Opena Baton Managers
+	Common package for the VNFM and the Plugin SDK for Open Baton Managers
  */
 package sdk
 
