@@ -6,9 +6,30 @@ import (
 	"encoding/json"
 )
 
+// Obtain a Docker vim instance from a interfaced struct
 func GetDockerVimInstance(vimInstance interface{}) (*catalogue.DockerVimInstance, error) {
 	switch t := vimInstance.(type) {
 	case *catalogue.DockerVimInstance:
+		return t, nil
+	default:
+		return nil, errors.New("Not Received Docker Vim Instance");
+	}
+}
+
+// Obtain a Openstack vim instance from a interfaced struct
+func GetOpenstackVimInstance(vimInstance interface{}) (*catalogue.OpenstackVimInstance, error) {
+	switch t := vimInstance.(type) {
+	case *catalogue.OpenstackVimInstance:
+		return t, nil
+	default:
+		return nil, errors.New("Not Received Docker Vim Instance");
+	}
+}
+
+// Obtain a Generic vim instance from a interfaced struct
+func GetBaseVimInstance(vimInstance interface{}) (*catalogue.BaseVimInstance, error) {
+	switch t := vimInstance.(type) {
+	case *catalogue.BaseVimInstance:
 		return t, nil
 	default:
 		return nil, errors.New("Not Received Docker Vim Instance");

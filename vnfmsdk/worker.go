@@ -159,6 +159,7 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 
 	return nfvMessage, nil
 }
+
 func (worker *worker) executeRpc(queue string, message messages.NFVMessage) (messages.NFVMessage, error) {
 	msgs, corrId, err := sdk.ExecuteRpc(queue, message, worker.Channel, worker.l)
 	if err != nil {

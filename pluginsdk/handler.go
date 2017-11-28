@@ -20,7 +20,7 @@ func handlePluginRequest(bytemsg []byte, wk interface{}) ([]byte, error){
 	}
 	switch t := wk.(type) {
 		case *worker:
-			result, err := t.Handle(req.MethodName, req.Parameters)
+			result, err := t.handle(req.MethodName, req.Parameters)
 
 			var resp response
 			if err != nil {

@@ -17,7 +17,7 @@ type worker struct {
 	h HandlerVim
 }
 
-func (w worker) Handle(fname string, args []json.RawMessage) (interface{}, error) {
+func (w worker) handle(fname string, args []json.RawMessage) (interface{}, error) {
 	if len(args) < 1 {
 		return nil, plugError{"expecting at least one VimInstance"}
 	}
