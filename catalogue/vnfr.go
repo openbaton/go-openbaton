@@ -19,6 +19,7 @@ package catalogue
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 )
 
 // A VirtualNetworkFunctionRecord as described by ETSI GS NFV-MAN 001 V1.1.1
@@ -66,7 +67,7 @@ func NewVNFR(
 	flavourKey string,
 	vlrs []*VirtualLinkRecord,
 	extension map[string]string,
-	vimInstances map[string][]*BaseVimInstance) (*VirtualNetworkFunctionRecord, error) {
+	vimInstances map[string][]interface{}) (*VirtualNetworkFunctionRecord, error) {
 
 	autoScalePolicies := make([]*AutoScalePolicy, len(vnfd.AutoScalePolicies))
 	for i, asp := range vnfd.AutoScalePolicies {
@@ -148,20 +149,19 @@ func NewVNFR(
 
 	vdus := make([]*VirtualDeploymentUnit, len(vnfd.VDUs))
 	for i, vdu := range vnfd.VDUs {
-		//for _, vi := range vimInstances[vdu.ID] {
-		//	for _, name := range vdu.VIMInstanceNames {
-		//		if name == vi.Name {
-		//			if !vi.HasFlavour(flavourKey) {
-		//				return nil, fmt.Errorf("no key %s found in vim instance: %v", flavourKey, vi)
-		//			}
-		//		}
-		//	}
-		//}
-
 		vdus[i] = makeVDUFromParent(vdu)
 		vimNames := make([]string, len(vimInstances[vdu.ID]))
 		for i, vim := range vimInstances[vdu.ID] {
-			vimNames[i] = vim.Name
+			switch t := vim.(type) {
+			case *DockerVimInstance:
+				vimNames[i] = t.Name
+			case *OpenstackVimInstance:
+				vimNames[i] = t.Name
+			case *BaseVimInstance:
+				vimNames[i] = t.Name
+			default:
+				return nil, errors.New("Type of Vim Instance not known")
+			}
 		}
 		vdus[i].VIMInstanceNames = vimNames
 	}

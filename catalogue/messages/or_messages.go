@@ -62,7 +62,7 @@ type OrGrantLifecycleOperation struct {
 	orMessage
 
 	GrantAllowed bool                                    `json:"grantAllowed"`
-	VDUVIM       map[string]*catalogue.BaseVimInstance   `json:"vduVim,omitempty"`
+	VDUVIM       map[string]interface{}                  `json:"vduVim,omitempty"`
 	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
 }
 
@@ -90,7 +90,7 @@ type OrInstantiate struct {
 	VNFInstanceName string                                      `json:"vnfInstanceName,omitempty"`
 	VLRs            []*catalogue.VirtualLinkRecord              `json:"vlrs,omitempty"`
 	Extension       map[string]string                           `json:"extension,omitempty"`
-	VIMInstances    map[string][]*catalogue.BaseVimInstance     `json:"vimInstances,omitempty"`
+	VIMInstances    map[string][]interface{}                    `json:"vimInstances,omitempty"`
 	VNFPackage      *catalogue.VNFPackage                       `json:"vnfPackage,omitempty"`
 	Keys            []*catalogue.Key                            `json:"keys,omitempty"`
 }
@@ -104,7 +104,7 @@ type OrScaling struct {
 
 	Component    *catalogue.VNFComponent                 `json:"component,omitempty"`
 	VNFCInstance *catalogue.VNFCInstance                 `json:"vnfcInstance,omitempty"`
-	VIMInstance  *catalogue.BaseVimInstance              `json:"vimInstance,omitempty"`
+	VIMInstance  interface{}                             `json:"vimInstance,omitempty"`
 	VNFPackage   *catalogue.VNFPackage                   `json:"vnfPackage,omitempty"`
 	VNFR         *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
 	Dependency   *catalogue.VNFRecordDependency          `json:"dependency,omitempty"`
