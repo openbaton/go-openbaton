@@ -99,7 +99,7 @@ func startWithCfg(cfg PluginConfig, h HandlerVim, name string) error {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
-		for _ = range c {
+		for range c {
 			logger.Infof("Received ctrl-c, unregistering")
 			manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword)
 			go manager.Shutdown()

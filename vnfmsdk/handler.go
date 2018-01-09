@@ -19,35 +19,24 @@ func handleNfvMessage(bytemsg []byte, wk interface{}) ([]byte, error) {
 	}
 	logger.Debugf("Received Message %s", n.Action())
 	var response messages.NFVMessage
-	var err *vnfmError
 	switch t := wk.(type) {
 
 	case *worker:
-		response, err = handleMessage(n, t)
+		response = handleMessage(n, t)
 	default:
 		return nil, errors.New("Worker must be of type ")
 	}
 	var byteRes []byte
+	resp, err := json.Marshal(response)
 	if err != nil {
-		merr, err := json.Marshal(err)
-		if err != nil {
-			logger.Errorf("Error while marshaling error: %v", err)
-			return nil, err
-		}
-		byteRes = []byte(merr)
-	} else {
-		resp, err := json.Marshal(response)
-		//logger.Debugf("Sending back: \n%v" , string(resp))
-		if err != nil {
-			logger.Errorf("Error while marshaling response: %v", err)
-			return nil, err
-		}
-		byteRes = []byte(resp)
+		logger.Errorf("Error while marshaling response: %v", err)
+		return nil, err
 	}
+	byteRes = []byte(resp)
 	return byteRes, nil
 }
 
-func handleMessage(nfvMessage messages.NFVMessage, wk *worker) (messages.NFVMessage, *vnfmError) {
+func handleMessage(nfvMessage messages.NFVMessage, wk *worker) (messages.NFVMessage) {
 	content := nfvMessage.Content()
 
 	var reply messages.NFVMessage
@@ -115,8 +104,27 @@ func handleMessage(nfvMessage messages.NFVMessage, wk *worker) (messages.NFVMess
 		wk.l.Warning("received unsupported action")
 	}
 	if err != nil {
-		wk.l.Errorf("ERROR: %v", err)
+		wk.l.Errorf("%v", err)
+		errorMsg, err := messages.New(catalogue.ActionError, &messages.VNFMError{
+			Exception: messages.JavaException{
+				DetailMessage:        err.msg,
+				StackTrace:           make([]messages.Trace, 0),
+				SuppressedExceptions: make([]string, 0),
+				InternalCause: messages.Cause{
+					DetailMessage:        err.msg,
+					StackTrace:           make([]messages.Trace, 0),
+					SuppressedExceptions: make([]string, 0),
+				},
+			},
+			NSRID: err.nsrID,
+			VNFR:  err.vnfr,
+		})
+		if err == nil {
+			return errorMsg
+		} else {
+			wk.l.Errorf("Error generating vnfm message error: %v", err)
+		}
 	}
 
-	return reply, err
+	return reply
 }

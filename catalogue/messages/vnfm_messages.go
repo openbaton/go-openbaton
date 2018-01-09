@@ -39,12 +39,33 @@ func (VNFMAllocateResources) DefaultAction() catalogue.Action {
 	return catalogue.ActionAllocateResources
 }
 
+type Trace struct {
+	DeclaringClass string `json:"declaringClass,omitempty"`
+	MethodName     string `json:"methodName,omitempty"`
+	FileName       string `json:"fileName,omitempty"`
+	LineNumber     int    `json:"lineNumber,omitempty"`
+}
+
+type Cause struct {
+	DetailMessage        string   `json:"detailMessage,omitempty"`
+	StackTrace           []Trace  `json:"stackTrace,omitempty"`
+	SuppressedExceptions []string `json:"suppressedExceptions,omitempty"`
+}
+
+type JavaException struct {
+	DetailMessage        string   `json:"detailMessage,omitempty"`
+	StackTrace           []Trace  `json:"stackTrace,omitempty"`
+	SuppressedExceptions []string `json:"suppressedExceptions,omitempty"`
+
+	InternalCause Cause `json:"cause,omitempty"`
+}
+
 type VNFMError struct {
 	vnfmMessage
 
 	NSRID     string                                  `json:"nsrId,omitempty"`
 	VNFR      *catalogue.VirtualNetworkFunctionRecord `json:"virtualNetworkFunctionRecord,omitempty"`
-	Exception map[string]interface{}                  `json:"exception,omitempty"` // I don't know how to deserialize a Java exception
+	Exception JavaException                           `json:"exception,omitempty"` // I don't know how to deserialize a Java exception
 }
 
 func (VNFMError) DefaultAction() catalogue.Action {
@@ -129,7 +150,3 @@ type VNFMStartStop struct {
 func (VNFMStartStop) DefaultAction() catalogue.Action {
 	return catalogue.ActionStart
 }
-
-
-
-
