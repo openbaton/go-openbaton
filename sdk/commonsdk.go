@@ -124,6 +124,10 @@ type Manager struct {
 	Channel    *amqp.Channel
 	workers    int
 	queueName  string
+	Username   string
+	Password   string
+	BrokerIp   string
+	BrokerPort int
 	done       chan error
 	logger     *logging.Logger
 	deliveries <-chan amqp.Delivery
@@ -247,6 +251,10 @@ func setupManager(username string, password string, brokerIp string, brokerPort 
 		return err
 	}
 
+	c.Username = username
+	c.Password = password
+	c.BrokerIp = brokerIp
+	c.BrokerPort = brokerPort
 	c.logger.Debug("Queue bound to Exchange, starting Consume")
 	return nil
 }

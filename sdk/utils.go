@@ -9,11 +9,9 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"github.com/openbaton/go-openbaton/catalogue"
-	"sync"
 )
 
 var log *logging.Logger
-var mux sync.Mutex
 
 //Obtain the Logger preformatted
 func GetLogger(name string, levelStr string) (*logging.Logger) {
@@ -72,11 +70,19 @@ func randInt(min int, max int) int {
 }
 
 // Execute a AMQP RPC call to a specific queue
-func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *logging.Logger) (<-chan amqp.Delivery, string, error) {
-	mux.Lock()
-	defer mux.Unlock()
+func ExecuteRpc(queue string, message interface{}, username, password, brokerIp string, brokerPort int, l *logging.Logger) (<-chan amqp.Delivery, string, error) {
+
+	amqpURI := getAmqpUri(username, password, brokerIp, brokerPort)
+	l.Debugf("dialing %s", amqpURI)
+	conn, err := amqp.Dial(amqpURI)
+	if err != nil {
+		return nil, "", err
+	}
+
+	l.Debugf("got Connection, getting Channel")
+	channel, err := conn.Channel()
+
 	var q amqp.Queue
-	var err error
 	var msgs <-chan amqp.Delivery
 
 	l.Debugf("Declaring Queue for RPC")

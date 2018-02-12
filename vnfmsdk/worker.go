@@ -16,6 +16,7 @@ type worker struct {
 	handler  HandlerVnfm
 	Allocate bool
 	Channel  *amqp.Channel
+	Manager  *sdk.VnfmManager
 }
 
 type vnfmError struct {
@@ -161,7 +162,14 @@ func (wk *worker) handleInstantiate(instantiateMessage *messages.OrInstantiate) 
 }
 
 func (worker *worker) executeRpc(queue string, message messages.NFVMessage) (messages.NFVMessage, error) {
-	msgs, corrId, err := sdk.ExecuteRpc(queue, message, worker.Channel, worker.l)
+	msgs, corrId, err := sdk.ExecuteRpc(
+		queue,
+		message,
+		worker.Manager.Username,
+		worker.Manager.Password,
+		worker.Manager.BrokerIp,
+		worker.Manager.BrokerPort,
+		worker.l)
 	if err != nil {
 		return nil, err
 	}

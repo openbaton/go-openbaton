@@ -125,9 +125,9 @@ func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 
 	wk := &worker{
 		l:        logger,
-		Channel:  manager.Channel,
 		handler:  h,
 		Allocate: cfg.Allocate,
+		Manager: manager,
 	}
 	manager.Serve(wk)
 
