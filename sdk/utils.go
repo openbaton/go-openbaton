@@ -9,10 +9,11 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"github.com/openbaton/go-openbaton/catalogue"
-	"time"
+	"sync"
 )
 
 var log *logging.Logger
+var mux sync.Mutex
 
 //Obtain the Logger preformatted
 func GetLogger(name string, levelStr string) (*logging.Logger) {
@@ -72,61 +73,40 @@ func randInt(min int, max int) int {
 
 // Execute a AMQP RPC call to a specific queue
 func ExecuteRpc(queue string, message interface{}, channel *amqp.Channel, l *logging.Logger) (<-chan amqp.Delivery, string, error) {
-	tenative := 0
+	mux.Lock()
+	defer mux.Unlock()
 	var q amqp.Queue
 	var err error
-	var done bool = false
 	var msgs <-chan amqp.Delivery
 
-	for tenative < 100 && !done {
-		l.Debugf("Declaring Queue for RPC tentative number: %d", tenative)
-		q, err = channel.QueueDeclare(
-			"",    // name
-			false, // durable
-			false, // delete when unused
-			true,  // exclusive
-			false, // noWait
-			nil,   // arguments
-		)
-		if err != nil {
-			debug.PrintStack()
-			l.Errorf("Failed to declare a queue: %v", err)
-			tenative++
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		done = true
-	}
-
-	if !done {
+	l.Debugf("Declaring Queue for RPC")
+	q, err = channel.QueueDeclare(
+		"",    // name
+		false, // durable
+		false, // delete when unused
+		true,  // exclusive
+		false, // noWait
+		nil,   // arguments
+	)
+	if err != nil {
+		debug.PrintStack()
 		l.Errorf("Failed to declare a queue: %v", err)
 		return nil, "", err
 	}
 
-	done = false
-	tenative = 0
-	for tenative < 100 && !done {
-		l.Debugf("Registering consume for RPC tentative number: %d", tenative)
-		msgs, err = channel.Consume(
-			q.Name, // queue
-			"",     // consumer
-			true,   // auto-ack
-			false,  // exclusive
-			false,  // no-local
-			false,  // no-wait
-			nil,    // args
-		)
-		if err != nil {
-			debug.PrintStack()
-			l.Errorf("Failed to register a consumer")
-			tenative++
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		done = true
-	}
-
-	if !done {
+	l.Debugf("Registering consume for RPC")
+	msgs, err = channel.Consume(
+		q.Name, // queue
+		"",     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+	if err != nil {
+		debug.PrintStack()
+		l.Errorf("Failed to register a consumer")
 		return nil, "", err
 	}
 	corrId := randomString(32)
