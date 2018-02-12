@@ -2,41 +2,45 @@ package vnfmsdk
 
 import (
 	"fmt"
-	"errors"
 	"encoding/json"
 	"github.com/openbaton/go-openbaton/sdk"
 	"github.com/openbaton/go-openbaton/catalogue"
 	"github.com/openbaton/go-openbaton/catalogue/messages"
+	"github.com/streadway/amqp"
 )
 
-func handleNfvMessage(bytemsg []byte, wk interface{}) ([]byte, error) {
+func handleNfvMessage(bytemsg []byte, handlerVnfm sdk.Handler, allocate bool, connection *amqp.Connection) ([]byte, error) {
 	logger := sdk.GetLogger("handler-function", "DEBUG")
-	n, verr := messages.Unmarshal(bytemsg, messages.NFVO)
-	if verr != nil {
-		logger.Errorf("Error while unmarshaling nfv message: %v", verr)
-		err := errors.New(fmt.Sprintf("Error while unmarshaling nfv message: %v", verr))
+	n, err := messages.Unmarshal(bytemsg, messages.NFVO)
+	if err != nil {
+		logger.Errorf("Error while unmarshaling nfv message: %v", err)
+		err := sdk.NewSdkError(fmt.Sprintf("Error while unmarshaling nfv message: %v", err))
 		return nil, err
 	}
 	logger.Debugf("Received Message %s", n.Action())
-	var response messages.NFVMessage
-	switch t := wk.(type) {
-
-	case *worker:
-		response = handleMessage(n, t)
+	switch h := handlerVnfm.(type) {
+	case HandlerVnfm:
+		wk := &worker{
+			l:          logger,
+			handler:    h,
+			Allocate:   allocate,
+			Connection: connection,
+		}
+		response := handleMessage(n, wk)
+		var byteRes []byte
+		resp, err := json.Marshal(response)
+		if err != nil {
+			logger.Errorf("Error while marshaling response: %v", err)
+			return nil, err
+		}
+		byteRes = []byte(resp)
+		return byteRes, nil
 	default:
-		return nil, errors.New("Worker must be of type ")
+		return nil, sdk.NewSdkError("Not a HandlerVnfm implementation")
 	}
-	var byteRes []byte
-	resp, err := json.Marshal(response)
-	if err != nil {
-		logger.Errorf("Error while marshaling response: %v", err)
-		return nil, err
-	}
-	byteRes = []byte(resp)
-	return byteRes, nil
 }
 
-func handleMessage(nfvMessage messages.NFVMessage, wk *worker) (messages.NFVMessage) {
+func handleMessage(nfvMessage messages.NFVMessage, worker *worker) (messages.NFVMessage) {
 	content := nfvMessage.Content()
 
 	var reply messages.NFVMessage
@@ -46,65 +50,65 @@ func handleMessage(nfvMessage messages.NFVMessage, wk *worker) (messages.NFVMess
 
 	case catalogue.ActionConfigure:
 		genericMessage := content.(*messages.OrGeneric)
-		reply, err = wk.handleConfigure(genericMessage)
+		reply, err = worker.handleConfigure(genericMessage)
 
 	case catalogue.ActionError:
 		errorMessage := content.(*messages.OrError)
-		err = wk.handleError(errorMessage)
+		err = worker.handleError(errorMessage)
 
 	case catalogue.ActionHeal:
 		healMessage := content.(*messages.OrHealVNFRequest)
-		reply, err = wk.handleHeal(healMessage)
+		reply, err = worker.handleHeal(healMessage)
 
 	case catalogue.ActionInstantiate:
 		instantiateMessage := content.(*messages.OrInstantiate)
-		reply, err = wk.handleInstantiate(instantiateMessage)
+		reply, err = worker.handleInstantiate(instantiateMessage)
 
 	case catalogue.ActionInstantiateFinish:
 
 	case catalogue.ActionModify:
 		genericMessage := content.(*messages.OrGeneric)
-		reply, err = wk.handleModify(genericMessage)
+		reply, err = worker.handleModify(genericMessage)
 
 	case catalogue.ActionScaleIn:
 		scalingMessage := content.(*messages.OrScaling)
-		err = wk.handleScaleIn(scalingMessage)
+		err = worker.handleScaleIn(scalingMessage)
 
 	case catalogue.ActionScaleOut:
 		scalingMessage := content.(*messages.OrScaling)
-		reply, err = wk.handleScaleOut(scalingMessage)
+		reply, err = worker.handleScaleOut(scalingMessage)
 
 		// not implemented
 	case catalogue.ActionScaling:
 
 	case catalogue.ActionStart:
 		startStopMessage := content.(*messages.OrStartStop)
-		reply, err = wk.handleStart(startStopMessage)
+		reply, err = worker.handleStart(startStopMessage)
 
 	case catalogue.ActionStop:
 		startStopMessage := content.(*messages.OrStartStop)
-		reply, err = wk.handleStop(startStopMessage)
+		reply, err = worker.handleStop(startStopMessage)
 
 		// not implemented
 	case catalogue.ActionReleaseResourcesFinish:
 
 	case catalogue.ActionReleaseResources:
 		genericMessage := content.(*messages.OrGeneric)
-		reply, err = wk.handleReleaseResources(genericMessage)
+		reply, err = worker.handleReleaseResources(genericMessage)
 
 	case catalogue.ActionResume:
 		genericMessage := content.(*messages.OrGeneric)
-		reply, err = wk.handleResume(genericMessage)
+		reply, err = worker.handleResume(genericMessage)
 
 	case catalogue.ActionUpdate:
 		updateMessage := content.(*messages.OrUpdate)
-		reply, err = wk.handleUpdate(updateMessage)
+		reply, err = worker.handleUpdate(updateMessage)
 
 	default:
-		wk.l.Warning("received unsupported action")
+		worker.l.Warning("received unsupported action")
 	}
 	if err != nil {
-		wk.l.Errorf("%v", err)
+		worker.l.Errorf("%v", err)
 		errorMsg, err := messages.New(catalogue.ActionError, &messages.VNFMError{
 			Exception: messages.JavaException{
 				DetailMessage:        err.msg,
@@ -122,7 +126,7 @@ func handleMessage(nfvMessage messages.NFVMessage, wk *worker) (messages.NFVMess
 		if err == nil {
 			return errorMsg
 		} else {
-			wk.l.Errorf("Error generating vnfm message error: %v", err)
+			worker.l.Errorf("Error generating vnfm message error: %v", err)
 		}
 	}
 

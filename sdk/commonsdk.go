@@ -15,10 +15,7 @@ import (
 type Handler interface{}
 
 // Handler function for the VNFMs
-type handleVnfmFunction func(bytemsg []byte, worker interface{}) ([]byte, error)
-
-// Handler function for the Plugins
-type handlePluginFunction func(bytemsg []byte, worker interface{}) ([]byte, error)
+type handlerFunction func(bytemsg []byte, handlerVnfm Handler, allocate bool, connection *amqp.Connection) ([]byte, error)
 
 // Function to retrieve the private amqp credentials for a VNFM
 func GetVnfmCreds(username string, password string, brokerIp string, brokerPort int, vnfm_endpoint *catalogue.Endpoint, log_level string) (*catalogue.ManagerCredentials, error) {
@@ -120,105 +117,63 @@ func getAmqpUri(username string, password string, brokerIp string, brokerPort in
 
 // Base Manager struct
 type Manager struct {
-	conn       *amqp.Connection
-	Channel    *amqp.Channel
-	workers    int
-	queueName  string
-	Username   string
-	Password   string
-	BrokerIp   string
-	BrokerPort int
-	done       chan error
-	logger     *logging.Logger
-	deliveries <-chan amqp.Delivery
+	Connection      *amqp.Connection
+	Channel         *amqp.Channel
+	workers         int
+	allocate        bool
+	queueName       string
+	errorChan       chan error
+	logger          *logging.Logger
+	deliveries      <-chan amqp.Delivery
+	handlerFunction handlerFunction
+	handler         Handler
 }
 
-// Specialization of Manager for VNFMs containing the right handler function
-type VnfmManager struct {
-	*Manager
-	handlerFunction handleVnfmFunction
-}
-
-// Specialization of Manager for Plugins containing the right handler function
-type PluginManager struct {
-	*Manager
-	handlerFunction handlePluginFunction
-}
-
-// Instantiate a new Plugin Manager struct
-func NewPluginManager(username string,
+// Instantiate a new Manager struct
+func NewManager(h Handler,
+	username string,
 	password string,
 	brokerIp string,
 	brokerPort int,
 	exchange string,
 	queueName string,
 	workers int,
-	handlerFunction handlePluginFunction,
-	log_level string) (*PluginManager, error) {
-	m := &PluginManager{
-		Manager: &Manager{
-			logger:  GetLogger("plugin-manager", log_level),
-			Channel: nil,
-			conn:    nil,
-			workers: workers,
-			done:    make(chan error),
-		},
-		handlerFunction: handlerFunction,
-	}
-	err := setupManager(username, password, brokerIp, brokerPort, m.Manager, exchange, queueName)
-	m.queueName = queueName
-	if err != nil {
-		m.logger.Errorf("Error while setup the amqp thing: %v", err)
-		return nil, err
-	}
+	allocate bool,
+	managerName string,
+	handleFunction handlerFunction,
+	logLevel string) (*Manager, error) {
 
-	return m, nil
-}
-
-// Instantiate a new Vnfm Manager struct
-func NewVnfmManager(username string,
-	password string,
-	brokerIp string,
-	brokerPort int,
-	exchange string,
-	queueName string,
-	workers int,
-	manager_name string,
-	handleFunction handleVnfmFunction,
-	log_level string) (*VnfmManager, error) {
-
-	c := &VnfmManager{
-		Manager: &Manager{
-			conn:    nil,
-			Channel: nil,
-			workers: workers,
-			done:    make(chan error),
-			logger:  GetLogger(manager_name, log_level),
-		},
+	manager := &Manager{
+		Connection:      nil,
+		Channel:         nil,
+		allocate:        allocate,
+		workers:         workers,
+		errorChan:       make(chan error),
+		logger:          GetLogger(managerName, logLevel),
 		handlerFunction: handleFunction,
+		handler:         h,
 	}
 
-	var err error
-	err = setupManager(username, password, brokerIp, brokerPort, c.Manager, exchange, queueName)
+	err := setupManager(username, password, brokerIp, brokerPort, manager, exchange, queueName)
 	if err != nil {
-		c.logger.Errorf("Error while setup the amqp thing: %v", err)
+		manager.logger.Errorf("Error while setup the amqp thing: %v", err)
 		return nil, err
 	}
-	c.queueName = queueName
-	return c, nil
+	manager.queueName = queueName
+	return manager, nil
 }
 
 func setupManager(username string, password string, brokerIp string, brokerPort int, c *Manager, exchange string, queueName string) error {
 	amqpURI := getAmqpUri(username, password, brokerIp, brokerPort)
 	c.logger.Debugf("dialing %s", amqpURI)
 	var err error
-	c.conn, err = amqp.Dial(amqpURI)
+	c.Connection, err = amqp.Dial(amqpURI)
 	if err != nil {
 		return err
 	}
 
 	c.logger.Debugf("got Connection, getting Channel")
-	c.Channel, err = c.conn.Channel()
+	c.Channel, err = c.Connection.Channel()
 	if err != nil {
 		return err
 	}
@@ -227,12 +182,12 @@ func setupManager(username string, password string, brokerIp string, brokerPort 
 
 	c.logger.Debugf("declared Exchange, declaring Queue %q", queueName)
 	queue, err := c.Channel.QueueDeclare(
-		queueName, // name of the queue
-		true,      // durable
-		true,      // delete when unused
-		false,     // exclusive
-		false,     // noWait
-		nil,       // arguments
+		queueName,
+		true,
+		true,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		return err
@@ -251,164 +206,118 @@ func setupManager(username string, password string, brokerIp string, brokerPort 
 		return err
 	}
 
-	c.Username = username
-	c.Password = password
-	c.BrokerIp = brokerIp
-	c.BrokerPort = brokerPort
 	c.logger.Debug("Queue bound to Exchange, starting Consume")
 	return nil
 }
 
 // Shutdown the manager
-func (c *Manager) Shutdown() error {
-	if err := c.conn.Close(); err != nil {
-		c.logger.Errorf("AMQP connection close error: %s", err)
+func (manager *Manager) Shutdown() error {
+	if err := manager.Connection.Close(); err != nil {
+		manager.logger.Errorf("AMQP connection close error: %s", err)
 		return err
 	}
 
-	defer c.logger.Debugf("AMQP shutdown OK")
+	defer manager.logger.Debugf("AMQP shutdown OK")
 
-	// wait for handle() to exit
-	return <-c.done
+	return <-manager.errorChan
 }
 
-// Unregister function for VNFM
-func (v *VnfmManager) Unregister(typ, username, password string, vnfm_endpoint *catalogue.Endpoint) {
-	msg := catalogue.VnfmManagerUnregisterMessage{
-		Type:     typ,
-		Action:   "unregister",
-		Username: username,
-		Password: password,
-		Endpoint: vnfm_endpoint,
+// Unregister function for Managers
+func (manager *Manager) Unregister(typ, username, password string, vnfmEndpoint *catalogue.Endpoint) {
+	if vnfmEndpoint == nil {
+		manager.unregisterPlugin(typ, username, password)
+		return
+	} else {
+		msg := catalogue.VnfmManagerUnregisterMessage{
+			Type:     typ,
+			Action:   "unregister",
+			Username: username,
+			Password: password,
+			Endpoint: vnfmEndpoint,
+		}
+		manager.unregister(msg)
 	}
-	v.Manager.unregister(msg)
 }
 
-// Unregister function for Plugin
-func (v *PluginManager) Unregister(typ, username, password string) {
+// Unregister function for the Plugin
+func (manager *Manager) unregisterPlugin(typ, username, password string) {
 	msg := catalogue.ManagerUnregisterMessage{
 		Type:     typ,
 		Action:   "unregister",
 		Username: username,
 		Password: password,
 	}
-	v.Manager.unregister(msg)
+	manager.unregister(msg)
 }
 
-func (v *Manager) unregister(msg interface{}) {
+func (manager *Manager) unregister(msg interface{}) {
 	msgBytes, err := json.Marshal(msg)
 	if err != nil {
-		v.logger.Errorf("Error while marshalling unregister message: %v", err)
+		manager.logger.Errorf("Error while marshalling unregister message: %v", err)
 		return
 	}
-	err = SendMsg("nfvo.manager.handling", msgBytes, v.Channel, v.logger)
+	err = SendMsg("nfvo.manager.handling", msgBytes, manager.Channel, manager.logger)
 	if err != nil {
-		v.logger.Errorf("Error unregistering: %v", err)
+		manager.logger.Errorf("Error unregistering: %v", err)
 		return
 	}
-	//v.logger.Debugf("Unregistered and got answer: %v", resp)
 }
 
-// Serve function for VNFM
-func (c *VnfmManager) Serve(worker interface{}) {
+// Serve function for Manager
+func (manager *Manager) Serve() {
 	forever := make(chan bool)
 
-	for x := 0; x < c.workers; x++ {
+	for x := 0; x < manager.workers; x++ {
 
 		go func() {
 
-			deliveries, err := c.Channel.Consume(
-				c.queueName, // name
-				"",          // consumerTag,
-				false,       // noAck
-				false,       // exclusive
-				false,       // noLocal
-				false,       // noWait
-				nil,         // arguments
+			deliveries, err := manager.Channel.Consume(
+				manager.queueName, // name
+				"",                // consumerTag,
+				false,             // noAck
+				false,             // exclusive
+				false,             // noLocal
+				false,             // noWait
+				nil,               // arguments
 			)
 			if err != nil {
-				c.logger.Errorf("Error while consuming: %v", err)
+				manager.logger.Errorf("Error while consuming: %v", err)
 				return
 			}
 
-			c.deliveries = deliveries
-			for d := range c.deliveries {
-
-				byteRes, err := c.handlerFunction(d.Body, worker)
-				if err != nil {
-					c.logger.Errorf("Error while executing handler function: %v", err)
-					return
-				}
-				rerr := c.Channel.Publish(
-					"",        // exchange
-					d.ReplyTo, // routing key
-					false,     // mandatory
-					false,     // immediate
-					amqp.Publishing{
-						ContentType:   "text/plain",
-						CorrelationId: d.CorrelationId,
-						Body:          byteRes,
-					})
-				if err != nil {
-					c.done <- rerr
-					return
-				}
+			manager.deliveries = deliveries
+			for d := range manager.deliveries {
+				d1 := d
+				go func() {
+					byteRes, err := manager.handlerFunction(d1.Body, manager.handler, manager.allocate, manager.Connection)
+					if err != nil {
+						manager.logger.Errorf("Error while executing handler function: %v", err)
+						return
+					}
+					err = manager.Channel.Publish(
+						"",
+						d1.ReplyTo,
+						false,
+						false,
+						amqp.Publishing{
+							ContentType:   "text/plain",
+							CorrelationId: d1.CorrelationId,
+							Body:          byteRes,
+						})
+					if err != nil {
+						manager.errorChan <- err
+						return
+					}
+				}()
 
 				d.Ack(false)
 			}
 		}()
 	}
-	<-forever
-}
-
-// Serve function for Plugin
-func (c *PluginManager) Serve(worker interface{}) {
-	forever := make(chan bool)
-
-	for x := 0; x < c.workers; x++ {
-
-		go func() {
-
-			deliveries, err := c.Channel.Consume(
-				c.queueName, // name
-				"",          // consumerTag,
-				false,       // noAck
-				false,       // exclusive
-				false,       // noLocal
-				false,       // noWait
-				nil,         // arguments
-			)
-			if err != nil {
-				c.logger.Errorf("Error while consuming: %v", err)
-				return
-			}
-
-			c.deliveries = deliveries
-			for d := range c.deliveries {
-
-				byteRes, err := c.handlerFunction(d.Body, worker)
-				if err != nil {
-					c.logger.Errorf("Error while executing handler function: %v", err)
-					return
-				}
-				rerr := c.Channel.Publish(
-					"",        // exchange
-					d.ReplyTo, // routing key
-					false,     // mandatory
-					false,     // immediate
-					amqp.Publishing{
-						ContentType:   "text/plain",
-						CorrelationId: d.CorrelationId,
-						Body:          byteRes,
-					})
-				if err != nil {
-					c.done <- rerr
-					return
-				}
-
-				d.Ack(false)
-			}
-		}()
-	}
+	go func() {
+		for {
+			manager.logger.Error(fmt.Sprintf("Got error while handling rabbitmq: %q", <-manager.errorChan))
+		}
+	}()
 	<-forever
 }

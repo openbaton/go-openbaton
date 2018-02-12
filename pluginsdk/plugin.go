@@ -82,7 +82,8 @@ func startWithCfg(cfg PluginConfig, h HandlerVim, name string) error {
 		return err
 	}
 
-	manager, err := sdk.NewPluginManager(
+	manager, err := sdk.NewManager(
+		h,
 		rabbitCredentials.RabbitUsername,
 		rabbitCredentials.RabbitPassword,
 		cfg.BrokerIp,
@@ -90,6 +91,8 @@ func startWithCfg(cfg PluginConfig, h HandlerVim, name string) error {
 		"openbaton-exchange",
 		pluginId,
 		cfg.Workers,
+		false,
+		name,
 		handlePluginRequest,
 		"DEBUG",
 	)
@@ -101,18 +104,14 @@ func startWithCfg(cfg PluginConfig, h HandlerVim, name string) error {
 	go func() {
 		for range c {
 			logger.Infof("Received ctrl-c, unregistering")
-			manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword)
+			manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword, nil)
 			go manager.Shutdown()
 			logger.Infof("Done")
 			os.Exit(0)
 		}
 	}()
 
-	wk := &worker{
-		l: logger,
-		h: h,
-	}
-	manager.Serve(wk)
+	manager.Serve()
 
 	return err
 }

@@ -214,7 +214,7 @@ type Server struct {
 	Shared             bool                `json:"shared,omitempty"`
 	Metadata           map[string]string   `json:"metadata,omitempty"`
 	Name               string              `json:"name"`
-	Image              *DockerImage        `json:"image"`
+	Image              BaseImageInt        `json:"image"`
 	Flavour            *DeploymentFlavour  `json:"flavor"`
 	Status             string              `json:"status"`
 	ExtendedStatus     string              `json:"extendedStatus"`
@@ -283,6 +283,18 @@ type DockerVimInstance struct {
 	Images    []DockerImage   `json:"images"`
 	Networks  []DockerNetwork `json:"networks"`
 }
+
+type KubernatesNamespeces struct {
+	Name string `json:"name"`
+}
+
+type KubernetesVimInstance struct {
+	BaseVimInstance
+	ConfigFilePath string                  `json:"configFilePath"`
+	Namespaces     []*KubernatesNamespeces `json:"networks"`
+	Images         []string                `json:"images"`
+}
+
 type VNFCDependencyParameters struct {
 	ID         string                           `json:"id,omitempty"`
 	HbVersion  int                              `json:"hbVersion,omitempty"`

@@ -20,25 +20,23 @@ import (
 	"github.com/openbaton/go-openbaton/catalogue"
 )
 
-
-
 // The Handler interface defines an abstraction of the operations that a VNFM should provide.
 type HandlerVim interface {
 	AddFlavour(vimInstance interface{}, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
-	AddImage(vimInstance interface{}, image *catalogue.DockerImage, imageFile []byte) (*catalogue.DockerImage, error)
+	AddImage(vimInstance interface{}, image catalogue.BaseImageInt, imageFile []byte) (catalogue.BaseImageInt, error)
 
-	AddImageFromURL(vimInstance interface{}, image *catalogue.DockerImage, imageURL string) (*catalogue.DockerImage, error)
+	AddImageFromURL(vimInstance interface{}, image catalogue.BaseImageInt, imageURL string) (catalogue.BaseImageInt, error)
 
-	CopyImage(vimInstance interface{}, image *catalogue.DockerImage, imageFile []byte) (*catalogue.DockerImage, error)
+	CopyImage(vimInstance interface{}, image catalogue.BaseImageInt, imageFile []byte) (catalogue.BaseImageInt, error)
 
-	CreateNetwork(vimInstance interface{}, network *catalogue.DockerNetwork) (*catalogue.DockerNetwork, error)
+	CreateNetwork(vimInstance interface{}, network catalogue.BaseNetworkInt) (catalogue.BaseNetworkInt, error)
 
-	CreateSubnet(vimInstance interface{}, createdNetwork *catalogue.DockerNetwork, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
+	CreateSubnet(vimInstance interface{}, createdNetwork catalogue.BaseNetworkInt, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
 
 	DeleteFlavour(vimInstance interface{}, extID string) (bool, error)
 
-	DeleteImage(vimInstance interface{}, image *catalogue.DockerImage) (bool, error)
+	DeleteImage(vimInstance interface{}, image catalogue.BaseImageInt) (bool, error)
 
 	DeleteNetwork(vimInstance interface{}, extID string) (bool, error)
 
@@ -73,13 +71,13 @@ type HandlerVim interface {
 
 	ListFlavours(vimInstance interface{}) ([]*catalogue.DeploymentFlavour, error)
 
-	ListImages(vimInstance interface{}) ([]*catalogue.DockerImage, error)
+	ListImages(vimInstance interface{}) (catalogue.BaseImageInt, error)
 
-	ListNetworks(vimInstance interface{}) ([]*catalogue.DockerNetwork, error)
+	ListNetworks(vimInstance interface{}) (catalogue.BaseNetworkInt, error)
 
 	ListServer(vimInstance interface{}) ([]*catalogue.Server, error)
 
-	NetworkByID(vimInstance interface{}, id string) (*catalogue.DockerNetwork, error)
+	NetworkByID(vimInstance interface{}, id string) (catalogue.BaseNetworkInt, error)
 
 	Quota(vimInstance interface{}) (*catalogue.Quota, error)
 
@@ -89,9 +87,9 @@ type HandlerVim interface {
 
 	UpdateFlavour(vimInstance interface{}, deploymentFlavour *catalogue.DeploymentFlavour) (*catalogue.DeploymentFlavour, error)
 
-	UpdateImage(vimInstance interface{}, image *catalogue.DockerImage) (*catalogue.DockerImage, error)
+	UpdateImage(vimInstance interface{}, image catalogue.BaseImageInt) (catalogue.BaseImageInt, error)
 
-	UpdateNetwork(vimInstance interface{}, network *catalogue.DockerNetwork) (*catalogue.DockerNetwork, error)
+	UpdateNetwork(vimInstance interface{}, network catalogue.BaseNetworkInt) (catalogue.BaseNetworkInt, error)
 
-	UpdateSubnet(vimInstance interface{}, createdNetwork *catalogue.DockerNetwork, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
+	UpdateSubnet(vimInstance interface{}, createdNetwork catalogue.BaseNetworkInt, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
 }

@@ -9,11 +9,25 @@ import (
 	"encoding/json"
 	"github.com/streadway/amqp"
 	"github.com/openbaton/go-openbaton/catalogue"
+	"github.com/pkg/errors"
+	"fmt"
 )
 
 var log *logging.Logger
 
-//Obtain the Logger preformatted
+type SdkError struct {
+	err error
+}
+
+func (e *SdkError) Error() string {
+	return fmt.Sprintf("SDK-ERROR: %s", e.err)
+}
+
+func NewSdkError(msg string) *SdkError {
+	return &SdkError{errors.New(msg)}
+}
+
+//Obtain the Logger pre-formatted
 func GetLogger(name string, levelStr string) (*logging.Logger) {
 	if log != nil {
 		return log
@@ -70,22 +84,18 @@ func randInt(min int, max int) int {
 }
 
 // Execute a AMQP RPC call to a specific queue
-func ExecuteRpc(queue string, message interface{}, username, password, brokerIp string, brokerPort int, l *logging.Logger) (<-chan amqp.Delivery, string, error) {
+func Rpc(queue string, message interface{}, conn *amqp.Connection, l *logging.Logger) ([]byte, error) {
 
-	amqpURI := getAmqpUri(username, password, brokerIp, brokerPort)
-	l.Debugf("dialing %s", amqpURI)
-	conn, err := amqp.Dial(amqpURI)
-	if err != nil {
-		return nil, "", err
-	}
-
-	l.Debugf("got Connection, getting Channel")
+	l.Info("Executing RPC to queue: %s", queue)
+	l.Debug("Getting Channel for RPC")
 	channel, err := conn.Channel()
+	defer channel.Close()
+	l.Debug("Got Channel for RPC")
 
 	var q amqp.Queue
 	var msgs <-chan amqp.Delivery
 
-	l.Debugf("Declaring Queue for RPC")
+	l.Debug("Declaring Queue for RPC")
 	q, err = channel.QueueDeclare(
 		"",    // name
 		false, // durable
@@ -97,10 +107,10 @@ func ExecuteRpc(queue string, message interface{}, username, password, brokerIp 
 	if err != nil {
 		debug.PrintStack()
 		l.Errorf("Failed to declare a queue: %v", err)
-		return nil, "", err
+		return nil, err
 	}
-
-	l.Debugf("Registering consume for RPC")
+	l.Debug("Declared Queue for RPC")
+	l.Debug("Registering consumer for RPC")
 	msgs, err = channel.Consume(
 		q.Name, // queue
 		"",     // consumer
@@ -112,16 +122,19 @@ func ExecuteRpc(queue string, message interface{}, username, password, brokerIp 
 	)
 	if err != nil {
 		debug.PrintStack()
-		l.Errorf("Failed to register a consumer")
-		return nil, "", err
+		l.Errorf("Failed to register a consumer: %v", err)
+		return nil, err
 	}
+
+	l.Debug("Registered consumer for RPC")
 	corrId := randomString(32)
 
 	mrs, err := json.Marshal(message)
 	if err != nil {
 		l.Errorf("Error while marshaling: %v", err)
-		return nil, "", err
+		return nil, err
 	}
+	l.Debug("Publishing message to queue %s", queue)
 	err = channel.Publish(
 		"openbaton-exchange", // exchange
 		queue,                // routing key
@@ -136,9 +149,17 @@ func ExecuteRpc(queue string, message interface{}, username, password, brokerIp 
 
 	if err != nil {
 		l.Errorf("Failed to publish a message")
-		return nil, "", err
+		return nil, err
 	}
-	return msgs, corrId, nil
+	l.Debugf("Published message to queue %s", queue)
+
+	for d := range msgs {
+		if corrId == d.CorrelationId {
+			l.Debug("Received Response")
+			return d.Body, nil
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("Not found message with correlationId [%s]", corrId))
 }
 
 // Send message to a specific queue

@@ -42,7 +42,6 @@ func (w worker) handle(fname string, args []json.RawMessage) (interface{}, error
 				return nil, err
 			}
 
-			//callArgs[i] = &catalogue.DockerVimInstance{}
 			callArgs[i] = reflect.ValueOf(GetVimInstance(jsonArg, argValue))
 		} else if kind == reflect.Slice && argType.Elem().Kind() == reflect.Uint8 { // special case: argument is an array of bytes
 			var baseStr string

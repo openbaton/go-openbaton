@@ -70,6 +70,9 @@ type ConstituentVNF struct {
 	Version               int               `json:"version"`
 }
 
+type BaseNetworkInt interface{}
+type BaseImageInt interface{}
+
 // DeploymentFlavour as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type DeploymentFlavour struct {
 	ID         string            `json:"id,omitempty"`

@@ -12,7 +12,7 @@ func GetDockerVimInstance(vimInstance interface{}) (*catalogue.DockerVimInstance
 	case *catalogue.DockerVimInstance:
 		return t, nil
 	default:
-		return nil, errors.New("Not Received Docker Vim Instance");
+		return nil, errors.New("not Received Docker Vim Instance");
 	}
 }
 
@@ -22,7 +22,7 @@ func GetOpenstackVimInstance(vimInstance interface{}) (*catalogue.OpenstackVimIn
 	case *catalogue.OpenstackVimInstance:
 		return t, nil
 	default:
-		return nil, errors.New("Not Received Docker Vim Instance");
+		return nil, errors.New("not Received Docker Vim Instance");
 	}
 }
 
@@ -32,7 +32,7 @@ func GetBaseVimInstance(vimInstance interface{}) (*catalogue.BaseVimInstance, er
 	case *catalogue.BaseVimInstance:
 		return t, nil
 	default:
-		return nil, errors.New("Not Received Docker Vim Instance");
+		return nil, errors.New("not Received Docker Vim Instance");
 	}
 }
 
@@ -43,6 +43,10 @@ func GetVimInstance(jsonArg json.RawMessage, argValue map[string]interface{}) in
 		return ret
 	} else if argValue["type"] == "openstack" {
 		var ret = &catalogue.OpenstackVimInstance{}
+		json.Unmarshal(jsonArg, ret)
+		return ret
+	} else if argValue["type"] == "kubernetes" {
+		var ret = &catalogue.KubernetesVimInstance{}
 		json.Unmarshal(jsonArg, ret)
 		return ret
 	} else {

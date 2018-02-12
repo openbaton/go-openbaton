@@ -71,7 +71,6 @@ func StartWithConfig(typ, description, username, password, loglevel, brokerIp st
 	return startWithCfg(cfg, name, h)
 }
 
-
 func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 	logger := sdk.GetLogger(cfg.Type, cfg.LogLevel)
 	logger.Infof("Starting VNFM of type %s", cfg.Type)
@@ -96,7 +95,8 @@ func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 		return err
 	}
 
-	manager, err := sdk.NewVnfmManager(
+	manager, err := sdk.NewManager(
+		h,
 		rabbitCredentials.RabbitUsername,
 		rabbitCredentials.RabbitPassword,
 		cfg.BrokerIp,
@@ -104,6 +104,7 @@ func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 		"openbaton-exchange",
 		endpoint.Endpoint,
 		cfg.Workers,
+		cfg.Allocate,
 		name,
 		handleNfvMessage,
 		"DEBUG",
@@ -123,13 +124,7 @@ func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 		}
 	}()
 
-	wk := &worker{
-		l:        logger,
-		handler:  h,
-		Allocate: cfg.Allocate,
-		Manager: manager,
-	}
-	manager.Serve(wk)
+	manager.Serve()
 
 	return err
 }
