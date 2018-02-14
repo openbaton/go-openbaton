@@ -9,7 +9,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func handleNfvMessage(bytemsg []byte, handlerVnfm sdk.Handler, allocate bool, connection *amqp.Connection) ([]byte, error) {
+func handleNfvMessage(bytemsg []byte, handlerVnfm sdk.Handler, allocate bool, connection *amqp.Connection, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) ([]byte, error) {
 	logger := sdk.GetLogger("handler-function", "DEBUG")
 	n, err := messages.Unmarshal(bytemsg, messages.NFVO)
 	if err != nil {

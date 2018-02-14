@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"github.com/openbaton/go-openbaton/sdk"
 	"github.com/streadway/amqp"
+	"github.com/openbaton/go-openbaton/catalogue"
 )
 
-func handlePluginRequest(bytemsg []byte, handler sdk.Handler, allocate bool, connection *amqp.Connection) ([]byte, error) {
+func handlePluginRequest(bytemsg []byte, handler sdk.Handler, allocate bool, connection *amqp.Connection, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) ([]byte, error) {
 	var req request
 	logger := sdk.GetLogger("handler-plugin-function", "DEBUG")
 	if err := json.Unmarshal(bytemsg, &req); err != nil {
@@ -20,6 +21,8 @@ func handlePluginRequest(bytemsg []byte, handler sdk.Handler, allocate bool, con
 		wk := &worker{
 			l: logger,
 			h: h,
+			networkType:net,
+			imageType:img,
 		}
 		result, err := wk.handle(req.MethodName, req.Parameters)
 		var resp response
@@ -42,7 +45,7 @@ func handlePluginRequest(bytemsg []byte, handler sdk.Handler, allocate bool, con
 			logger.Error("failure while serialising response")
 			return nil, err
 		}
-		logger.Debugf("Returning %v", string(bResp))
+		//logger.Debugf("Returning %v", string(bResp))
 		return bResp, nil
 	default:
 		logger.Errorf("Error, worker of wrong type")

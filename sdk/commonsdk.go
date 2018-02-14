@@ -15,7 +15,7 @@ import (
 type Handler interface{}
 
 // Handler function for the VNFMs
-type handlerFunction func(bytemsg []byte, handlerVnfm Handler, allocate bool, connection *amqp.Connection) ([]byte, error)
+type handlerFunction func(bytemsg []byte, handlerVnfm Handler, allocate bool, connection *amqp.Connection, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) ([]byte, error)
 
 // Function to retrieve the private amqp credentials for a VNFM
 func GetVnfmCreds(username string, password string, brokerIp string, brokerPort int, vnfm_endpoint *catalogue.Endpoint, log_level string) (*catalogue.ManagerCredentials, error) {
@@ -39,7 +39,9 @@ func getCreds(username string, password string, brokerIp string, brokerPort int,
 	logger := GetLogger("common.sdk", log_level)
 	logger.Debugf("Dialing %s", amqpUri)
 
-	conn, err := amqp.Dial(amqpUri)
+	conn, err := amqp.DialConfig(amqpUri, amqp.Config{
+		Heartbeat: 5,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +129,8 @@ type Manager struct {
 	deliveries      <-chan amqp.Delivery
 	handlerFunction handlerFunction
 	handler         Handler
+	image           catalogue.BaseImageInt
+	network         catalogue.BaseNetworkInt
 }
 
 // Instantiate a new Manager struct
@@ -141,7 +145,9 @@ func NewManager(h Handler,
 	allocate bool,
 	managerName string,
 	handleFunction handlerFunction,
-	logLevel string) (*Manager, error) {
+	logLevel string,
+	net catalogue.BaseNetworkInt,
+	img catalogue.BaseImageInt) (*Manager, error) {
 
 	manager := &Manager{
 		Connection:      nil,
@@ -152,6 +158,8 @@ func NewManager(h Handler,
 		logger:          GetLogger(managerName, logLevel),
 		handlerFunction: handleFunction,
 		handler:         h,
+		image:           img,
+		network:         net,
 	}
 
 	err := setupManager(username, password, brokerIp, brokerPort, manager, exchange, queueName)
@@ -272,13 +280,13 @@ func (manager *Manager) Serve() {
 		go func() {
 
 			deliveries, err := manager.Channel.Consume(
-				manager.queueName, // name
-				"",                // consumerTag,
-				false,             // noAck
-				false,             // exclusive
-				false,             // noLocal
-				false,             // noWait
-				nil,               // arguments
+				manager.queueName,
+				"",
+				false,
+				false,
+				false,
+				false,
+				nil,
 			)
 			if err != nil {
 				manager.logger.Errorf("Error while consuming: %v", err)
@@ -289,7 +297,7 @@ func (manager *Manager) Serve() {
 			for d := range manager.deliveries {
 				d1 := d
 				go func() {
-					byteRes, err := manager.handlerFunction(d1.Body, manager.handler, manager.allocate, manager.Connection)
+					byteRes, err := manager.handlerFunction(d1.Body, manager.handler, manager.allocate, manager.Connection, manager.network, manager.image)
 					if err != nil {
 						manager.logger.Errorf("Error while executing handler function: %v", err)
 						return

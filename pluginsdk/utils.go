@@ -4,6 +4,7 @@ import (
 	"github.com/openbaton/go-openbaton/catalogue"
 	"errors"
 	"encoding/json"
+	"reflect"
 )
 
 // Obtain a Docker vim instance from a interfaced struct
@@ -53,5 +54,28 @@ func GetVimInstance(jsonArg json.RawMessage, argValue map[string]interface{}) in
 		var ret = &catalogue.BaseVimInstance{}
 		json.Unmarshal(jsonArg, ret)
 		return ret
+	}
+}
+
+func GetConcrete(jsonArg json.RawMessage, destType interface{}) reflect.Value {
+	switch destType.(type) {
+	case catalogue.DockerNetwork:
+		ret := &catalogue.DockerNetwork{}
+		json.Unmarshal(jsonArg, ret)
+		return reflect.ValueOf(ret)
+	case catalogue.DockerImage:
+		ret := &catalogue.DockerImage{}
+		json.Unmarshal(jsonArg, ret)
+		return reflect.ValueOf(ret)
+	case catalogue.BaseNfvImage:
+		ret := &catalogue.BaseNfvImage{}
+		json.Unmarshal(jsonArg, ret)
+		return reflect.ValueOf(ret)
+	case catalogue.BaseNetwork:
+		ret := &catalogue.BaseNetwork{}
+		json.Unmarshal(jsonArg, ret)
+		return reflect.ValueOf(ret)
+	default:
+		return reflect.Value{}
 	}
 }

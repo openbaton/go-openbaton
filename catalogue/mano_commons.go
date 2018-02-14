@@ -16,6 +16,9 @@
 
 package catalogue
 
+type BaseNetworkInt interface{}
+type BaseImageInt interface{}
+
 type AutoScalePolicy struct {
 	ID                 string            `json:"id,omitempty"`
 	HbVersion          int               `json:"hbVersion,omitempty"`
@@ -69,9 +72,6 @@ type ConstituentVNF struct {
 	NumberOfInstances     int               `json:"number_of_instancesid"`
 	Version               int               `json:"version"`
 }
-
-type BaseNetworkInt interface{}
-type BaseImageInt interface{}
 
 // DeploymentFlavour as described in ETSI GS NFV-MAN 001 V1.1.1 (2014-12)
 type DeploymentFlavour struct {

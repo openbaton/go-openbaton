@@ -256,11 +256,13 @@ type BaseVimInstance struct {
 
 type DockerImage struct {
 	BaseNfvImage
+
 	Tags []string `json:"tags"`
 }
 
 type DockerNetwork struct {
 	BaseNetwork
+
 	Scope   string `json:"scope"`
 	Driver  string `json:"driver"`
 	Gateway string `json:"gateway"`
@@ -269,6 +271,7 @@ type DockerNetwork struct {
 
 type OpenstackVimInstance struct {
 	BaseVimInstance
+
 	Username string `json:"username"`
 	Password string `json:"password"`
 	KeyPair  string `json:"keyPair"`
@@ -277,6 +280,7 @@ type OpenstackVimInstance struct {
 
 type DockerVimInstance struct {
 	BaseVimInstance
+
 	Ca        string          `json:"ca"`
 	Cert      string          `json:"cert"`
 	DockerKey string          `json:"dockerKey"`

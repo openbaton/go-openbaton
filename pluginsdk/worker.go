@@ -13,8 +13,10 @@ var (
 )
 
 type worker struct {
-	l *logging.Logger
-	h HandlerVim
+	l           *logging.Logger
+	h           HandlerVim
+	imageType   interface{}
+	networkType interface{}
 }
 
 func (w worker) handle(fname string, args []json.RawMessage) (interface{}, error) {
@@ -26,7 +28,6 @@ func (w worker) handle(fname string, args []json.RawMessage) (interface{}, error
 	if err != nil {
 		return nil, err
 	}
-
 
 	fType := fValue.Type()
 
@@ -55,6 +56,19 @@ func (w worker) handle(fname string, args []json.RawMessage) (interface{}, error
 			}
 
 			callArgs[i] = reflect.ValueOf(b)
+		} else if fname == "createNetwork" && i == 1 {
+			argValue := map[string]interface{}{}
+			if err := json.Unmarshal(jsonArg, &argValue); err != nil {
+				return nil, err
+			}
+			network := GetConcrete(jsonArg, w.networkType)
+			callArgs[i] = network
+		} else if fname == "addImageFromURL" && i == 1 {
+			argValue := map[string]interface{}{}
+			if err := json.Unmarshal(jsonArg, &argValue); err != nil {
+				return nil, err
+			}
+			callArgs[i] = reflect.ValueOf(GetConcrete(jsonArg, w.imageType))
 		} else {
 			// create a new pointer to the arg type, and deserialise into it
 			// its JSON

@@ -10,6 +10,7 @@ import (
 	"github.com/openbaton/go-openbaton/sdk"
 	"os/signal"
 	"encoding/json"
+	"github.com/openbaton/go-openbaton/catalogue"
 )
 
 // The Config struct for a plugin
@@ -24,7 +25,7 @@ type PluginConfig struct {
 }
 
 // Start the plugin using the configuration file
-func Start(confPath string, h HandlerVim, name string) (error) {
+func Start(confPath string, h HandlerVim, name string, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) (error) {
 	cfg := PluginConfig{
 		Type:       "unknown",
 		Workers:    5,
@@ -48,11 +49,11 @@ func Start(confPath string, h HandlerVim, name string) (error) {
 		os.Exit(100)
 	}
 
-	return startWithCfg(cfg, h, name)
+	return startWithCfg(cfg, h, name, net, img)
 }
 
 // Start the plugin with specific configuration
-func StartWithConfig(typ, username, password, loglevel, brokerip string, workers, brokerPort int, h HandlerVim, name string) (error) {
+func StartWithConfig(typ, username, password, loglevel, brokerip string, workers, brokerPort int, h HandlerVim, name string, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) (error) {
 	cfg := PluginConfig{
 		Type:       typ,
 		Workers:    workers,
@@ -63,10 +64,10 @@ func StartWithConfig(typ, username, password, loglevel, brokerip string, workers
 		BrokerPort: brokerPort,
 	}
 
-	return startWithCfg(cfg, h, name)
+	return startWithCfg(cfg, h, name, net, img)
 }
 
-func startWithCfg(cfg PluginConfig, h HandlerVim, name string) error {
+func startWithCfg(cfg PluginConfig, h HandlerVim, name string, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) error {
 	pluginId := fmt.Sprintf("vim-drivers.%s.%s", cfg.Type, name)
 	logger := sdk.GetLogger(cfg.Type, cfg.LogLevel)
 	logger.Infof("Starting Plugin of type %s", cfg.Type)
@@ -95,6 +96,8 @@ func startWithCfg(cfg PluginConfig, h HandlerVim, name string) error {
 		name,
 		handlePluginRequest,
 		"DEBUG",
+		net,
+		img,
 	)
 	if err != nil {
 		return err

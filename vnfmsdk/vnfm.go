@@ -108,6 +108,8 @@ func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 		name,
 		handleNfvMessage,
 		"DEBUG",
+		nil,
+		nil,
 	)
 	if err != nil {
 		logger.Errorf("Error while creating vnfm: %v", err)
