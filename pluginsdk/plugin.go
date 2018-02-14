@@ -1,6 +1,4 @@
-/*
-	Plugin SDK for Open Baton Managers
- */
+//Plugin SDK for Open Baton Managers. Uses the sdk package passing specific implementation of certain functions.
 package pluginsdk
 
 import (
@@ -89,7 +87,7 @@ func startWithCfg(cfg PluginConfig, h HandlerVim, name string, net catalogue.Bas
 		rabbitCredentials.RabbitPassword,
 		cfg.BrokerIp,
 		cfg.BrokerPort,
-		"openbaton-exchange",
+		sdk.OpenbatonExchangeName,
 		pluginId,
 		cfg.Workers,
 		false,
@@ -115,6 +113,5 @@ func startWithCfg(cfg PluginConfig, h HandlerVim, name string, net catalogue.Bas
 	}()
 
 	manager.Serve()
-
-	return err
+	return nil
 }

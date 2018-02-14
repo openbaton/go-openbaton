@@ -97,12 +97,12 @@ func Rpc(queue string, message interface{}, conn *amqp.Connection, l *logging.Lo
 
 	l.Debug("Declaring Queue for RPC")
 	q, err = channel.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when unused
-		true,  // exclusive
-		false, // noWait
-		nil,   // arguments
+		"",
+		false,
+		false,
+		true,
+		false,
+		nil,
 	)
 	if err != nil {
 		debug.PrintStack()
@@ -112,13 +112,13 @@ func Rpc(queue string, message interface{}, conn *amqp.Connection, l *logging.Lo
 	l.Debug("Declared Queue for RPC")
 	l.Debug("Registering consumer for RPC")
 	msgs, err = channel.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		q.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		debug.PrintStack()
@@ -136,12 +136,12 @@ func Rpc(queue string, message interface{}, conn *amqp.Connection, l *logging.Lo
 	}
 	l.Debug("Publishing message to queue %s", queue)
 	err = channel.Publish(
-		"openbaton-exchange", // exchange
-		queue,                // routing key
-		false,                // mandatory
-		false,                // immediate
+		OpenbatonExchangeName, // exchange
+		queue,                 // routing key
+		false,                 // mandatory
+		false,                 // immediate
 		amqp.Publishing{
-			ContentType:   "text/plain",
+			ContentType:   AmqpContentType,
 			CorrelationId: corrId,
 			ReplyTo:       q.Name,
 			Body:          []byte(mrs),
@@ -165,12 +165,12 @@ func Rpc(queue string, message interface{}, conn *amqp.Connection, l *logging.Lo
 // Send message to a specific queue
 func SendMsg(queue string, message []byte, channel *amqp.Channel, logger *logging.Logger) (error) {
 	err := channel.Publish(
-		"openbaton-exchange", // exchange
-		queue,                // routing key
-		false,                // mandatory
-		false,                // immediate
+		OpenbatonExchangeName,
+		queue,
+		false,
+		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: AmqpContentType,
 			Body:        []byte(message),
 		})
 

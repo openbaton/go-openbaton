@@ -10,6 +10,7 @@ import (
 	"github.com/openbaton/go-openbaton/catalogue/messages"
 )
 
+//The worker struct allows the VNFM SDK to invoke implementation specific of VNFMs
 type worker struct {
 	l          *logging.Logger
 	handler    HandlerVnfm

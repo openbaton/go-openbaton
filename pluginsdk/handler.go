@@ -8,6 +8,7 @@ import (
 	"github.com/openbaton/go-openbaton/catalogue"
 )
 
+//Handler function for the Plugins to be passed to the sdk package
 func handlePluginRequest(bytemsg []byte, handler sdk.Handler, allocate bool, connection *amqp.Connection, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) ([]byte, error) {
 	var req request
 	logger := sdk.GetLogger("handler-plugin-function", "DEBUG")

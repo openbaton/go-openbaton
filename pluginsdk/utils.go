@@ -37,6 +37,7 @@ func GetBaseVimInstance(vimInstance interface{}) (*catalogue.BaseVimInstance, er
 	}
 }
 
+//Unmarshal the json raw message to the right struct type for the Vim Instance types
 func GetVimInstance(jsonArg json.RawMessage, argValue map[string]interface{}) interface{} {
 	if argValue["type"] == "docker" {
 		var ret = &catalogue.DockerVimInstance{}
@@ -57,6 +58,7 @@ func GetVimInstance(jsonArg json.RawMessage, argValue map[string]interface{}) in
 	}
 }
 
+//Unmarshal the json raw message to the right struct type for the Network and Image types
 func GetConcrete(jsonArg json.RawMessage, destType interface{}) reflect.Value {
 	switch destType.(type) {
 	case catalogue.DockerNetwork:

@@ -1,6 +1,5 @@
-/*
-	Common package for the VNFM and the Plugin SDK for Open Baton Managers
- */
+//Common package for the VNFM and the Plugin SDK for Open Baton Managers.
+//It provides common functions for registering, unregistering, starting the manager, etc.
 package sdk
 
 import (
@@ -12,12 +11,13 @@ import (
 	"github.com/openbaton/go-openbaton/catalogue"
 )
 
+//The plugin or vnfm Handler interface
 type Handler interface{}
 
-// Handler function for the VNFMs
+// Handler function to be implemented by the vnfm package and by the pluginsdk package that will be called while serving
 type handlerFunction func(bytemsg []byte, handlerVnfm Handler, allocate bool, connection *amqp.Connection, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) ([]byte, error)
 
-// Function to retrieve the private amqp credentials for a VNFM
+//Function to retrieve the private amqp credentials for a VNFM
 func GetVnfmCreds(username string, password string, brokerIp string, brokerPort int, vnfm_endpoint *catalogue.Endpoint, log_level string) (*catalogue.ManagerCredentials, error) {
 	registerMessage := catalogue.VnfmRegisterMessage{}
 	registerMessage.Action = "register"
@@ -26,7 +26,7 @@ func GetVnfmCreds(username string, password string, brokerIp string, brokerPort 
 	return getCreds(username, password, brokerIp, brokerPort, registerMessage, log_level)
 }
 
-// Function to retrieve the private amqp credentials for a Plugin
+//Function to retrieve the private amqp credentials for a Plugin
 func GetPluginCreds(username string, password string, brokerIp string, brokerPort int, plugin_type string, log_level string) (*catalogue.ManagerCredentials, error) {
 	registerMessage := catalogue.PluginRegisterMessage{}
 	registerMessage.Action = "register"
@@ -55,25 +55,25 @@ func getCreds(username string, password string, brokerIp string, brokerPort int,
 
 	defer channel.Close()
 	q, err := channel.QueueDeclare(
-		"",    // name
-		false, // durable
-		false, // delete when unused
-		true,  // exclusive
-		false, // noWait
-		nil,   // arguments
+		"",
+		false,
+		false,
+		true,
+		false,
+		nil,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	msgs, err := channel.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		q.Name,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
 	)
 	if err != nil {
 		return nil, err
@@ -86,12 +86,12 @@ func getCreds(username string, password string, brokerIp string, brokerPort int,
 		return nil, err
 	}
 	err = channel.Publish(
-		"",                      // exchange
-		"nfvo.manager.handling", // routing key
-		false,                   // mandatory
-		false,                   // immediate
+		"",
+		nfvoManagerHandling,
+		false,
+		false,
 		amqp.Publishing{
-			ContentType:   "text/plain",
+			ContentType:   AmqpContentType,
 			CorrelationId: corrId,
 			ReplyTo:       q.Name,
 			Body:          []byte(mrs),
@@ -117,12 +117,15 @@ func getAmqpUri(username string, password string, brokerIp string, brokerPort in
 	return fmt.Sprintf("amqp://%s:%s@%s:%d/", username, password, brokerIp, brokerPort)
 }
 
-// Base Manager struct
+//The generic Manager struct
 type Manager struct {
-	Connection      *amqp.Connection
-	Channel         *amqp.Channel
-	workers         int
-	allocate        bool
+	Connection *amqp.Connection
+	Channel    *amqp.Channel
+	//Number of listeners
+	workers int
+	//define whenever the VNFM must allocate resources
+	allocate bool
+	//The name of the queue the manager is consuming on
 	queueName       string
 	errorChan       chan error
 	logger          *logging.Logger
@@ -171,25 +174,26 @@ func NewManager(h Handler,
 	return manager, nil
 }
 
-func setupManager(username string, password string, brokerIp string, brokerPort int, c *Manager, exchange string, queueName string) error {
+//Configure the manager and start consuming
+func setupManager(username string, password string, brokerIp string, brokerPort int, manager *Manager, exchange string, queueName string) error {
 	amqpURI := getAmqpUri(username, password, brokerIp, brokerPort)
-	c.logger.Debugf("dialing %s", amqpURI)
+	manager.logger.Debugf("dialing %s", amqpURI)
 	var err error
-	c.Connection, err = amqp.Dial(amqpURI)
+	manager.Connection, err = amqp.Dial(amqpURI)
 	if err != nil {
 		return err
 	}
 
-	c.logger.Debugf("got Connection, getting Channel")
-	c.Channel, err = c.Connection.Channel()
+	manager.logger.Debugf("got Connection, getting Channel")
+	manager.Channel, err = manager.Connection.Channel()
 	if err != nil {
 		return err
 	}
 
-	c.logger.Debugf("got Channel, declaring Exchange (%q)", exchange)
+	manager.logger.Debugf("got Channel, declaring Exchange (%q)", exchange)
 
-	c.logger.Debugf("declared Exchange, declaring Queue %q", queueName)
-	queue, err := c.Channel.QueueDeclare(
+	manager.logger.Debugf("declared Exchange, declaring Queue %q", queueName)
+	queue, err := manager.Channel.QueueDeclare(
 		queueName,
 		true,
 		true,
@@ -201,10 +205,10 @@ func setupManager(username string, password string, brokerIp string, brokerPort 
 		return err
 	}
 
-	c.logger.Debugf("declared Queue (%q, %d messages, %d consumers), binding to Exchange",
+	manager.logger.Debugf("declared Queue (%q, %d messages, %d consumers), binding to Exchange",
 		queue.Name, queue.Messages, queue.Consumers)
 
-	if err = c.Channel.QueueBind(
+	if err = manager.Channel.QueueBind(
 		queue.Name, // name of the queue
 		queue.Name, // bindingKey
 		exchange,   // sourceExchange
@@ -214,11 +218,11 @@ func setupManager(username string, password string, brokerIp string, brokerPort 
 		return err
 	}
 
-	c.logger.Debug("Queue bound to Exchange, starting Consume")
+	manager.logger.Debug("Queue bound to Exchange, starting Consume")
 	return nil
 }
 
-// Shutdown the manager
+//Shutdown the manager
 func (manager *Manager) Shutdown() error {
 	if err := manager.Connection.Close(); err != nil {
 		manager.logger.Errorf("AMQP connection close error: %s", err)
@@ -230,7 +234,7 @@ func (manager *Manager) Shutdown() error {
 	return <-manager.errorChan
 }
 
-// Unregister function for Managers
+//Unregister function for Managers
 func (manager *Manager) Unregister(typ, username, password string, vnfmEndpoint *catalogue.Endpoint) {
 	if vnfmEndpoint == nil {
 		manager.unregisterPlugin(typ, username, password)
@@ -247,7 +251,7 @@ func (manager *Manager) Unregister(typ, username, password string, vnfmEndpoint 
 	}
 }
 
-// Unregister function for the Plugin
+//Unregister function for the Plugin
 func (manager *Manager) unregisterPlugin(typ, username, password string) {
 	msg := catalogue.ManagerUnregisterMessage{
 		Type:     typ,
@@ -258,20 +262,21 @@ func (manager *Manager) unregisterPlugin(typ, username, password string) {
 	manager.unregister(msg)
 }
 
+//Send unregister to the right queue.
 func (manager *Manager) unregister(msg interface{}) {
 	msgBytes, err := json.Marshal(msg)
 	if err != nil {
 		manager.logger.Errorf("Error while marshalling unregister message: %v", err)
 		return
 	}
-	err = SendMsg("nfvo.manager.handling", msgBytes, manager.Channel, manager.logger)
+	err = SendMsg(nfvoManagerHandling, msgBytes, manager.Channel, manager.logger)
 	if err != nil {
 		manager.logger.Errorf("Error unregistering: %v", err)
 		return
 	}
 }
 
-// Serve function for Manager
+//Serve function for Manager. Start consuming.
 func (manager *Manager) Serve() {
 	forever := make(chan bool)
 
@@ -308,7 +313,7 @@ func (manager *Manager) Serve() {
 						false,
 						false,
 						amqp.Publishing{
-							ContentType:   "text/plain",
+							ContentType:   AmqpContentType,
 							CorrelationId: d1.CorrelationId,
 							Body:          byteRes,
 						})

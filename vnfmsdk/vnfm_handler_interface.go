@@ -20,8 +20,6 @@ import (
 	"github.com/openbaton/go-openbaton/catalogue"
 )
 
-
-
 // The Handler interface defines an abstraction of the operations that a VNFM should provide.
 type HandlerVnfm interface {
 	// ActionForResume uses the given VNFR and VNFCInstance to return a valid
@@ -85,5 +83,4 @@ type HandlerVnfm interface {
 
 	// UserData returns a string containing UserData.
 	UserData() string
-
 }

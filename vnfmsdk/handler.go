@@ -9,6 +9,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
+//Handler function for the VNFMs to be passed to the sdk package
 func handleNfvMessage(bytemsg []byte, handlerVnfm sdk.Handler, allocate bool, connection *amqp.Connection, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) ([]byte, error) {
 	logger := sdk.GetLogger("handler-function", "DEBUG")
 	n, err := messages.Unmarshal(bytemsg, messages.NFVO)

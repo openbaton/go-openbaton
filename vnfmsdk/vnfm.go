@@ -1,6 +1,4 @@
-/*
-	VNFM SDK for Open Baton Managers
- */
+//VNFM SDK for Open Baton VNFManagers. Uses the sdk package passing specific implementation of certain functions.
 package vnfmsdk
 
 import (
@@ -101,7 +99,7 @@ func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 		rabbitCredentials.RabbitPassword,
 		cfg.BrokerIp,
 		cfg.BrokerPort,
-		"openbaton-exchange",
+		sdk.OpenbatonExchangeName,
 		endpoint.Endpoint,
 		cfg.Workers,
 		cfg.Allocate,
@@ -118,7 +116,7 @@ func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
-		for _ = range c {
+		for range c {
 			logger.Infof("Received ctrl-c, unregistering")
 			manager.Unregister(cfg.Type, rabbitCredentials.RabbitUsername, rabbitCredentials.RabbitPassword, &endpoint)
 			go manager.Shutdown()

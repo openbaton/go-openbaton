@@ -12,6 +12,7 @@ var (
 	ErrProtocolFail error = plugError{"protocol error, NFVO and plugin are out of sync"}
 )
 
+//The worker struct allows the Plugin SDK to invoke implementation specific of Plugins
 type worker struct {
 	l           *logging.Logger
 	h           HandlerVim
