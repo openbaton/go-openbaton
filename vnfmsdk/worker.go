@@ -117,7 +117,7 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 	recvVNFR := respContent.VNFR
 	vimInstanceChosen := respContent.VDUVIM
 
-	worker.l.Debug("received VNFR")
+	worker.l.Debug("Received VNFR after GRANT_OPERATION")
 
 	if !worker.Allocate {
 		allocatedVNFR, err := worker.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
