@@ -1,10 +1,11 @@
 package pluginsdk
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"reflect"
-	"encoding/json"
-	"encoding/base64"
+
 	"github.com/op/go-logging"
 )
 

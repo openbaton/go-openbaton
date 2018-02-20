@@ -3,12 +3,14 @@
 package sdk
 
 import (
-	"fmt"
-	"errors"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"time"
+
 	"github.com/op/go-logging"
-	"github.com/streadway/amqp"
 	"github.com/openbaton/go-openbaton/catalogue"
+	"github.com/streadway/amqp"
 )
 
 //The plugin or vnfm Handler interface
@@ -18,30 +20,29 @@ type Handler interface{}
 type handlerFunction func(bytemsg []byte, handlerVnfm Handler, allocate bool, connection *amqp.Connection, net catalogue.BaseNetworkInt, img catalogue.BaseImageInt) ([]byte, error)
 
 //Function to retrieve the private amqp credentials for a VNFM
-func GetVnfmCreds(username string, password string, brokerIp string, brokerPort int, vnfm_endpoint *catalogue.Endpoint, log_level string) (*catalogue.ManagerCredentials, error) {
+func GetVnfmCreds(username string, password string, brokerIp string, brokerPort, timeout int, vnfmEndpoint *catalogue.Endpoint, logLevel string) (*catalogue.ManagerCredentials, error) {
 	registerMessage := catalogue.VnfmRegisterMessage{}
 	registerMessage.Action = "register"
-	registerMessage.Endpoint = vnfm_endpoint
-	registerMessage.Type = vnfm_endpoint.Type
-	return getCreds(username, password, brokerIp, brokerPort, registerMessage, log_level)
+	registerMessage.Endpoint = vnfmEndpoint
+	registerMessage.Type = vnfmEndpoint.Type
+	return getCreds(username, password, brokerIp, brokerPort, timeout, registerMessage, logLevel)
 }
 
 //Function to retrieve the private amqp credentials for a Plugin
-func GetPluginCreds(username string, password string, brokerIp string, brokerPort int, plugin_type string, log_level string) (*catalogue.ManagerCredentials, error) {
+func GetPluginCreds(username string, password string, brokerIp string, brokerPort, timeout int, pluginType string, logLevel string) (*catalogue.ManagerCredentials, error) {
 	registerMessage := catalogue.PluginRegisterMessage{}
 	registerMessage.Action = "register"
-	registerMessage.Type = plugin_type
-	return getCreds(username, password, brokerIp, brokerPort, registerMessage, log_level)
+	registerMessage.Type = pluginType
+	return getCreds(username, password, brokerIp, brokerPort, timeout, registerMessage, logLevel)
 }
 
-func getCreds(username string, password string, brokerIp string, brokerPort int, msg interface{}, log_level string) (*catalogue.ManagerCredentials, error) {
+func getCreds(username string, password string, brokerIp string, brokerPort, timeout int, msg interface{}, logLevel string) (*catalogue.ManagerCredentials, error) {
 	amqpUri := getAmqpUri(username, password, brokerIp, brokerPort)
-	logger := GetLogger("common.sdk", log_level)
-	logger.Debugf("Dialing %s", amqpUri)
+	logger := GetLogger("common.sdk", logLevel)
+	logger.Debugf("Dialing %s. Timeout: %d", amqpUri, timeout)
 
-	conn, err := amqp.DialConfig(amqpUri, amqp.Config{
-		Heartbeat: 5,
-	})
+	conn, err := amqpDial(amqpUri, time.Duration(timeout)*time.Second)
+
 	if err != nil {
 		return nil, err
 	}
@@ -100,17 +101,22 @@ func getCreds(username string, password string, brokerIp string, brokerPort int,
 		return nil, err
 	}
 
-	for d := range msgs {
-		if corrId == d.CorrelationId {
-			managerCredentials := &catalogue.ManagerCredentials{}
-			err := json.Unmarshal(d.Body, managerCredentials)
-			if err != nil {
-				return nil, err
+	//for d := range msgs {
+	for {
+		select {
+		case d := <-msgs:
+			if corrId == d.CorrelationId {
+				managerCredentials := &catalogue.ManagerCredentials{}
+				err := json.Unmarshal(d.Body, managerCredentials)
+				if err != nil {
+					return nil, err
+				}
+				return managerCredentials, nil
 			}
-			return managerCredentials, nil
+		case <-time.After(time.Duration(timeout) * time.Second):
+			return nil, errors.New(fmt.Sprintf("no answer after %d seconds", timeout))
 		}
 	}
-	return nil, errors.New("no answer")
 }
 
 func getAmqpUri(username string, password string, brokerIp string, brokerPort int) string {

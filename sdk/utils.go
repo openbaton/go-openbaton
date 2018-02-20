@@ -1,16 +1,19 @@
 package sdk
 
 import (
-	"github.com/op/go-logging"
-	"os"
-	"strings"
-	"math/rand"
-	"runtime/debug"
 	"encoding/json"
-	"github.com/streadway/amqp"
+	"fmt"
+	"math/rand"
+	"net"
+	"os"
+	"runtime/debug"
+	"strings"
+	"time"
+
+	"github.com/op/go-logging"
 	"github.com/openbaton/go-openbaton/catalogue"
 	"github.com/pkg/errors"
-	"fmt"
+	"github.com/streadway/amqp"
 )
 
 var log *logging.Logger
@@ -179,6 +182,32 @@ func SendMsg(queue string, message []byte, channel *amqp.Channel, logger *loggin
 		return err
 	}
 	return nil
+}
+
+func amqpDial(amqpUri string, timeout time.Duration) (*amqp.Connection, error) {
+	conn := make(chan *amqp.Connection)
+	err := make(chan error)
+	go func() {
+		c, e := amqp.DialConfig(amqpUri, amqp.Config{
+			Dial: func(network, addr string) (net.Conn, error) {
+				return net.DialTimeout(network, addr, timeout)
+			},
+		})
+		if e != nil {
+			err <- e
+		} else {
+			conn <- c
+		}
+	}()
+
+	select {
+	case c := <-conn:
+		return c, nil
+	case e := <-err:
+		return nil, e
+	case <-time.After(timeout):
+		return nil, errors.New(fmt.Sprintf("timeout dialing %s", amqpUri))
+	}
 }
 
 // Vim Driver Error

@@ -2,12 +2,13 @@
 package vnfmsdk
 
 import (
-	"os"
-	"github.com/BurntSushi/toml"
 	"encoding/json"
-	"github.com/openbaton/go-openbaton/sdk"
-	"github.com/openbaton/go-openbaton/catalogue"
+	"os"
 	"os/signal"
+
+	"github.com/BurntSushi/toml"
+	"github.com/openbaton/go-openbaton/catalogue"
+	"github.com/openbaton/go-openbaton/sdk"
 )
 
 // The VNFM config struct
@@ -22,6 +23,7 @@ type VnfmConfig struct {
 	LogLevel    string `toml:"logLevel"`
 	BrokerIp    string `toml:"brokerIp"`
 	BrokerPort  int    `toml:"brokerPort"`
+	Timeout     int    `toml:"timeout"`
 }
 
 // Start the VNFM with config file
@@ -36,6 +38,7 @@ func Start(confPath string, h HandlerVnfm, name string) (error) {
 		LogLevel:    "DEBUG",
 		BrokerIp:    "localhost",
 		BrokerPort:  5672,
+		Timeout:     2,
 	}
 	cfg.Endpoint = cfg.Type
 
@@ -52,7 +55,7 @@ func Start(confPath string, h HandlerVnfm, name string) (error) {
 }
 
 // Start the VNFM with specific config
-func StartWithConfig(typ, description, username, password, loglevel, brokerIp string, brokerPort, workers int, allocate bool, h HandlerVnfm, name string) (error) {
+func StartWithConfig(typ, description, username, password, loglevel, brokerIp string, brokerPort, workers, timeout int, allocate bool, h HandlerVnfm, name string) (error) {
 	cfg := VnfmConfig{
 		Type:        typ,
 		Workers:     workers,
@@ -63,6 +66,7 @@ func StartWithConfig(typ, description, username, password, loglevel, brokerIp st
 		LogLevel:    loglevel,
 		BrokerIp:    brokerIp,
 		BrokerPort:  brokerPort,
+		Timeout:     timeout,
 	}
 	cfg.Endpoint = cfg.Type
 
@@ -86,7 +90,7 @@ func startWithCfg(cfg VnfmConfig, name string, h HandlerVnfm) error {
 		Enabled:      true,
 		EndpointType: "RABBIT",
 	}
-	rabbitCredentials, err := sdk.GetVnfmCreds(cfg.Username, cfg.Password, cfg.BrokerIp, cfg.BrokerPort, &endpoint, "DEBUG")
+	rabbitCredentials, err := sdk.GetVnfmCreds(cfg.Username, cfg.Password, cfg.BrokerIp, cfg.BrokerPort, cfg.Timeout, &endpoint, "DEBUG")
 
 	if err != nil {
 		logger.Errorf("Error getting credentials: %v", err)
