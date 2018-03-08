@@ -53,11 +53,12 @@ type HandlerVnfm interface {
 		dependency *catalogue.VNFRecordDependency) (*catalogue.VirtualNetworkFunctionRecord, error)
 
 	// Scale allows scaling (out / in, up / down) a VNF instance.
-	Scale(scaleInOrOut catalogue.Action,
+	Scale(chosenVimInstance interface{},
+		scaleInOrOut catalogue.Action,
 		vnfr *catalogue.VirtualNetworkFunctionRecord,
 		component catalogue.Component,
 		scripts interface{},
-		dependency *catalogue.VNFRecordDependency) (*catalogue.VirtualNetworkFunctionRecord, error)
+		dependency *catalogue.VNFRecordDependency) (*catalogue.VirtualNetworkFunctionRecord, *catalogue.VNFCInstance, error)
 
 	// Start starts a VNFR.
 	Start(vnfr *catalogue.VirtualNetworkFunctionRecord) (*catalogue.VirtualNetworkFunctionRecord, error)

@@ -3,11 +3,12 @@ package vnfmsdk
 import (
 	"fmt"
 	"strings"
+
 	"github.com/op/go-logging"
-	"github.com/streadway/amqp"
-	"github.com/openbaton/go-openbaton/sdk"
 	"github.com/openbaton/go-openbaton/catalogue"
 	"github.com/openbaton/go-openbaton/catalogue/messages"
+	"github.com/openbaton/go-openbaton/sdk"
+	"github.com/streadway/amqp"
 )
 
 //The worker struct allows the VNFM SDK to invoke implementation specific of VNFMs
@@ -243,7 +244,7 @@ func (worker *worker) handleScaleIn(scalingMessage *messages.OrScaling) *vnfmErr
 
 	vnfcInstanceToRemove := scalingMessage.VNFCInstance
 
-	if _, err := worker.handler.Scale(catalogue.ActionScaleIn, vnfr, vnfcInstanceToRemove, nil, nil); err != nil {
+	if _, _, err := worker.handler.Scale(scalingMessage.VIMInstance, catalogue.ActionScaleIn, vnfr, vnfcInstanceToRemove, nil, nil); err != nil {
 		return &vnfmError{err.Error(), vnfr, nsrID}
 	}
 
@@ -322,7 +323,15 @@ func (worker *worker) handleScaleOut(scalingMessage *messages.OrScaling) (messag
 		scripts = scalingMessage.VNFPackage.Scripts
 	}
 
-	resultVNFR, err := worker.handler.Scale(catalogue.ActionScaleOut, vnfr, newVNFCInstance, scripts, scalingMessage.Dependency)
+	var err error
+	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
+
+	if !worker.Allocate {
+		resultVNFR, newVNFCInstance, err = worker.handler.Scale(scalingMessage.VIMInstance, catalogue.ActionScaleOut, vnfr, newVNFCInstance, scripts, scalingMessage.Dependency)
+	} else {
+		resultVNFR, newVNFCInstance, err = worker.handler.Scale(scalingMessage.VIMInstance, catalogue.ActionScaleOut, vnfr, component, scripts, scalingMessage.Dependency)
+	}
+
 	if err != nil {
 		return nil, &vnfmError{err.Error(), vnfr, nsrID}
 	}
