@@ -1,11 +1,12 @@
 package vnfmsdk
 
 import (
-	"fmt"
 	"encoding/json"
-	"github.com/openbaton/go-openbaton/sdk"
+	"fmt"
+
 	"github.com/openbaton/go-openbaton/catalogue"
 	"github.com/openbaton/go-openbaton/catalogue/messages"
+	"github.com/openbaton/go-openbaton/sdk"
 	"github.com/streadway/amqp"
 )
 
@@ -41,7 +42,7 @@ func handleNfvMessage(bytemsg []byte, handlerVnfm sdk.Handler, allocate bool, co
 	}
 }
 
-func handleMessage(nfvMessage messages.NFVMessage, worker *worker) (messages.NFVMessage) {
+func handleMessage(nfvMessage messages.NFVMessage, worker *worker) messages.NFVMessage {
 	content := nfvMessage.Content()
 
 	var reply messages.NFVMessage
@@ -57,9 +58,9 @@ func handleMessage(nfvMessage messages.NFVMessage, worker *worker) (messages.NFV
 		errorMessage := content.(*messages.OrError)
 		err = worker.handleError(errorMessage)
 
-	case catalogue.ActionHeal:
-		healMessage := content.(*messages.OrHealVNFRequest)
-		reply, err = worker.handleHeal(healMessage)
+	// case catalogue.ActionHeal:
+	// 	healMessage := content.(*messages.OrHealVNFRequest)
+	// 	reply, err = worker.handleHeal(healMessage)
 
 	case catalogue.ActionInstantiate:
 		instantiateMessage := content.(*messages.OrInstantiate)
@@ -82,28 +83,28 @@ func handleMessage(nfvMessage messages.NFVMessage, worker *worker) (messages.NFV
 		// not implemented
 	case catalogue.ActionScaling:
 
-	case catalogue.ActionStart:
-		startStopMessage := content.(*messages.OrStartStop)
-		reply, err = worker.handleStart(startStopMessage)
+	// case catalogue.ActionStart:
+	// 	startStopMessage := content.(*messages.OrStartStop)
+	// 	reply, err = worker.handleStart(startStopMessage)
 
-	case catalogue.ActionStop:
-		startStopMessage := content.(*messages.OrStartStop)
-		reply, err = worker.handleStop(startStopMessage)
+	// case catalogue.ActionStop:
+	// 	startStopMessage := content.(*messages.OrStartStop)
+	// 	reply, err = worker.handleStop(startStopMessage)
 
-		// not implemented
+	// not implemented
 	case catalogue.ActionReleaseResourcesFinish:
 
 	case catalogue.ActionReleaseResources:
 		genericMessage := content.(*messages.OrGeneric)
 		reply, err = worker.handleReleaseResources(genericMessage)
 
-	case catalogue.ActionResume:
-		genericMessage := content.(*messages.OrGeneric)
-		reply, err = worker.handleResume(genericMessage)
+	// case catalogue.ActionResume:
+	// 	genericMessage := content.(*messages.OrGeneric)
+	// 	reply, err = worker.handleResume(genericMessage)
 
-	case catalogue.ActionUpdate:
-		updateMessage := content.(*messages.OrUpdate)
-		reply, err = worker.handleUpdate(updateMessage)
+	// case catalogue.ActionUpdate:
+	// 	updateMessage := content.(*messages.OrUpdate)
+	// 	reply, err = worker.handleUpdate(updateMessage)
 
 	default:
 		worker.l.Warning("received unsupported action")
