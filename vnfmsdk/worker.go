@@ -85,50 +85,53 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 	} else {
 		flavorKey = ""
 	}
+	var recvVNFR *catalogue.VirtualNetworkFunctionRecord
+	if instantiateMessage.VNFR == nil {
+		vnfr, err := catalogue.NewVNFR(
+			instantiateMessage.VNFD,
+			flavorKey,
+			instantiateMessage.VLRs,
+			instantiateMessage.Extension,
+			vimInstances)
 
-	vnfr, err := catalogue.NewVNFR(
-		instantiateMessage.VNFD,
-		flavorKey,
-		instantiateMessage.VLRs,
-		instantiateMessage.Extension,
-		vimInstances)
-
-	msg, err := messages.New(catalogue.ActionGrantOperation, &messages.VNFMGeneric{
-		VNFR: vnfr,
-	})
-	if err != nil {
-		worker.l.Panic("BUG: shouldn't happen")
-	}
-
-	resp, err := worker.executeRpc("vnfm.nfvo.actions.reply", msg)
-
-	if err != nil {
-		return nil, &vnfmError{err.Error(), vnfr, vnfr.ParentNsID}
-	}
-
-	respContent, ok := resp.Content().(*messages.OrGrantLifecycleOperation)
-	if !ok {
-		return nil, &vnfmError{
-			msg:   fmt.Sprintf("expected OrGrantLifecycleOperation, got %T", resp.Content()),
-			nsrID: vnfr.ParentNsID,
-			vnfr:  vnfr,
-		}
-	}
-
-	recvVNFR := respContent.VNFR
-	vimInstanceChosen := respContent.VDUVIM
-
-	worker.l.Debug("Received VNFR after GRANT_OPERATION")
-
-	if !worker.Allocate {
-		allocatedVNFR, err := worker.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
+		msg, err := messages.New(catalogue.ActionGrantOperation, &messages.VNFMGeneric{
+			VNFR: vnfr,
+		})
 		if err != nil {
-			return nil, err
+			worker.l.Panic("BUG: shouldn't happen")
 		}
 
-		recvVNFR = allocatedVNFR
-	}
+		resp, err := worker.executeRpc("vnfm.nfvo.actions.reply", msg)
 
+		if err != nil {
+			return nil, &vnfmError{err.Error(), vnfr, vnfr.ParentNsID}
+		}
+
+		respContent, ok := resp.Content().(*messages.OrGrantLifecycleOperation)
+		if !ok {
+			return nil, &vnfmError{
+				msg:   fmt.Sprintf("expected OrGrantLifecycleOperation, got %T", resp.Content()),
+				nsrID: vnfr.ParentNsID,
+				vnfr:  vnfr,
+			}
+		}
+
+		recvVNFR = respContent.VNFR
+		vimInstanceChosen := respContent.VDUVIM
+
+		worker.l.Debug("Received VNFR after GRANT_OPERATION")
+
+		if !worker.Allocate {
+			allocatedVNFR, err := worker.allocateResources(recvVNFR, vimInstanceChosen, instantiateMessage.Keys)
+			if err != nil {
+				return nil, err
+			}
+
+			recvVNFR = allocatedVNFR
+		}
+	} else {
+		recvVNFR = instantiateMessage.VNFR
+	}
 	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
 
 	if instantiateMessage.VNFPackage != nil {

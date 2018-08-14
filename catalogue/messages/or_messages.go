@@ -93,6 +93,7 @@ type OrInstantiate struct {
 	VIMInstances    map[string][]interface{}                    `json:"vimInstances,omitempty"`
 	VNFPackage      *catalogue.VNFPackage                       `json:"vnfPackage,omitempty"`
 	Keys            []*catalogue.Key                            `json:"keys,omitempty"`
+	VNFR            *catalogue.VirtualNetworkFunctionRecord     `json:"virtualNetworkFunctionRecord,omitempty"`
 }
 
 func (OrInstantiate) DefaultAction() catalogue.Action {
