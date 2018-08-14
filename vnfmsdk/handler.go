@@ -83,13 +83,13 @@ func handleMessage(nfvMessage messages.NFVMessage, worker *worker) messages.NFVM
 		// not implemented
 	case catalogue.ActionScaling:
 
-	// case catalogue.ActionStart:
-	// 	startStopMessage := content.(*messages.OrStartStop)
-	// 	reply, err = worker.handleStart(startStopMessage)
+	case catalogue.ActionStart:
+		startStopMessage := content.(*messages.OrStartStop)
+		reply, err = worker.handleStart(startStopMessage)
 
-	// case catalogue.ActionStop:
-	// 	startStopMessage := content.(*messages.OrStartStop)
-	// 	reply, err = worker.handleStop(startStopMessage)
+	case catalogue.ActionStop:
+		startStopMessage := content.(*messages.OrStartStop)
+		reply, err = worker.handleStop(startStopMessage)
 
 	// not implemented
 	case catalogue.ActionReleaseResourcesFinish:
