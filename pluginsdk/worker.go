@@ -219,6 +219,9 @@ func (w worker) matchFunc(fname string, args []json.RawMessage) (reflect.Value, 
 	case "updateSubnet":
 		fVal = reflect.ValueOf(w.h.UpdateSubnet)
 
+	case "rebuildServer":
+		fVal = reflect.ValueOf(w.h.RebuildServer)
+
 	default:
 		return fVal, ErrProtocolFail
 	}

@@ -92,4 +92,6 @@ type HandlerVim interface {
 	UpdateNetwork(vimInstance interface{}, network catalogue.BaseNetworkInt) (catalogue.BaseNetworkInt, error)
 
 	UpdateSubnet(vimInstance interface{}, createdNetwork catalogue.BaseNetworkInt, subnet *catalogue.Subnet) (*catalogue.Subnet, error)
+
+	RebuildServer(vimInstance interface{}, serverId string, imageId string) (*catalogue.Server, error)
 }
