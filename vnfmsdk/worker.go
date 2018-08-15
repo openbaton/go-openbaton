@@ -86,6 +86,9 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 		flavorKey = ""
 	}
 	var recvVNFR *catalogue.VirtualNetworkFunctionRecord
+
+	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
+
 	if instantiateMessage.VNFR == nil {
 		vnfr, err := catalogue.NewVNFR(
 			instantiateMessage.VNFD,
@@ -129,33 +132,30 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 
 			recvVNFR = allocatedVNFR
 		}
-	} else {
-		recvVNFR = instantiateMessage.VNFR
-	}
-	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
-	var err error
 
-	if instantiateMessage.VNFPackage != nil {
-		pkg := instantiateMessage.VNFPackage
+		if instantiateMessage.VNFPackage != nil {
+			pkg := instantiateMessage.VNFPackage
 
-		if pkg.ScriptsLink != "" {
+			if pkg.ScriptsLink != "" {
 
-			resultVNFR, err = worker.handler.Instantiate(recvVNFR, pkg.ScriptsLink, vimInstances)
+				resultVNFR, err = worker.handler.Instantiate(recvVNFR, pkg.ScriptsLink, vimInstances)
+			} else {
+				resultVNFR, err = worker.handler.Instantiate(recvVNFR, pkg.Scripts, vimInstances)
+			}
 		} else {
-			resultVNFR, err = worker.handler.Instantiate(recvVNFR, pkg.Scripts, vimInstances)
+			resultVNFR, err = worker.handler.Instantiate(recvVNFR, nil, vimInstances)
+		}
+
+		if err != nil {
+			return nil, &vnfmError{
+				msg:   err.Error(),
+				nsrID: recvVNFR.ParentNsID,
+				vnfr:  recvVNFR,
+			}
 		}
 	} else {
-		resultVNFR, err = worker.handler.Instantiate(recvVNFR, nil, vimInstances)
+		resultVNFR = instantiateMessage.VNFR
 	}
-
-	if err != nil {
-		return nil, &vnfmError{
-			msg:   err.Error(),
-			nsrID: recvVNFR.ParentNsID,
-			vnfr:  recvVNFR,
-		}
-	}
-
 	nfvMessage, err := messages.New(catalogue.ActionInstantiate, &messages.VNFMInstantiate{
 		VNFR: resultVNFR,
 	})
