@@ -133,11 +133,13 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 		recvVNFR = instantiateMessage.VNFR
 	}
 	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
+	err := nil
 
 	if instantiateMessage.VNFPackage != nil {
 		pkg := instantiateMessage.VNFPackage
 
 		if pkg.ScriptsLink != "" {
+
 			resultVNFR, err = worker.handler.Instantiate(recvVNFR, pkg.ScriptsLink, vimInstances)
 		} else {
 			resultVNFR, err = worker.handler.Instantiate(recvVNFR, pkg.Scripts, vimInstances)
