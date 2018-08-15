@@ -133,7 +133,7 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 		recvVNFR = instantiateMessage.VNFR
 	}
 	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
-	err := nil
+	var err error
 
 	if instantiateMessage.VNFPackage != nil {
 		pkg := instantiateMessage.VNFPackage
