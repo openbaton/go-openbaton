@@ -169,6 +169,7 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 		// just returning an update message prevents that and has no impact on the service
 		// as the update task only saves the unmodified vnfr.
 		// returning no message at all is unfortunately not an option as then the NSR's status stays NULL
+		worker.l.Debug("Received INSTANTIATE in context of restartVNFR. Sending back UPDATE message for avoiding the usual INSTANTIATE -> MODIFY -> START procedure and setting the VNFR's status back to ACTIVE.")
 		resultVNFR = instantiateMessage.VNFR
 		nfvMessage, err = messages.New(catalogue.ActionUpdate, &messages.VNFMInstantiate{
 			VNFR: resultVNFR,
