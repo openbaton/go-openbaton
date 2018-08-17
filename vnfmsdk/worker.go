@@ -89,7 +89,12 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 
 	var resultVNFR *catalogue.VirtualNetworkFunctionRecord
 
+	var err error
+
+	var nfvMessage messages.NFVMessage
+
 	if instantiateMessage.VNFR == nil {
+		// this is the normal instantiate case
 		vnfr, err := catalogue.NewVNFR(
 			instantiateMessage.VNFD,
 			flavorKey,
@@ -153,12 +158,22 @@ func (worker *worker) handleInstantiate(instantiateMessage *messages.OrInstantia
 				vnfr:  recvVNFR,
 			}
 		}
+		nfvMessage, err = messages.New(catalogue.ActionInstantiate, &messages.VNFMInstantiate{
+			VNFR: resultVNFR,
+		})
 	} else {
+		// this will only happen if a VNFR is restarted.
+		// in this case we return an Update message instead of an Instantiate message
+		// it is a (not so elegant) workaround because otherwise the NFVO would run its
+		// instantiateTask which in the end triggers the creation of a new container.
+		// just returning an update message prevents that and has no impact on the service
+		// as the update task only saves the unmodified vnfr.
+		// returning no message at all is unfortunately not an option as then the NSR's status stays NULL
 		resultVNFR = instantiateMessage.VNFR
+		nfvMessage, err = messages.New(catalogue.ActionUpdate, &messages.VNFMInstantiate{
+			VNFR: resultVNFR,
+		})
 	}
-	nfvMessage, err := messages.New(catalogue.ActionInstantiate, &messages.VNFMInstantiate{
-		VNFR: resultVNFR,
-	})
 	if err != nil {
 		return nil, &vnfmError{err.Error(), resultVNFR, resultVNFR.ParentNsID}
 	}
