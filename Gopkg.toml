@@ -39,7 +39,7 @@
 
 [[constraint]]
   name = "github.com/openbaton/go-openbaton"
-  version = "6.0.0-RC1"
+  version = "6.0.0"
 
 [[constraint]]
   name = "github.com/pkg/errors"
