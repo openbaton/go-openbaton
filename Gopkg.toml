@@ -39,7 +39,7 @@
 
 [[constraint]]
   name = "github.com/openbaton/go-openbaton"
-  version = "master"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/pkg/errors"
